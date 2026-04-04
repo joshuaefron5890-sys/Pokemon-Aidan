@@ -68,4 +68,19 @@ const CARD_LIST = [
     setName: "Perfect Order",
     tcgUrl: "https://www.tcgplayer.com/product/684377/pokemon-me03-perfect-order-salazzle-ex-101-088",
   },
+  {
+    query: "Tyrunt 070",
+    setName: "Mega Evolution Promos",
+    tcgUrl: "https://www.tcgplayer.com/product/685562/pokemon-me-mega-evolution-promo-tyrunt-070",
+  },
+  {
+    query: "Snorlax 051",
+    setName: "Scarlet & Violet Black Star Promos",
+    tcgUrl: "https://www.tcgplayer.com/product/517175/pokemon-sv-scarlet-and-violet-promo-cards-snorlax-051",
+  },
+  {
+    query: "Popplio 045",
+    setName: "Mega Evolution Promos",
+    tcgUrl: "https://www.tcgplayer.com/product/684469/pokemon-me-mega-evolution-promo-popplio-045",
+  },
 ];
