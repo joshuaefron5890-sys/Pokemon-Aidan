@@ -83,4 +83,24 @@ const CARD_LIST = [
     setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/684469/pokemon-me-mega-evolution-promo-popplio-045",
   },
+  {
+    query: "Mismagius ex 112/094",
+    setName: "Phantasmal Flames",
+    tcgUrl: "https://www.tcgplayer.com/product/662200/pokemon-me02-phantasmal-flames-mismagius-ex-112-094",
+  },
+  {
+    query: "Mudsdale 175/162",
+    setName: "Temporal Forces",
+    tcgUrl: "https://www.tcgplayer.com/product/542896/pokemon-sv05-temporal-forces-mudsdale-175-162",
+  },
+  {
+    query: "Drayton 232/191",
+    setName: "Surging Sparks",
+    tcgUrl: "https://www.tcgplayer.com/product/589924/pokemon-sv08-surging-sparks-drayton-232-191",
+  },
+  {
+    query: "Friends in Paldea 137/131",
+    setName: "Prismatic Evolutions",
+    tcgUrl: "https://www.tcgplayer.com/product/610492/pokemon-sv-prismatic-evolutions-friends-in-paldea-137-131",
+  },
 ];
