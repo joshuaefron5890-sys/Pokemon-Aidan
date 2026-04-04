@@ -167,4 +167,34 @@ const CARD_LIST = [
     cardId: "zsv10pt5-28",
     setName: "Black Bolt",
   },
+  {
+    query: "Wigglytuff ex 040/165",
+    cardId: "sv3pt5-40",
+    setName: "Pokemon 151",
+    tcgUrl: "https://www.tcgplayer.com/product/516145/pokemon-sv-scarlet-and-violet-151-wigglytuff-ex-040-165?page=1&Language=English",
+  },
+  {
+    query: "Serperior ex 003/086",
+    cardId: "zsv10pt5-3",
+    setName: "Black Bolt",
+    tcgUrl: "https://www.tcgplayer.com/product/642452/pokemon-sv-black-bolt-serperior-ex?page=1&Language=English",
+  },
+  {
+    query: "Spidops ex 019/198",
+    cardId: "sv1-19",
+    setName: "Scarlet & Violet",
+    tcgUrl: "https://www.tcgplayer.com/product/487856/pokemon-sv01-scarlet-and-violet-base-set-spidops-ex-019-198?page=1&Language=English",
+  },
+  {
+    query: "Incineroar ex 034/162",
+    cardId: "sv5-34",
+    setName: "Temporal Forces",
+    tcgUrl: "https://www.tcgplayer.com/product/542778/pokemon-sv05-temporal-forces-incineroar-ex-034-162?page=1&Language=English",
+  },
+  {
+    query: "Azumarill ex 084/217",
+    cardId: "me2pt5-84",
+    setName: "Ascended Heroes",
+    tcgUrl: "https://www.tcgplayer.com/product/675896/pokemon-me-ascended-heroes-azumarill-ex?page=1&Language=English",
+  },
 ];
