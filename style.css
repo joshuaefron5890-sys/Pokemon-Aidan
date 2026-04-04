@@ -40,6 +40,33 @@ header {
   overflow: hidden;
 }
 
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+.header-photo-wrap {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  padding: 4px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 24px rgba(247,201,72,.4), 0 0 48px rgba(59,130,246,.2);
+  flex-shrink: 0;
+}
+
+.header-photo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 3px solid var(--bg);
+}
+
 header::before {
   content: "";
   position: absolute;
