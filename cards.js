@@ -253,6 +253,7 @@ const CARD_LIST = [
     query: "Mega Starmie ex 021/088",
     cardId: "me3-21",
     setName: "Perfect Order",
+    fallbackPrice: 17.99,
   },
   {
     query: "Squirtle 007/165",
@@ -260,10 +261,29 @@ const CARD_LIST = [
     setName: "Pokemon 151",
   },
   {
-    query: "Pikachu 018/091",
-    cardId: "tottg24-18",
-    setName: "Trick or Trade 2024",
-    tcgUrl: "https://www.tcgplayer.com/product/569132/pokemon-trick-or-trade-booster-bundle-2024-pikachu-018-091-cosmos-holo?page=1&Language=English",
+    query: "Mega Lucario ex 113/217",
+    cardId: "me2pt5-113",
+    setName: "Ascended Heroes",
+  },
+  {
+    query: "Garganacl 147/132",
+    cardId: "me1-147",
+    setName: "Mega Evolution",
+  },
+  {
+    query: "Terapagos ex 180/131",
+    cardId: "sv8pt5-180",
+    setName: "Prismatic Evolutions",
+  },
+  {
+    query: "Rowlet 090/088",
+    cardId: "me3-90",
+    setName: "Perfect Order",
+  },
+  {
+    query: "Litten 044",
+    cardId: "mep-44",
+    setName: "Mega Evolution Promos",
   },
   {
     query: "Giacomo 138/131",
