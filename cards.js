@@ -11,4 +11,10 @@ const CARD_LIST = [
   "Rowlet 043",
   "Marill 232/217",
   "Pidgeotto 208/197",
+  "Team Rocket's Wobbuffet 203",
+  "Mega Skarmory ex 055/088",
+  "Servine 088/086",
+  "Dewgong 097/094",
+  "Blastoise ex XY30",
+  "Salazzle ex 101/088",
 ];

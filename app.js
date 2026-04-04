@@ -84,7 +84,8 @@ async function fetchCard(query) {
 }
 
 function parseCardQuery(query) {
-  const match = query.trim().match(/^(.+?)\s+(\d+(?:\/\d+)?)$/);
+  // Matches plain numbers (051), fractions (133/132), and promo codes (XY30, SM01)
+  const match = query.trim().match(/^(.+?)\s+([A-Z]*\d+(?:\/\d+)?)$/);
   if (match) {
     return [match[1].trim(), match[2].split("/")[0]];
   }
