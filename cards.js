@@ -270,6 +270,7 @@ const CARD_LIST = [
     query: "Mega Lucario ex 113/217",
     cardId: "me2pt5-113",
     setName: "Ascended Heroes",
+    fallbackPrice: 1.65,
   },
   {
     query: "Garganacl 147/132",
@@ -285,6 +286,7 @@ const CARD_LIST = [
     query: "Rowlet 090/088",
     cardId: "me3-90",
     setName: "Perfect Order",
+    fallbackPrice: 12.99,
   },
   {
     query: "Litten 044",
