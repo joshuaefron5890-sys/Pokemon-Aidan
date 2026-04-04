@@ -38,31 +38,46 @@ function setCached(query, card) {
 
 // ── API ────────────────────────────────────────────────────
 
+async function apiFetch(url) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const resp = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    return await resp.json();
+  } catch (e) {
+    clearTimeout(timeout);
+    throw e;
+  }
+}
+
 async function fetchCard(query) {
   const cached = getCached(query);
   if (cached !== undefined) return cached; // null (not found) is also a valid cached result
 
   const [namePart, numberPart] = parseCardQuery(query);
-  const q = `name:"${namePart}" number:"${numberPart}"`;
-  const url = `${API_BASE}?q=${encodeURIComponent(q)}&pageSize=10`;
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
-    const resp = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeout);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const json = await resp.json();
-    let card = null;
-    if (json.data && json.data.length > 0) {
-      card = json.data.find(c => c.name.toLowerCase() === namePart.toLowerCase())
-        || json.data[0];
+    // First try: exact name + number
+    const q1 = `name:"${namePart}" number:"${numberPart}"`;
+    const json1 = await apiFetch(`${API_BASE}?q=${encodeURIComponent(q1)}&pageSize=10`);
+    if (json1.data && json1.data.length > 0) {
+      const card = json1.data.find(c => c.name.toLowerCase() === namePart.toLowerCase())
+        || json1.data[0];
+      setCached(query, card);
+      return card;
     }
+
+    // Fallback: name only (catches cards where number format doesn't match)
+    const q2 = `name:"${namePart}"`;
+    const json2 = await apiFetch(`${API_BASE}?q=${encodeURIComponent(q2)}&pageSize=10`);
+    const card = (json2.data || []).find(c => c.name.toLowerCase() === namePart.toLowerCase())
+      || json2.data?.[0]
+      || null;
     setCached(query, card);
     return card;
   } catch (e) {
-    clearTimeout(timeout);
     console.warn(`Failed to fetch "${query}":`, e);
     return null; // don't cache failures so we retry next visit
   }
@@ -213,9 +228,12 @@ async function loadCollection() {
   for (let i = 0; i < skeletonCount; i++) grid.insertBefore(createSkeletonCard(), sentinel);
 
   // Fetch all in parallel — cached cards return immediately, others have a 5s timeout
+  let doneCount = 0;
   const results = await Promise.all(
     CARD_LIST.map(async query => {
       const card = await fetchCard(query);
+      doneCount++;
+      if (freshCount > 0) loadingEl.textContent = `Loading ${doneCount} / ${CARD_LIST.length}…`;
       return { query, card, price: getMarketPrice(card) };
     })
   );
