@@ -1,0 +1,355 @@
+/* ── Variables ─────────────────────────────────────────── */
+:root {
+  --bg:        #0d1117;
+  --surface:   #161b22;
+  --surface2:  #21262d;
+  --border:    #30363d;
+  --accent:    #f7c948;   /* Pokémon yellow */
+  --accent2:   #3b82f6;   /* blue */
+  --text:      #e6edf3;
+  --text-muted:#8b949e;
+  --red:       #ef4444;
+  --shadow:    rgba(0,0,0,.6);
+
+  --card-radius: 16px;
+  --transition: .2s ease;
+}
+
+/* ── Reset / Base ──────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ── Header ────────────────────────────────────────────── */
+header {
+  background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 60%);
+  border-bottom: 1px solid var(--border);
+  padding: 2.5rem 1.5rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 80% at 20% 50%, rgba(247,201,72,.08) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 80% at 80% 50%, rgba(59,130,246,.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.header-pokeball {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  position: relative;
+}
+
+.header-pokeball svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 12px rgba(247,201,72,.5));
+  animation: spin-slow 12s linear infinite;
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+header h1 {
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  background: linear-gradient(135deg, var(--accent) 0%, #fff 60%, var(--accent2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+header p.subtitle {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin-top: .4rem;
+}
+
+/* ── Stats Bar ─────────────────────────────────────────── */
+.stats-bar {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding: 1.5rem 1.5rem 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  text-align: center;
+  min-width: 160px;
+}
+
+.stat-label {
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-muted);
+  margin-bottom: .25rem;
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.stat-card.stat-count .stat-value {
+  color: var(--accent2);
+}
+
+/* ── Loading / Status ──────────────────────────────────── */
+.loading-bar {
+  text-align: center;
+  padding: .75rem 1.5rem;
+  color: var(--text-muted);
+  font-size: .85rem;
+  min-height: 2rem;
+}
+
+/* ── Grid ──────────────────────────────────────────────── */
+.grid-container {
+  max-width: 1400px;
+  margin: 1.5rem auto 4rem;
+  padding: 0 1.5rem;
+}
+
+#card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ── Card Item ─────────────────────────────────────────── */
+.card-item {
+  border-radius: var(--card-radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  overflow: hidden;
+  position: relative;
+}
+
+.card-item:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 16px 40px var(--shadow);
+  border-color: var(--accent);
+  z-index: 2;
+}
+
+/* Rarity glows */
+.rarity-secret {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 1px #a855f7, 0 4px 20px rgba(168,85,247,.25);
+}
+.rarity-secret:hover {
+  box-shadow: 0 16px 40px rgba(168,85,247,.5);
+  border-color: #c084fc;
+}
+
+.rarity-ultra {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 1px #f59e0b, 0 4px 20px rgba(245,158,11,.2);
+}
+.rarity-ultra:hover {
+  box-shadow: 0 16px 40px rgba(245,158,11,.4);
+}
+
+.rarity-holo {
+  border-color: var(--accent2);
+}
+.rarity-holo:hover {
+  box-shadow: 0 16px 40px rgba(59,130,246,.4);
+}
+
+.card-link {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ── Card Image ────────────────────────────────────────── */
+.card-image-wrap {
+  position: relative;
+  background: var(--surface2);
+  aspect-ratio: 2.5 / 3.5;
+  overflow: hidden;
+}
+
+.card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  transition: transform .3s ease;
+}
+
+.card-item:hover .card-img {
+  transform: scale(1.04);
+}
+
+.card-img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  font-size: .85rem;
+  color: var(--text-muted);
+  text-align: center;
+  background: linear-gradient(135deg, var(--surface2), var(--surface));
+}
+
+.card-price-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0,0,0,.85);
+  color: var(--accent);
+  font-size: .8rem;
+  font-weight: 700;
+  padding: .2rem .55rem;
+  border-radius: 20px;
+  border: 1px solid rgba(247,201,72,.3);
+  backdrop-filter: blur(4px);
+}
+
+/* ── Card Info ─────────────────────────────────────────── */
+.card-info {
+  padding: .85rem;
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  flex: 1;
+}
+
+.card-name {
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.card-set {
+  font-size: .75rem;
+  color: var(--text-muted);
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-top: .1rem;
+}
+
+.card-number {
+  font-size: .7rem;
+  color: var(--text-muted);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: .1rem .4rem;
+  border-radius: 4px;
+}
+
+.card-rarity {
+  font-size: .65rem;
+  color: var(--text-muted);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: .1rem .4rem;
+  border-radius: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+
+.card-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-top: auto;
+  padding-top: .5rem;
+}
+
+.card-price-unknown {
+  color: var(--text-muted);
+}
+
+/* ── Skeleton Loader ───────────────────────────────────── */
+.card-skeleton {
+  pointer-events: none;
+}
+
+.skeleton-img {
+  aspect-ratio: 2.5 / 3.5;
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--surface) 50%, var(--surface2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+.skeleton-line {
+  height: .75rem;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--surface) 50%, var(--surface2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+.skeleton-name { width: 80%; height: 1rem; }
+.skeleton-set  { width: 60%; margin-top: .2rem; }
+.skeleton-price { width: 45%; margin-top: .5rem; height: 1.1rem; }
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Footer ────────────────────────────────────────────── */
+footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: .8rem;
+}
+
+footer a {
+  color: var(--accent2);
+  text-decoration: underline;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 480px) {
+  #card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+  .stats-bar { gap: 1rem; }
+  .stat-card { padding: .75rem 1.25rem; min-width: 130px; }
+}
