@@ -103,4 +103,19 @@ const CARD_LIST = [
     setName: "Prismatic Evolutions",
     tcgUrl: "https://www.tcgplayer.com/product/610492/pokemon-sv-prismatic-evolutions-friends-in-paldea-137-131",
   },
+  {
+    query: "Cheren 258/217",
+    setName: "Ascended Heroes",
+    tcgUrl: "https://www.tcgplayer.com/product/676070/pokemon-me-ascended-heroes-cheren",
+  },
+  {
+    query: "Ethan's Ho-Oh ex 039/182",
+    setName: "Destined Rivals",
+    tcgUrl: "https://www.tcgplayer.com/product/632858/pokemon-sv10-destined-rivals-ethans-ho-oh-ex-039-182",
+  },
+  {
+    query: "Arven's Mabosstiff ex 139/182",
+    setName: "Destined Rivals",
+    tcgUrl: "https://www.tcgplayer.com/product/632946/pokemon-sv10-destined-rivals-arvens-mabosstiff-ex-139-182",
+  },
 ];
