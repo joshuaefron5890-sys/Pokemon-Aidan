@@ -7,7 +7,6 @@ const CARD_LIST = [
   "Mega Sharpedo ex 113/094",
   "Whirlipede 133/086",
   "Throh 128/086",
-  "Throh 128/086",
   "Rowlet 043",
   "Marill 232/217",
   "Pidgeotto 208/197",
