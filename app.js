@@ -1,15 +1,16 @@
 const API_BASE = "https://api.pokemontcg.io/v2/cards";
 const CACHE_KEY = "pokemon_portfolio_cache";
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+const FETCH_TIMEOUT_MS = 5000;             // 5 seconds per card
 const PAGE_SIZE = 20;
 
 // ── Cache helpers ──────────────────────────────────────────
+// Uses undefined as "not in cache" so null (card not found) can be cached too
 
 function loadCache() {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw);
+    return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
   }
@@ -18,17 +19,15 @@ function loadCache() {
 function saveCache(cache) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-  } catch {
-    // Storage full or unavailable — just skip caching
-  }
+  } catch { /* storage full — skip */ }
 }
 
 function getCached(query) {
   const cache = loadCache();
   const entry = cache[query];
-  if (!entry) return null;
-  if (Date.now() - entry.ts > CACHE_TTL_MS) return null; // expired
-  return entry.card; // may be null (card not found) — that's also cached
+  if (entry === undefined) return undefined;         // not cached
+  if (Date.now() - entry.ts > CACHE_TTL_MS) return undefined; // expired
+  return entry.card;                                 // may be null (not found)
 }
 
 function setCached(query, card) {
@@ -41,14 +40,14 @@ function setCached(query, card) {
 
 async function fetchCard(query) {
   const cached = getCached(query);
-  if (cached !== null) return cached;
+  if (cached !== undefined) return cached; // null (not found) is also a valid cached result
 
   const [namePart, numberPart] = parseCardQuery(query);
   const q = `name:"${namePart}" number:"${numberPart}"`;
   const url = `${API_BASE}?q=${encodeURIComponent(q)}&pageSize=10`;
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
     const resp = await fetch(url, { signal: controller.signal });
@@ -57,26 +56,22 @@ async function fetchCard(query) {
     const json = await resp.json();
     let card = null;
     if (json.data && json.data.length > 0) {
-      const exact = json.data.find(
-        c => c.name.toLowerCase() === namePart.toLowerCase()
-      );
-      card = exact || json.data[0];
+      card = json.data.find(c => c.name.toLowerCase() === namePart.toLowerCase())
+        || json.data[0];
     }
     setCached(query, card);
     return card;
   } catch (e) {
     clearTimeout(timeout);
     console.warn(`Failed to fetch "${query}":`, e);
-    return null;
+    return null; // don't cache failures so we retry next visit
   }
 }
 
 function parseCardQuery(query) {
   const match = query.trim().match(/^(.+?)\s+(\d+(?:\/\d+)?)$/);
   if (match) {
-    const name = match[1].trim();
-    const number = match[2].split("/")[0];
-    return [name, number];
+    return [match[1].trim(), match[2].split("/")[0]];
   }
   return [query.trim(), ""];
 }
@@ -86,19 +81,19 @@ function parseCardQuery(query) {
 function getMarketPrice(card) {
   if (!card || !card.tcgplayer || !card.tcgplayer.prices) return null;
   const prices = card.tcgplayer.prices;
-  const types = ["holofoil", "reverseHolofoil", "normal", "1stEditionHolofoil", "unlimited"];
-  for (const type of types) {
-    if (prices[type] && prices[type].market != null) return prices[type].market;
+  const priority = ["holofoil", "reverseHolofoil", "normal", "1stEditionHolofoil", "unlimited"];
+  for (const type of priority) {
+    if (prices[type]?.market != null) return prices[type].market;
   }
   for (const type of Object.keys(prices)) {
-    if (prices[type] && prices[type].market != null) return prices[type].market;
+    if (prices[type]?.market != null) return prices[type].market;
   }
   return null;
 }
 
 function getTcgPlayerUrl(card, query) {
-  if (card && card.tcgplayer && card.tcgplayer.url) return card.tcgplayer.url;
-  return `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(query)}&view=grid`;
+  return card?.tcgplayer?.url
+    || `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(query)}&view=grid`;
 }
 
 function formatPrice(price) {
@@ -107,8 +102,7 @@ function formatPrice(price) {
 }
 
 function getRarityClass(card) {
-  if (!card) return "";
-  const rarity = (card.rarity || "").toLowerCase();
+  const rarity = (card?.rarity || "").toLowerCase();
   if (rarity.includes("secret") || rarity.includes("special")) return "rarity-secret";
   if (rarity.includes("ultra") || rarity.includes("hyper")) return "rarity-ultra";
   if (rarity.includes("rare holo") || rarity.includes("double rare")) return "rarity-holo";
@@ -121,16 +115,17 @@ function getRarityClass(card) {
 function createCardElement(query, card, price) {
   const wrapper = document.createElement("div");
   wrapper.className = `card-item ${getRarityClass(card)}`;
+  wrapper.dataset.price = price ?? -1; // used for sorting
 
   const tcgUrl = getTcgPlayerUrl(card, query);
-  const imgSrc = card ? card.images.large || card.images.small : "";
+  const imgSrc = card?.images?.large || card?.images?.small || "";
   const cardName = card ? card.name : query;
-  const setName = card ? (card.set ? card.set.name : "") : "";
+  const setName = card?.set?.name || "";
   const cardNumber = card
     ? `${card.number}/${card.set?.printedTotal || card.set?.total || "?"}`
     : query.split(" ").pop();
   const priceDisplay = formatPrice(price);
-  const rarity = card ? card.rarity || "" : "";
+  const rarity = card?.rarity || "";
 
   wrapper.innerHTML = `
     <a href="${tcgUrl}" target="_blank" rel="noopener" class="card-link">
@@ -156,9 +151,9 @@ function createCardElement(query, card, price) {
 }
 
 function createSkeletonCard() {
-  const wrapper = document.createElement("div");
-  wrapper.className = "card-item card-skeleton";
-  wrapper.innerHTML = `
+  const el = document.createElement("div");
+  el.className = "card-item card-skeleton";
+  el.innerHTML = `
     <div class="card-image-wrap skeleton-img"></div>
     <div class="card-info">
       <div class="skeleton-line skeleton-name"></div>
@@ -166,41 +161,32 @@ function createSkeletonCard() {
       <div class="skeleton-line skeleton-price"></div>
     </div>
   `;
-  return wrapper;
+  return el;
 }
 
 // ── Pagination ─────────────────────────────────────────────
 
-let allResults = [];
+let sortedResults = [];
 let currentPage = 0;
 
 function renderNextPage() {
   const grid = document.getElementById("card-grid");
   const sentinel = document.getElementById("load-sentinel");
   const start = currentPage * PAGE_SIZE;
-  const slice = allResults.slice(start, start + PAGE_SIZE);
-
-  slice.forEach(({ query, card, price }) => {
-    grid.insertBefore(createCardElement(query, card, price), sentinel);
-  });
-
+  const slice = sortedResults.slice(start, start + PAGE_SIZE);
+  slice.forEach(({ query, card, price }) =>
+    grid.insertBefore(createCardElement(query, card, price), sentinel)
+  );
   currentPage++;
-
-  // Hide sentinel once all cards are shown
-  if (currentPage * PAGE_SIZE >= allResults.length) {
-    sentinel.style.display = "none";
-  }
+  if (currentPage * PAGE_SIZE >= sortedResults.length) sentinel.style.display = "none";
 }
 
 function setupIntersectionObserver() {
   const sentinel = document.getElementById("load-sentinel");
-  const observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting) renderNextPage();
-    },
-    { rootMargin: "200px" } // start loading 200px before it scrolls into view
-  );
-  observer.observe(sentinel);
+  new IntersectionObserver(
+    entries => { if (entries[0].isIntersecting) renderNextPage(); },
+    { rootMargin: "200px" }
+  ).observe(sentinel);
 }
 
 // ── Main ───────────────────────────────────────────────────
@@ -214,50 +200,48 @@ async function loadCollection() {
 
   countEl.textContent = CARD_LIST.length;
 
-  // Show skeletons only for the first page
-  const skeletonCount = Math.min(PAGE_SIZE, CARD_LIST.length);
-  for (let i = 0; i < skeletonCount; i++) {
-    grid.insertBefore(createSkeletonCard(), sentinel);
-  }
-
-  // Check how many cards are already cached
-  const cachedCount = CARD_LIST.filter(q => getCached(q) !== null).length;
-  loadingEl.textContent = cachedCount === CARD_LIST.length
+  // Count how many are already cached (undefined = not cached)
+  const freshCount = CARD_LIST.filter(q => getCached(q) === undefined).length;
+  loadingEl.textContent = freshCount === 0
     ? "Loading from cache…"
-    : `Fetching ${CARD_LIST.length - cachedCount} new card${CARD_LIST.length - cachedCount !== 1 ? "s" : ""}…`;
+    : freshCount === CARD_LIST.length
+      ? "Fetching card data…"
+      : `Fetching ${freshCount} new card${freshCount !== 1 ? "s" : ""}, rest from cache…`;
 
-  // Fetch all in parallel (cached cards return instantly)
+  // Show skeletons for first page while loading
+  const skeletonCount = Math.min(PAGE_SIZE, CARD_LIST.length);
+  for (let i = 0; i < skeletonCount; i++) grid.insertBefore(createSkeletonCard(), sentinel);
+
+  // Fetch all in parallel — cached cards return immediately, others have a 5s timeout
   const results = await Promise.all(
-    CARD_LIST.map(async (query) => {
+    CARD_LIST.map(async query => {
       const card = await fetchCard(query);
-      const price = getMarketPrice(card);
-      return { query, card, price };
+      return { query, card, price: getMarketPrice(card) };
     })
   );
 
-  // Sort by price descending (nulls at end)
-  results.sort((a, b) => {
+  // Sort by price descending (no price → end)
+  sortedResults = results.sort((a, b) => {
     if (a.price == null && b.price == null) return 0;
     if (a.price == null) return 1;
     if (b.price == null) return -1;
     return b.price - a.price;
   });
 
-  allResults = results;
-
-  const total = results.reduce((sum, r) => sum + (r.price || 0), 0);
+  // Update total
+  const total = sortedResults.reduce((sum, r) => sum + (r.price || 0), 0);
   totalEl.textContent = formatPrice(total);
-  loadingEl.textContent = "";
 
-  // Remove skeletons and render first page
+  // Remove skeletons, render first page
   grid.querySelectorAll(".card-skeleton").forEach(el => el.remove());
+  currentPage = 0;
   setupIntersectionObserver();
   renderNextPage();
 
-  const missing = results.filter(r => r.price == null).length;
-  if (missing > 0) {
-    loadingEl.textContent = `${missing} card${missing !== 1 ? "s" : ""} without price data`;
-  }
+  const missing = sortedResults.filter(r => r.price == null).length;
+  loadingEl.textContent = missing > 0
+    ? `${missing} card${missing !== 1 ? "s" : ""} without price data`
+    : "";
 }
 
 document.addEventListener("DOMContentLoaded", loadCollection);
