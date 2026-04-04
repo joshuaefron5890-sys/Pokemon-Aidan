@@ -4,10 +4,13 @@ const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 const FETCH_TIMEOUT_MS = 5000;             // 5 seconds per card
 const PAGE_SIZE = 20;
 
+const DEBUG = new URLSearchParams(location.search).has("debug");
+
 // ── Entry helpers ──────────────────────────────────────────
 // CARD_LIST entries can be a plain string ("Bulbasaur 133/132")
-// or an object with overrides for cards the API gets wrong:
-// { query: "Dewgong 097/094", tcgUrl: "https://...", imageUrl: "https://..." }
+// or an object with overrides:
+// { query, setName, tcgUrl, cardId }
+// cardId: exact pokemontcg.io ID (e.g. "sv8-232") — bypasses search entirely
 
 function entryQuery(entry) {
   return typeof entry === "string" ? entry : entry.query;
@@ -65,14 +68,21 @@ async function apiFetch(url) {
   }
 }
 
-async function fetchCard(query, setName) {
-  const cacheKey = setName ? `${query}|${setName}` : query;
+async function fetchCard(query, setName, cardId) {
+  const cacheKey = cardId || (setName ? `${query}|${setName}` : query);
   const cached = getCached(cacheKey);
   if (cached !== undefined) return cached;
 
   const [namePart, numberPart] = parseCardQuery(query);
 
   try {
+    // If we have an exact card ID, fetch directly — no search needed
+    if (cardId) {
+      const json = await apiFetch(`${API_BASE}/${cardId}`);
+      setCached(cacheKey, json || null);
+      return json || null;
+    }
+
     // First try: name + number (+ set name if provided)
     let q1 = `name:"${namePart}" number:"${numberPart}"`;
     if (setName) q1 += ` set.name:"${setName}"`;
@@ -250,7 +260,7 @@ async function loadCollection() {
     CARD_LIST.map(async entry => {
       const query = entryQuery(entry);
       const overrides = entryOverrides(entry);
-      const card = await fetchCard(query, overrides.setName);
+      const card = await fetchCard(query, overrides.setName, overrides.cardId);
       doneCount++;
       if (freshCount > 0) loadingEl.textContent = `Loading ${doneCount} / ${CARD_LIST.length}…`;
       return { query, card, price: getMarketPrice(card), overrides };
@@ -279,6 +289,55 @@ async function loadCollection() {
   loadingEl.textContent = missing > 0
     ? `${missing} card${missing !== 1 ? "s" : ""} without price data`
     : "";
+
+  if (DEBUG) renderDebugTable(sortedResults);
+}
+
+function renderDebugTable(results) {
+  const existing = document.getElementById("debug-table-wrap");
+  if (existing) existing.remove();
+
+  const wrap = document.createElement("div");
+  wrap.id = "debug-table-wrap";
+  wrap.style.cssText = "max-width:1400px;margin:2rem auto;padding:0 1.5rem;overflow-x:auto;position:relative;z-index:1";
+
+  const rows = results.map(({ query, card, price, overrides }) => {
+    const expected = overrides.setName || "—";
+    const got = card ? `${card.name} · ${card.set?.name || "?"} · #${card.number}` : "NOT FOUND";
+    const imgOk = card ? "✓" : "✗";
+    const match = card && overrides.setName
+      ? card.set?.name?.toLowerCase().includes(overrides.setName.toLowerCase()) ? "✓" : "⚠️"
+      : card ? "?" : "✗";
+    return `<tr>
+      <td>${query}</td>
+      <td>${expected}</td>
+      <td>${got}</td>
+      <td style="text-align:center">${match}</td>
+      <td style="text-align:center">${price != null ? "$" + price.toFixed(2) : "—"}</td>
+      <td style="text-align:center">${card ? `<img src="${card.images?.small}" style="height:40px">` : "✗"}</td>
+    </tr>`;
+  }).join("");
+
+  wrap.innerHTML = `
+    <h2 style="color:var(--accent);margin-bottom:1rem;font-size:1rem;text-transform:uppercase;letter-spacing:.08em">
+      🔍 Debug Mode — API vs Expected
+    </h2>
+    <table style="width:100%;border-collapse:collapse;font-size:.8rem;background:var(--surface);border-radius:12px;overflow:hidden">
+      <thead>
+        <tr style="background:var(--surface2);color:var(--text-muted);text-align:left">
+          <th style="padding:.6rem .8rem">Query</th>
+          <th style="padding:.6rem .8rem">Expected Set</th>
+          <th style="padding:.6rem .8rem">API Returned</th>
+          <th style="padding:.6rem .8rem;text-align:center">Match</th>
+          <th style="padding:.6rem .8rem;text-align:center">Price</th>
+          <th style="padding:.6rem .8rem;text-align:center">Image</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+  document.querySelector(".grid-container").before(wrap);
 }
 
 document.addEventListener("DOMContentLoaded", loadCollection);
