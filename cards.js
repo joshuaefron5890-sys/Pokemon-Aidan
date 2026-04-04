@@ -181,6 +181,31 @@ const CARD_LIST = [
     setName: "Destined Rivals",
   },
   {
+    query: "Vulpix 138/132",
+    cardId: "me1-138",
+    setName: "Mega Evolution",
+  },
+  {
+    query: "Hydrapple 188/182",
+    cardId: "sv10-188",
+    setName: "Destined Rivals",
+  },
+  {
+    query: "Palossand ex 221/191",
+    cardId: "sv8-221",
+    setName: "Surging Sparks",
+  },
+  {
+    query: "Gengar 050/088",
+    cardId: "me3-50",
+    setName: "Perfect Order",
+  },
+  {
+    query: "Mega Froslass ex 265/217",
+    cardId: "me2pt5-265",
+    setName: "Ascended Heroes",
+  },
+  {
     query: "Mega Charizard X ex 109/094",
     cardId: "me2-109",
     setName: "Phantasmal Flames",
