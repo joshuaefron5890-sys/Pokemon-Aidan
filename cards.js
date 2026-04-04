@@ -51,7 +51,7 @@ const CARD_LIST = [
   {
     query: "Servine 088/086",
     setName: "Black Bolt",
-    tcgUrl: "https://www.tcgplayer.com/product/642537/pokemon-sv-black-bolt-servine-088-086?Language=English",
+    tcgUrl: "https://www.tcgplayer.com/product/642537/pokemon-sv-black-bolt-servine-088-086?Language=English&page=1",
   },
   {
     query: "Dewgong 097/094",
