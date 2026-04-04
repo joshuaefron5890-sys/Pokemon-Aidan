@@ -120,4 +120,10 @@ const CARD_LIST = [
     setName: "Destined Rivals",
     tcgUrl: "https://www.tcgplayer.com/product/632946/pokemon-sv10-destined-rivals-arvens-mabosstiff-ex-139-182",
   },
+  {
+    query: "Mewtwo VSTAR GG44/GG70",
+    cardId: "swsh12pt5gg-GG44",
+    setName: "Crown Zenith: Galarian Gallery",
+    tcgUrl: "https://www.tcgplayer.com/product/477057/pokemon-crown-zenith-galarian-gallery-mewtwo-vstar",
+  },
 ];
