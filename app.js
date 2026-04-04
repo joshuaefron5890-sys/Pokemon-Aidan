@@ -108,30 +108,12 @@ async function fetchCard(query, setName, cardId) {
       } catch { /* pokemontcg.io 404 or network error — fall through to TCGdex */ }
 
       // TCGdex fallback for cards not yet in pokemontcg.io (e.g. MEP promos)
-      // Try 1: /v2/en/cards/{id}  e.g. mep-43
       if (!card) {
         try {
           const tcgJson = await apiFetch(`${TCGDEX_BASE}/${cardId}`);
           card = normalizeTcgdexCard(tcgJson);
-          if (card) console.info(`[TCGdex cards] found ${cardId}`);
-        } catch (e) { console.warn(`[TCGdex cards] ${cardId} failed:`, e.message); }
+        } catch { /* TCGdex also failed — card stays null */ }
       }
-
-      // Try 2: /v2/en/sets/{setId}/{localId}  e.g. sets/mep/43
-      if (!card) {
-        const dashIdx = cardId.indexOf("-");
-        if (dashIdx > 0) {
-          const setId = cardId.slice(0, dashIdx);
-          const localId = cardId.slice(dashIdx + 1);
-          try {
-            const tcgJson2 = await apiFetch(`https://api.tcgdex.net/v2/en/sets/${setId}/${localId}`);
-            card = normalizeTcgdexCard(tcgJson2);
-            if (card) console.info(`[TCGdex sets] found ${cardId} via sets/${setId}/${localId}`);
-          } catch (e) { console.warn(`[TCGdex sets] ${cardId} failed:`, e.message); }
-        }
-      }
-
-      if (!card) console.warn(`[fetchCard] ${cardId} not found in pokemontcg.io or TCGdex`);
 
       setCached(cacheKey, card);
       return card;

@@ -29,10 +29,9 @@ const CARD_LIST = [
   },
   {
     query: "Rowlet 043",
-    cardId: "mep-43",
+    cardId: "mep-43", // ⚠️ MEP set not yet in pokemontcg.io — shows placeholder
     setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/684467/pokemon-me-mega-evolution-promo-rowlet-043?page=1&Language=English",
-    imageUrl: "https://assets.tcgdex.net/en/me/mep/043/high.webp",
   },
   {
     query: "Marill 232/217",
@@ -84,10 +83,9 @@ const CARD_LIST = [
   },
   {
     query: "Tyrunt 070",
-    cardId: "mep-70",
+    cardId: "mep-70", // ⚠️ MEP set not yet in pokemontcg.io — shows placeholder
     setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/685562/pokemon-me-mega-evolution-promo-tyrunt-070",
-    imageUrl: "https://assets.tcgdex.net/en/me/mep/070/high.webp",
   },
   {
     query: "Snorlax 051",
@@ -97,10 +95,9 @@ const CARD_LIST = [
   },
   {
     query: "Popplio 045",
-    cardId: "mep-45",
+    cardId: "mep-45", // ⚠️ MEP set not yet in pokemontcg.io — shows placeholder
     setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/684469/pokemon-me-mega-evolution-promo-popplio-045",
-    imageUrl: "https://assets.tcgdex.net/en/me/mep/045/high.webp",
   },
   {
     query: "Mismagius ex 112/094",
