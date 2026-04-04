@@ -181,6 +181,22 @@ const CARD_LIST = [
     setName: "Destined Rivals",
   },
   {
+    query: "Mega Charizard X ex 109/094",
+    cardId: "me2-109",
+    setName: "Phantasmal Flames",
+  },
+  {
+    query: "Mega Diancie ex 041/094",
+    cardId: "me2-41",
+    setName: "Phantasmal Flames",
+  },
+  {
+    query: "Roaring Moon ex 067",
+    cardId: "svp-67",
+    setName: "Scarlet & Violet Black Star Promos",
+    tcgUrl: "https://www.tcgplayer.com/product/527878/pokemon-sv-scarlet-and-violet-promo-cards-roaring-moon-ex-067?page=1&Language=English",
+  },
+  {
     query: "Giacomo 138/131",
     cardId: "sv8pt5-138",
     setName: "Prismatic Evolutions",
