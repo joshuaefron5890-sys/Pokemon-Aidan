@@ -5,8 +5,12 @@ async function fetchCard(query) {
   const q = `name:"${namePart}" number:"${numberPart}"`;
   const url = `${API_BASE}?q=${encodeURIComponent(q)}&pageSize=10`;
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+
   try {
-    const resp = await fetch(url);
+    const resp = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const json = await resp.json();
     if (json.data && json.data.length > 0) {
@@ -18,6 +22,7 @@ async function fetchCard(query) {
     }
     return null;
   } catch (e) {
+    clearTimeout(timeout);
     console.warn(`Failed to fetch "${query}":`, e);
     return null;
   }
@@ -138,20 +143,17 @@ async function loadCollection() {
   grid.innerHTML = "";
   CARD_LIST.forEach(() => grid.appendChild(createSkeletonCard()));
 
-  loadingEl.textContent = `Loading ${CARD_LIST.length} card${CARD_LIST.length !== 1 ? "s" : ""}…`;
+  loadingEl.textContent = `Loading collection…`;
   countEl.textContent = CARD_LIST.length;
 
-  // Fetch all cards (rate-limit: small batches)
-  const results = [];
-  for (let i = 0; i < CARD_LIST.length; i++) {
-    const query = CARD_LIST[i];
-    loadingEl.textContent = `Fetching ${i + 1} of ${CARD_LIST.length}…`;
-    const card = await fetchCard(query);
-    const price = getMarketPrice(card);
-    results.push({ query, card, price });
-    // Small delay to be polite to the API
-    if (i < CARD_LIST.length - 1) await new Promise(r => setTimeout(r, 100));
-  }
+  // Fetch all cards in parallel (each has an 8s timeout)
+  const results = await Promise.all(
+    CARD_LIST.map(async (query) => {
+      const card = await fetchCard(query);
+      const price = getMarketPrice(card);
+      return { query, card, price };
+    })
+  );
 
   // Sort by price descending (nulls at end)
   results.sort((a, b) => {
