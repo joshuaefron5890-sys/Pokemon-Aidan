@@ -84,9 +84,10 @@ const CARD_LIST = [
   },
   {
     query: "Tyrunt 070",
-    cardId: "mep-70", // ⚠️ MEP set not yet in pokemontcg.io — shows placeholder
+    cardId: "mep-70",
     setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/685562/pokemon-me-mega-evolution-promo-tyrunt-070",
+    imageUrl: "Tyrunt.jpg",
   },
   {
     query: "Snorlax 051",
@@ -96,9 +97,10 @@ const CARD_LIST = [
   },
   {
     query: "Popplio 045",
-    cardId: "mep-45", // ⚠️ MEP set not yet in pokemontcg.io — shows placeholder
+    cardId: "mep-45",
     setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/684469/pokemon-me-mega-evolution-promo-popplio-045",
+    imageUrl: "Popplio.jpg",
   },
   {
     query: "Mismagius ex 112/094",
