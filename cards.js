@@ -13,7 +13,11 @@ const CARD_LIST = [
   "Team Rocket's Wobbuffet 203",
   "Mega Skarmory ex 055/088",
   "Servine 088/086",
-  "Dewgong 097/094",
+  {
+    query: "Dewgong 097/094",
+    tcgUrl: "https://www.tcgplayer.com/product/662152/pokemon-me02-phantasmal-flames-dewgong-097-094?Language=English",
+    imageUrl: "https://product-images.tcgplayer.com/fit-in/437x437/662152.jpg",
+  },
   "Blastoise-EX XY30",
   "Salazzle ex 101/088",
 ];

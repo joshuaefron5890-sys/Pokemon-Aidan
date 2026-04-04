@@ -4,6 +4,19 @@ const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 const FETCH_TIMEOUT_MS = 5000;             // 5 seconds per card
 const PAGE_SIZE = 20;
 
+// ── Entry helpers ──────────────────────────────────────────
+// CARD_LIST entries can be a plain string ("Bulbasaur 133/132")
+// or an object with overrides for cards the API gets wrong:
+// { query: "Dewgong 097/094", tcgUrl: "https://...", imageUrl: "https://..." }
+
+function entryQuery(entry) {
+  return typeof entry === "string" ? entry : entry.query;
+}
+
+function entryOverrides(entry) {
+  return typeof entry === "string" ? {} : entry;
+}
+
 // ── Cache helpers ──────────────────────────────────────────
 // Uses undefined as "not in cache" so null (card not found) can be cached too
 
@@ -107,8 +120,9 @@ function getMarketPrice(card) {
   return null;
 }
 
-function getTcgPlayerUrl(card, query) {
-  return card?.tcgplayer?.url
+function getTcgPlayerUrl(card, query, overrideTcgUrl) {
+  return overrideTcgUrl
+    || card?.tcgplayer?.url
     || `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(query)}&view=grid`;
 }
 
@@ -128,13 +142,13 @@ function getRarityClass(card) {
 
 // ── Card rendering ─────────────────────────────────────────
 
-function createCardElement(query, card, price) {
+function createCardElement(query, card, price, overrides = {}) {
   const wrapper = document.createElement("div");
   wrapper.className = `card-item ${getRarityClass(card)}`;
   wrapper.dataset.price = price ?? -1; // used for sorting
 
-  const tcgUrl = getTcgPlayerUrl(card, query);
-  const imgSrc = card?.images?.large || card?.images?.small || "";
+  const tcgUrl = getTcgPlayerUrl(card, query, overrides.tcgUrl);
+  const imgSrc = overrides.imageUrl || card?.images?.large || card?.images?.small || "";
   const cardName = card ? card.name : query;
   const setName = card?.set?.name || "";
   const cardNumber = card
@@ -190,8 +204,8 @@ function renderNextPage() {
   const sentinel = document.getElementById("load-sentinel");
   const start = currentPage * PAGE_SIZE;
   const slice = sortedResults.slice(start, start + PAGE_SIZE);
-  slice.forEach(({ query, card, price }) =>
-    grid.insertBefore(createCardElement(query, card, price), sentinel)
+  slice.forEach(({ query, card, price, overrides }) =>
+    grid.insertBefore(createCardElement(query, card, price, overrides), sentinel)
   );
   currentPage++;
   if (currentPage * PAGE_SIZE >= sortedResults.length) sentinel.style.display = "none";
@@ -217,7 +231,7 @@ async function loadCollection() {
   countEl.textContent = CARD_LIST.length;
 
   // Count how many are already cached (undefined = not cached)
-  const freshCount = CARD_LIST.filter(q => getCached(q) === undefined).length;
+  const freshCount = CARD_LIST.filter(e => getCached(entryQuery(e)) === undefined).length;
   loadingEl.textContent = freshCount === 0
     ? "Loading from cache…"
     : freshCount === CARD_LIST.length
@@ -231,11 +245,13 @@ async function loadCollection() {
   // Fetch all in parallel — cached cards return immediately, others have a 5s timeout
   let doneCount = 0;
   const results = await Promise.all(
-    CARD_LIST.map(async query => {
+    CARD_LIST.map(async entry => {
+      const query = entryQuery(entry);
+      const overrides = entryOverrides(entry);
       const card = await fetchCard(query);
       doneCount++;
       if (freshCount > 0) loadingEl.textContent = `Loading ${doneCount} / ${CARD_LIST.length}…`;
-      return { query, card, price: getMarketPrice(card) };
+      return { query, card, price: getMarketPrice(card), overrides };
     })
   );
 
