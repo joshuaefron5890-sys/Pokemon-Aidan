@@ -26,7 +26,7 @@ const CARD_LIST = [
   {
     query: "Rowlet 043",
     setName: "Mega Evolution",
-    tcgUrl: "https://www.tcgplayer.com/product/684467/pokemon-me-mega-evolution-promo-rowlet-043",
+    tcgUrl: "https://www.tcgplayer.com/product/684467/pokemon-me-mega-evolution-promo-rowlet-043?page=1&Language=English",
   },
   {
     query: "Marill 232/217",
