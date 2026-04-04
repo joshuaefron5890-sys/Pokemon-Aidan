@@ -367,6 +367,37 @@ const CARD_LIST = [
     setName: "Perfect Order",
   },
   {
+    query: "Talonflame 091/088",
+    cardId: "me3-91",
+    setName: "Perfect Order",
+  },
+  {
+    query: "Thundurus 209",
+    cardId: "svp-209",
+    setName: "Scarlet & Violet Black Star Promos",
+    tcgUrl: "https://www.tcgplayer.com/product/644833/pokemon-sv-scarlet-and-violet-promo-cards-thundurus-209?page=1&Language=English",
+  },
+  {
+    query: "Brassius 135/131",
+    cardId: "sv8pt5-135",
+    setName: "Prismatic Evolutions",
+  },
+  {
+    query: "Hydrapple ex 011/131",
+    cardId: "sv8pt5-11",
+    setName: "Prismatic Evolutions",
+  },
+  {
+    query: "Paras GG32/GG70",
+    cardId: "swsh12pt5gg-GG32",
+    setName: "Crown Zenith: Galarian Gallery",
+  },
+  {
+    query: "Miraidon ex 081/198",
+    cardId: "sv1-81",
+    setName: "Scarlet & Violet",
+  },
+  {
     query: "Giacomo 138/131",
     cardId: "sv8pt5-138",
     setName: "Prismatic Evolutions",
