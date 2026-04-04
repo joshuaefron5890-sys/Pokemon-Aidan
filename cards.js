@@ -275,11 +275,13 @@ const CARD_LIST = [
     query: "Mawile 246/217",
     cardId: "me2pt5-246",
     setName: "Ascended Heroes",
+    fallbackPrice: 8.40,
   },
   {
     query: "Mega Charizard Y ex 022/217",
     cardId: "me2pt5-22",
     setName: "Ascended Heroes",
+    fallbackPrice: 6.00,
   },
   {
     query: "Mega Charizard X ex 013/094",
@@ -320,6 +322,18 @@ const CARD_LIST = [
     setName: "Mega Evolution Promos",
     imageUrl: "Litten.jpg",
     fallbackPrice: 7.99,
+  },
+  {
+    query: "Ethan's Typhlosion 190/182",
+    cardId: "sv10-190",
+    setName: "Destined Rivals",
+    grade: 8,
+  },
+  {
+    query: "N's Reshiram 167/159",
+    cardId: "sv9-167",
+    setName: "Journey Together",
+    grade: 9,
   },
   {
     query: "Giacomo 138/131",

@@ -203,6 +203,29 @@ header p.subtitle {
   z-index: 2;
 }
 
+/* Graded cards */
+.card-item.graded {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px #f59e0b, 0 4px 24px rgba(245,158,11,.35);
+}
+.card-item.graded:hover {
+  box-shadow: 0 0 0 2px #fbbf24, 0 16px 40px rgba(245,158,11,.55);
+}
+.card-grade-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: linear-gradient(135deg, #b45309, #f59e0b);
+  color: #fff;
+  font-size: .75rem;
+  font-weight: 800;
+  padding: .2rem .55rem;
+  border-radius: 20px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 6px rgba(0,0,0,.4);
+}
+
 /* Rarity glows */
 .rarity-secret {
   border-color: #a855f7;

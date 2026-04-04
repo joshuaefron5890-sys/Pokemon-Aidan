@@ -198,7 +198,8 @@ function getRarityClass(card) {
 
 function createCardElement(query, card, price, overrides = {}, isStaticPrice = false) {
   const wrapper = document.createElement("div");
-  wrapper.className = `card-item ${getRarityClass(card)}`;
+  const grade = overrides.grade ?? null;
+  wrapper.className = `card-item ${getRarityClass(card)}${grade ? " graded" : ""}`;
   wrapper.dataset.price = price ?? -1; // used for sorting
 
   const tcgUrl = getTcgPlayerUrl(card, query, overrides.tcgUrl);
@@ -218,6 +219,7 @@ function createCardElement(query, card, price, overrides = {}, isStaticPrice = f
           ? `<img src="${imgSrc}" alt="${cardName}" class="card-img" loading="lazy" />`
           : `<div class="card-img-placeholder"><span>${cardName}</span></div>`
         }
+        ${grade ? `<div class="card-grade-badge">Grade ${grade}</div>` : ""}
         ${price != null ? `<div class="card-price-badge${isStaticPrice ? " static" : ""}">${isStaticPrice ? "~" : ""}${priceDisplay}</div>` : ""}
       </div>
       <div class="card-info">
