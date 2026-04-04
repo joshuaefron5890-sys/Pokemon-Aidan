@@ -65,34 +65,36 @@ async function apiFetch(url) {
   }
 }
 
-async function fetchCard(query) {
-  const cached = getCached(query);
-  if (cached !== undefined) return cached; // null (not found) is also a valid cached result
+async function fetchCard(query, setName) {
+  const cacheKey = setName ? `${query}|${setName}` : query;
+  const cached = getCached(cacheKey);
+  if (cached !== undefined) return cached;
 
   const [namePart, numberPart] = parseCardQuery(query);
 
   try {
-    // First try: exact name + number
-    const q1 = `name:"${namePart}" number:"${numberPart}"`;
+    // First try: name + number (+ set name if provided)
+    let q1 = `name:"${namePart}" number:"${numberPart}"`;
+    if (setName) q1 += ` set.name:"${setName}"`;
     const json1 = await apiFetch(`${API_BASE}?q=${encodeURIComponent(q1)}&pageSize=10`);
     if (json1.data && json1.data.length > 0) {
       const card = json1.data.find(c => c.name.toLowerCase() === namePart.toLowerCase())
         || json1.data[0];
-      setCached(query, card);
+      setCached(cacheKey, card);
       return card;
     }
 
-    // Fallback: name only (catches cards where number format doesn't match)
+    // Fallback: name only
     const q2 = `name:"${namePart}"`;
     const json2 = await apiFetch(`${API_BASE}?q=${encodeURIComponent(q2)}&pageSize=10`);
     const card = (json2.data || []).find(c => c.name.toLowerCase() === namePart.toLowerCase())
       || json2.data?.[0]
       || null;
-    setCached(query, card);
+    setCached(cacheKey, card);
     return card;
   } catch (e) {
     console.warn(`Failed to fetch "${query}":`, e);
-    return null; // don't cache failures so we retry next visit
+    return null;
   }
 }
 
@@ -248,7 +250,7 @@ async function loadCollection() {
     CARD_LIST.map(async entry => {
       const query = entryQuery(entry);
       const overrides = entryOverrides(entry);
-      const card = await fetchCard(query);
+      const card = await fetchCard(query, overrides.setName);
       doneCount++;
       if (freshCount > 0) loadingEl.textContent = `Loading ${doneCount} / ${CARD_LIST.length}…`;
       return { query, card, price: getMarketPrice(card), overrides };

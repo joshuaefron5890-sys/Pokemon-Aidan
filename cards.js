@@ -14,13 +14,13 @@ const CARD_LIST = [
   "Mega Skarmory ex 055/088",
   {
     query: "Servine 088/086",
+    setName: "Black Bolt",
     tcgUrl: "https://www.tcgplayer.com/product/642537/pokemon-sv-black-bolt-servine-088-086?Language=English",
-    imageUrl: "https://product-images.tcgplayer.com/fit-in/437x437/642537.jpg",
   },
   {
     query: "Dewgong 097/094",
+    setName: "Phantasmal Flames",
     tcgUrl: "https://www.tcgplayer.com/product/662152/pokemon-me02-phantasmal-flames-dewgong-097-094?Language=English",
-    imageUrl: "https://product-images.tcgplayer.com/fit-in/437x437/662152.jpg",
   },
   "Blastoise-EX XY30",
   "Salazzle ex 101/088",
