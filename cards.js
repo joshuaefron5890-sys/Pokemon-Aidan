@@ -29,9 +29,10 @@ const CARD_LIST = [
   },
   {
     query: "Rowlet 043",
-    cardId: "mep-43", // ⚠️ MEP set not yet in pokemontcg.io — shows placeholder
+    cardId: "mep-43",
     setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/684467/pokemon-me-mega-evolution-promo-rowlet-043?page=1&Language=English",
+    imageUrl: "Rowlet.jpg",
   },
   {
     query: "Marill 232/217",
