@@ -199,11 +199,13 @@ const CARD_LIST = [
     query: "Gengar 050/088",
     cardId: "me3-50",
     setName: "Perfect Order",
+    fallbackPrice: 0.99,
   },
   {
     query: "Mega Froslass ex 265/217",
     cardId: "me2pt5-265",
     setName: "Ascended Heroes",
+    fallbackPrice: 17.25,
   },
   {
     query: "Mega Charizard X ex 109/094",
