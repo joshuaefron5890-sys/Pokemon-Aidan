@@ -302,6 +302,15 @@ header p.subtitle {
   color: var(--text-muted);
 }
 
+/* ── Load More Sentinel ────────────────────────────────── */
+.load-sentinel {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-size: .85rem;
+}
+
 /* ── Skeleton Loader ───────────────────────────────────── */
 .card-skeleton {
   pointer-events: none;
