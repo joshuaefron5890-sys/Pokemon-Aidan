@@ -196,7 +196,7 @@ function getRarityClass(card) {
 
 // ── Card rendering ─────────────────────────────────────────
 
-function createCardElement(query, card, price, overrides = {}) {
+function createCardElement(query, card, price, overrides = {}, isStaticPrice = false) {
   const wrapper = document.createElement("div");
   wrapper.className = `card-item ${getRarityClass(card)}`;
   wrapper.dataset.price = price ?? -1; // used for sorting
@@ -218,7 +218,7 @@ function createCardElement(query, card, price, overrides = {}) {
           ? `<img src="${imgSrc}" alt="${cardName}" class="card-img" loading="lazy" />`
           : `<div class="card-img-placeholder"><span>${cardName}</span></div>`
         }
-        ${price != null ? `<div class="card-price-badge">${priceDisplay}</div>` : ""}
+        ${price != null ? `<div class="card-price-badge${isStaticPrice ? " static" : ""}">${isStaticPrice ? "~" : ""}${priceDisplay}</div>` : ""}
       </div>
       <div class="card-info">
         <div class="card-name">${cardName}</div>
@@ -227,7 +227,7 @@ function createCardElement(query, card, price, overrides = {}) {
           <span class="card-number">#${cardNumber}</span>
           ${rarity ? `<span class="card-rarity">${rarity}</span>` : ""}
         </div>
-        <div class="card-price ${price == null ? "card-price-unknown" : ""}">${priceDisplay}</div>
+        <div class="card-price ${price == null ? "card-price-unknown" : isStaticPrice ? "card-price-static" : ""}">${isStaticPrice ? "~" : ""}${priceDisplay}</div>
       </div>
     </a>
   `;
@@ -258,8 +258,8 @@ function renderNextPage() {
   const sentinel = document.getElementById("load-sentinel");
   const start = currentPage * PAGE_SIZE;
   const slice = sortedResults.slice(start, start + PAGE_SIZE);
-  slice.forEach(({ query, card, price, overrides }) =>
-    grid.insertBefore(createCardElement(query, card, price, overrides), sentinel)
+  slice.forEach(({ query, card, price, overrides, isStaticPrice }) =>
+    grid.insertBefore(createCardElement(query, card, price, overrides, isStaticPrice), sentinel)
   );
   currentPage++;
   if (currentPage * PAGE_SIZE >= sortedResults.length) sentinel.style.display = "none";
@@ -303,9 +303,12 @@ async function loadCollection() {
       const query = entryQuery(entry);
       const overrides = entryOverrides(entry);
       const card = await fetchCard(query, overrides.setName, overrides.cardId);
+      const apiPrice = getMarketPrice(card);
+      const price = apiPrice ?? overrides.fallbackPrice ?? null;
+      const isStaticPrice = apiPrice == null && overrides.fallbackPrice != null;
       doneCount++;
       if (freshCount > 0) loadingEl.textContent = `Loading ${doneCount} / ${CARD_LIST.length}…`;
-      return { query, card, price: getMarketPrice(card), overrides };
+      return { query, card, price, overrides, isStaticPrice };
     })
   );
 

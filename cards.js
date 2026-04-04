@@ -33,12 +33,14 @@ const CARD_LIST = [
     setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/684467/pokemon-me-mega-evolution-promo-rowlet-043?page=1&Language=English",
     imageUrl: "Rowlet.jpg",
+    fallbackPrice: 9.80,
   },
   {
     query: "Marill 232/217",
     cardId: "me2pt5-232",
     setName: "Ascended Heroes",
     tcgUrl: "https://www.tcgplayer.com/product/676044/pokemon-me-ascended-heroes-marill-232-217",
+    fallbackPrice: 15.00,
   },
   {
     query: "Pidgeotto 208/197",
@@ -51,12 +53,14 @@ const CARD_LIST = [
     cardId: "svp-203",
     setName: "Scarlet & Violet Black Star Promos",
     tcgUrl: "https://www.tcgcollector.com/cards/49288/team-rockets-wobbuffet-scarlet-and-violet-promos-203",
+    fallbackPrice: 9.17,
   },
   {
     query: "Mega Skarmory ex 055/088",
     cardId: "me3-55",
     setName: "Perfect Order",
     tcgUrl: "https://www.tcgplayer.com/product/684351/pokemon-me03-perfect-order-mega-skarmory-ex-055-088",
+    fallbackPrice: 1.24,
   },
   {
     query: "Servine 088/086",
@@ -81,6 +85,7 @@ const CARD_LIST = [
     cardId: "me3-101",
     setName: "Perfect Order",
     tcgUrl: "https://www.tcgplayer.com/product/684377/pokemon-me03-perfect-order-salazzle-ex-101-088",
+    fallbackPrice: 2.13,
   },
   {
     query: "Tyrunt 070",
@@ -88,6 +93,7 @@ const CARD_LIST = [
     setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/685562/pokemon-me-mega-evolution-promo-tyrunt-070",
     imageUrl: "Tyrunt.jpg",
+    fallbackPrice: 6.41,
   },
   {
     query: "Snorlax 051",
@@ -101,6 +107,7 @@ const CARD_LIST = [
     setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/684469/pokemon-me-mega-evolution-promo-popplio-045",
     imageUrl: "Popplio.jpg",
+    fallbackPrice: 7.03,
   },
   {
     query: "Mismagius ex 112/094",
@@ -131,6 +138,7 @@ const CARD_LIST = [
     cardId: "me2pt5-258",
     setName: "Ascended Heroes",
     tcgUrl: "https://www.tcgplayer.com/product/676070/pokemon-me-ascended-heroes-cheren",
+    fallbackPrice: 1.00,
   },
   {
     query: "Ethan's Ho-Oh ex 039/182",
@@ -199,6 +207,7 @@ const CARD_LIST = [
     cardId: "me2pt5-84",
     setName: "Ascended Heroes",
     tcgUrl: "https://www.tcgplayer.com/product/675896/pokemon-me-ascended-heroes-azumarill-ex?page=1&Language=English",
+    fallbackPrice: 0.80,
   },
   {
     query: "Tyme 143/131",

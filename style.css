@@ -344,6 +344,14 @@ header p.subtitle {
   color: var(--text-muted);
 }
 
+.card-price-static {
+  color: #a89060;
+}
+.card-price-badge.static {
+  color: #c8a96e;
+  border-color: rgba(200,169,110,.3);
+}
+
 /* ── Load More Sentinel ────────────────────────────────── */
 .load-sentinel {
   grid-column: 1 / -1;
