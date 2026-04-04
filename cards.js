@@ -14,6 +14,6 @@ const CARD_LIST = [
   "Mega Skarmory ex 055/088",
   "Servine 088/086",
   "Dewgong 097/094",
-  "Blastoise ex XY30",
+  "Blastoise-EX XY30",
   "Salazzle ex 101/088",
 ];
