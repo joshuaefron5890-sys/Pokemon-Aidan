@@ -197,4 +197,9 @@ const CARD_LIST = [
     setName: "Ascended Heroes",
     tcgUrl: "https://www.tcgplayer.com/product/675896/pokemon-me-ascended-heroes-azumarill-ex?page=1&Language=English",
   },
+  {
+    query: "Tyme 143/131",
+    cardId: "sv8pt5-143",
+    setName: "Prismatic Evolutions",
+  },
 ];
