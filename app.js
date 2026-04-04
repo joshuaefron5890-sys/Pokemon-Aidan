@@ -1,5 +1,5 @@
 const API_BASE = "https://api.pokemontcg.io/v2/cards";
-const CACHE_KEY = "pokemon_portfolio_cache_v2";
+const CACHE_KEY = "pokemon_portfolio_cache_v3";
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 const FETCH_TIMEOUT_MS = 5000;             // 5 seconds per card
 const PAGE_SIZE = 20;
@@ -94,7 +94,13 @@ async function fetchCard(query, setName, cardId) {
       return card;
     }
 
-    // Fallback: name only
+    // Only fall back to name-only if no setName was specified
+    // (if setName was given and didn't match, return null rather than a wrong card)
+    if (setName) {
+      setCached(cacheKey, null);
+      return null;
+    }
+
     const q2 = `name:"${namePart}"`;
     const json2 = await apiFetch(`${API_BASE}?q=${encodeURIComponent(q2)}&pageSize=10`);
     const card = (json2.data || []).find(c => c.name.toLowerCase() === namePart.toLowerCase())

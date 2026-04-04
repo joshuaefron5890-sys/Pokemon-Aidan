@@ -55,6 +55,7 @@ const CARD_LIST = [
   },
   {
     query: "Dewgong 097/094",
+    cardId: "me2-97",
     setName: "Phantasmal Flames",
     tcgUrl: "https://www.tcgplayer.com/product/662152/pokemon-me02-phantasmal-flames-dewgong-097-094?Language=English&page=1",
   },
@@ -75,6 +76,7 @@ const CARD_LIST = [
   },
   {
     query: "Snorlax 051",
+    cardId: "svp-51",
     setName: "Scarlet & Violet Black Star Promos",
     tcgUrl: "https://www.tcgplayer.com/product/517175/pokemon-sv-scarlet-and-violet-promo-cards-snorlax-051",
   },
