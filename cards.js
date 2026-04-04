@@ -261,6 +261,12 @@ const CARD_LIST = [
     setName: "Pokemon 151",
   },
   {
+    query: "Pikachu 088",
+    cardId: "svp-88",
+    setName: "Scarlet & Violet Black Star Promos",
+    tcgUrl: "https://www.tcgplayer.com/product/542481/pokemon-sv-scarlet-and-violet-promo-cards-pikachu-088?page=1&Language=English",
+  },
+  {
     query: "Zeraora V 166/198",
     cardId: "swsh6-166",
     setName: "Chilling Reign",
