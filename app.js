@@ -1,11 +1,18 @@
 const API_BASE = "https://api.pokemontcg.io/v2/cards";
-const CACHE_KEY = "pokemon_portfolio_cache";
+const CACHE_KEY = "pokemon_portfolio_cache_v2"; // bumped to invalidate stale entries
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 const FETCH_TIMEOUT_MS = 5000;             // 5 seconds per card
 const PAGE_SIZE = 20;
 
+// ── Normalize CARD_LIST entries ───────────────────────────────
+// Entries can be strings or { query, id } objects
+
+function normalizeEntry(entry) {
+  if (typeof entry === "string") return { query: entry, id: null };
+  return { query: entry.query, id: entry.id || null };
+}
+
 // ── Cache helpers ──────────────────────────────────────────
-// Uses undefined as "not in cache" so null (card not found) can be cached too
 
 function loadCache() {
   try {
@@ -22,17 +29,17 @@ function saveCache(cache) {
   } catch { /* storage full — skip */ }
 }
 
-function getCached(query) {
+function getCached(key) {
   const cache = loadCache();
-  const entry = cache[query];
-  if (entry === undefined) return undefined;         // not cached
-  if (Date.now() - entry.ts > CACHE_TTL_MS) return undefined; // expired
-  return entry.card;                                 // may be null (not found)
+  const entry = cache[key];
+  if (entry === undefined) return undefined;
+  if (Date.now() - entry.ts > CACHE_TTL_MS) return undefined;
+  return entry.card;
 }
 
-function setCached(query, card) {
+function setCached(key, card) {
   const cache = loadCache();
-  cache[query] = { card, ts: Date.now() };
+  cache[key] = { card, ts: Date.now() };
   saveCache(cache);
 }
 
@@ -52,9 +59,25 @@ async function apiFetch(url) {
   }
 }
 
-async function fetchCard(query) {
+async function fetchCardById(id) {
+  const cacheKey = `id:${id}`;
+  const cached = getCached(cacheKey);
+  if (cached !== undefined) return cached;
+
+  try {
+    const json = await apiFetch(`${API_BASE}/${encodeURIComponent(id)}`);
+    const card = json.data || null;
+    setCached(cacheKey, card);
+    return card;
+  } catch (e) {
+    console.warn(`Failed to fetch card by ID "${id}":`, e);
+    return null;
+  }
+}
+
+async function fetchCardByQuery(query) {
   const cached = getCached(query);
-  if (cached !== undefined) return cached; // null (not found) is also a valid cached result
+  if (cached !== undefined) return cached;
 
   const [namePart, numberPart] = parseCardQuery(query);
 
@@ -69,7 +92,7 @@ async function fetchCard(query) {
       return card;
     }
 
-    // Fallback: name only (catches cards where number format doesn't match)
+    // Fallback: name only
     const q2 = `name:"${namePart}"`;
     const json2 = await apiFetch(`${API_BASE}?q=${encodeURIComponent(q2)}&pageSize=10`);
     const card = (json2.data || []).find(c => c.name.toLowerCase() === namePart.toLowerCase())
@@ -79,8 +102,14 @@ async function fetchCard(query) {
     return card;
   } catch (e) {
     console.warn(`Failed to fetch "${query}":`, e);
-    return null; // don't cache failures so we retry next visit
+    return null;
   }
+}
+
+async function fetchCard(entry) {
+  const { query, id } = normalizeEntry(entry);
+  if (id) return fetchCardById(id);
+  return fetchCardByQuery(query);
 }
 
 function parseCardQuery(query) {
@@ -130,7 +159,7 @@ function getRarityClass(card) {
 function createCardElement(query, card, price) {
   const wrapper = document.createElement("div");
   wrapper.className = `card-item ${getRarityClass(card)}`;
-  wrapper.dataset.price = price ?? -1; // used for sorting
+  wrapper.dataset.price = price ?? -1;
 
   const tcgUrl = getTcgPlayerUrl(card, query);
   const imgSrc = card?.images?.large || card?.images?.small || "";
@@ -179,6 +208,56 @@ function createSkeletonCard() {
   return el;
 }
 
+// ── Diagnostic Audit Table ────────────────────────────────
+
+function buildAuditTable(results) {
+  const section = document.getElementById("audit-section");
+  if (!section) return;
+
+  const tbody = section.querySelector("tbody");
+  tbody.innerHTML = "";
+
+  let allMatch = true;
+
+  results.forEach(({ query, id, card, price }) => {
+    const [expectedName, expectedNum] = parseCardQuery(query);
+    const apiName = card?.name || "—";
+    const apiSet = card?.set?.name || "—";
+    const apiNum = card ? `${card.number}/${card.set?.printedTotal || card.set?.total || "?"}` : "—";
+    const apiId = card?.id || "—";
+    const imgSrc = card?.images?.small || "";
+
+    // Check if the returned card number matches what was queried
+    const returnedNum = card?.number || "";
+    const match = returnedNum === expectedNum;
+    if (!match) allMatch = false;
+
+    const tr = document.createElement("tr");
+    tr.className = match ? "audit-match" : "audit-mismatch";
+    tr.innerHTML = `
+      <td>${query}${id ? `<br><small>id: ${id}</small>` : ""}</td>
+      <td>${expectedNum || "—"}</td>
+      <td>${apiId}</td>
+      <td>${apiName}<br><small>${apiSet} #${apiNum}</small></td>
+      <td class="audit-status">${match ? "✓" : "⚠️"}</td>
+      <td>${formatPrice(price)}</td>
+      <td>${imgSrc ? `<img src="${imgSrc}" class="audit-img" />` : "—"}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Show the section
+  section.style.display = "block";
+  const heading = section.querySelector("h2");
+  if (allMatch) {
+    heading.textContent = "Audit: All cards matched ✓";
+    heading.style.color = "#4ade80";
+  } else {
+    heading.textContent = "Audit: Mismatches found ⚠️";
+    heading.style.color = "#f59e0b";
+  }
+}
+
 // ── Pagination ─────────────────────────────────────────────
 
 let sortedResults = [];
@@ -215,8 +294,13 @@ async function loadCollection() {
 
   countEl.textContent = CARD_LIST.length;
 
-  // Count how many are already cached (undefined = not cached)
-  const freshCount = CARD_LIST.filter(q => getCached(q) === undefined).length;
+  // Count how many are already cached
+  const freshCount = CARD_LIST.filter(entry => {
+    const { query, id } = normalizeEntry(entry);
+    const key = id ? `id:${id}` : query;
+    return getCached(key) === undefined;
+  }).length;
+
   loadingEl.textContent = freshCount === 0
     ? "Loading from cache…"
     : freshCount === CARD_LIST.length
@@ -227,16 +311,20 @@ async function loadCollection() {
   const skeletonCount = Math.min(PAGE_SIZE, CARD_LIST.length);
   for (let i = 0; i < skeletonCount; i++) grid.insertBefore(createSkeletonCard(), sentinel);
 
-  // Fetch all in parallel — cached cards return immediately, others have a 5s timeout
+  // Fetch all in parallel
   let doneCount = 0;
   const results = await Promise.all(
-    CARD_LIST.map(async query => {
-      const card = await fetchCard(query);
+    CARD_LIST.map(async entry => {
+      const { query, id } = normalizeEntry(entry);
+      const card = await fetchCard(entry);
       doneCount++;
       if (freshCount > 0) loadingEl.textContent = `Loading ${doneCount} / ${CARD_LIST.length}…`;
-      return { query, card, price: getMarketPrice(card) };
+      return { query, id, card, price: getMarketPrice(card) };
     })
   );
+
+  // Build audit table (for debugging)
+  buildAuditTable(results);
 
   // Sort by price descending (no price → end)
   sortedResults = results.sort((a, b) => {
