@@ -3,5 +3,7 @@
 // Add or remove cards here to update the portfolio
 
 const CARD_LIST = [
-  "Drayton 232/191",
+  "Bulbasaur 133/132",
+  "Snorlax 051",
+  "Mega Sharpedo ex 113/094",
 ];
