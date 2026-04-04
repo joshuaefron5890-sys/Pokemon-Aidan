@@ -365,17 +365,20 @@ const CARD_LIST = [
     query: "Yveltal ex 053/088",
     cardId: "me3-53",
     setName: "Perfect Order",
+    fallbackPrice: 0.99,
   },
   {
     query: "Talonflame 091/088",
     cardId: "me3-91",
     setName: "Perfect Order",
+    fallbackPrice: 4.29,
   },
   {
     query: "Thundurus 209",
     cardId: "svp-209",
     setName: "Scarlet & Violet Black Star Promos",
     tcgUrl: "https://www.tcgplayer.com/product/644833/pokemon-sv-scarlet-and-violet-promo-cards-thundurus-209?page=1&Language=English",
+    fallbackPrice: 1.96,
   },
   {
     query: "Brassius 135/131",
@@ -396,6 +399,36 @@ const CARD_LIST = [
     query: "Miraidon ex 081/198",
     cardId: "sv1-81",
     setName: "Scarlet & Violet",
+  },
+  {
+    query: "Iron Leaves ex 176/131",
+    cardId: "sv8pt5-176",
+    setName: "Prismatic Evolutions",
+  },
+  {
+    query: "Team Rocket's Orbeetle 198/182",
+    cardId: "sv10-198",
+    setName: "Destined Rivals",
+  },
+  {
+    query: "Garganacl 202/182",
+    cardId: "sv10-202",
+    setName: "Destined Rivals",
+  },
+  {
+    query: "Cramorant 176/167",
+    cardId: "sv6-176",
+    setName: "Twilight Masquerade",
+  },
+  {
+    query: "Terapagos ex 092/131",
+    cardId: "sv8pt5-92",
+    setName: "Prismatic Evolutions",
+  },
+  {
+    query: "Mega Latias ex 100/132",
+    cardId: "me1-100",
+    setName: "Mega Evolution",
   },
   {
     query: "Giacomo 138/131",
