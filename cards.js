@@ -290,6 +290,8 @@ const CARD_LIST = [
     query: "Litten 044",
     cardId: "mep-44",
     setName: "Mega Evolution Promos",
+    imageUrl: "Litten.jpg",
+    fallbackPrice: 7.99,
   },
   {
     query: "Giacomo 138/131",
