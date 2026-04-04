@@ -224,6 +224,48 @@ const CARD_LIST = [
     tcgUrl: "https://www.tcgplayer.com/product/527878/pokemon-sv-scarlet-and-violet-promo-cards-roaring-moon-ex-067?page=1&Language=English",
   },
   {
+    query: "Mega Mawile ex 162/132",
+    cardId: "me1-162",
+    setName: "Mega Evolution",
+  },
+  {
+    query: "Lillie's Clefairy ex 056/159",
+    cardId: "sv9-56",
+    setName: "Journey Together",
+    tcgUrl: "https://www.tcgplayer.com/product/623483/pokemon-sv09-journey-together-lillies-clefairy-ex-056-159?page=1&Language=English",
+  },
+  {
+    query: "Ninetales ex 038/165",
+    cardId: "sv3pt5-38",
+    setName: "Pokemon 151",
+  },
+  {
+    query: "Ludicolo 095/094",
+    cardId: "me2-95",
+    setName: "Phantasmal Flames",
+  },
+  {
+    query: "Spearow 151/132",
+    cardId: "me1-151",
+    setName: "Mega Evolution",
+  },
+  {
+    query: "Mega Starmie ex 021/088",
+    cardId: "me3-21",
+    setName: "Perfect Order",
+  },
+  {
+    query: "Squirtle 007/165",
+    cardId: "sv3pt5-7",
+    setName: "Pokemon 151",
+  },
+  {
+    query: "Pikachu 018/091",
+    cardId: "tottg24-18",
+    setName: "Trick or Trade 2024",
+    tcgUrl: "https://www.tcgplayer.com/product/569132/pokemon-trick-or-trade-booster-bundle-2024-pikachu-018-091-cosmos-holo?page=1&Language=English",
+  },
+  {
     query: "Giacomo 138/131",
     cardId: "sv8pt5-138",
     setName: "Prismatic Evolutions",
