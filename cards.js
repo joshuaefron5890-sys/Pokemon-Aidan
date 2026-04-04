@@ -159,6 +159,26 @@ const CARD_LIST = [
     tcgUrl: "https://www.tcgplayer.com/product/477057/pokemon-crown-zenith-galarian-gallery-mewtwo-vstar",
   },
   {
+    query: "Wigglytuff 105/094",
+    cardId: "me2-105",
+    setName: "Phantasmal Flames",
+  },
+  {
+    query: "Toxtricity 103/094",
+    cardId: "me2-103",
+    setName: "Phantasmal Flames",
+  },
+  {
+    query: "Dedenne 093/088",
+    cardId: "me3-93",
+    setName: "Perfect Order",
+  },
+  {
+    query: "Ethan's Ho-Oh ex 209/182",
+    cardId: "sv10-209",
+    setName: "Destined Rivals",
+  },
+  {
     query: "Giacomo 138/131",
     cardId: "sv8pt5-138",
     setName: "Prismatic Evolutions",
