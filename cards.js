@@ -336,6 +336,37 @@ const CARD_LIST = [
     grade: 9,
   },
   {
+    query: "Slaking ex 227/191",
+    cardId: "sv8-227",
+    setName: "Surging Sparks",
+  },
+  {
+    query: "Arcanine ex 032/198",
+    cardId: "sv1-32",
+    setName: "Scarlet & Violet",
+  },
+  {
+    query: "Gouging Fire ex 144",
+    cardId: "svp-144",
+    setName: "Scarlet & Violet Black Star Promos",
+    tcgUrl: "https://www.tcgplayer.com/product/579993/pokemon-sv-scarlet-and-violet-promo-cards-gouging-fire-ex-144?page=1&Language=English",
+  },
+  {
+    query: "Yanmega ex 003/182",
+    cardId: "sv10-3",
+    setName: "Destined Rivals",
+  },
+  {
+    query: "Team Rocket's Persian ex 150/182",
+    cardId: "sv10-150",
+    setName: "Destined Rivals",
+  },
+  {
+    query: "Yveltal ex 053/088",
+    cardId: "me3-53",
+    setName: "Perfect Order",
+  },
+  {
     query: "Giacomo 138/131",
     cardId: "sv8pt5-138",
     setName: "Prismatic Evolutions",
