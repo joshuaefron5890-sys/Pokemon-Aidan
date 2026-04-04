@@ -267,6 +267,26 @@ const CARD_LIST = [
     tcgUrl: "https://www.tcgplayer.com/product/542481/pokemon-sv-scarlet-and-violet-promo-cards-pikachu-088?page=1&Language=English",
   },
   {
+    query: "Mareep GG34/GG70",
+    cardId: "swsh12pt5gg-GG34",
+    setName: "Crown Zenith: Galarian Gallery",
+  },
+  {
+    query: "Mawile 246/217",
+    cardId: "me2pt5-246",
+    setName: "Ascended Heroes",
+  },
+  {
+    query: "Mega Charizard Y ex 022/217",
+    cardId: "me2pt5-22",
+    setName: "Ascended Heroes",
+  },
+  {
+    query: "Mega Charizard X ex 013/094",
+    cardId: "me2-13",
+    setName: "Phantasmal Flames",
+  },
+  {
     query: "Zeraora V 166/198",
     cardId: "swsh6-166",
     setName: "Chilling Reign",
