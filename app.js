@@ -1,5 +1,5 @@
 const API_BASE = "https://api.pokemontcg.io/v2/cards";
-const CACHE_KEY = "pokemon_portfolio_cache_v4";
+const CACHE_KEY = "pokemon_portfolio_cache_v5";
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 const FETCH_TIMEOUT_MS = 5000;             // 5 seconds per card
 const PAGE_SIZE = 20;
@@ -79,8 +79,9 @@ async function fetchCard(query, setName, cardId) {
     // If we have an exact card ID, fetch directly — no search needed
     if (cardId) {
       const json = await apiFetch(`${API_BASE}/${cardId}`);
-      setCached(cacheKey, json || null);
-      return json || null;
+      const card = json?.data || null; // single-card endpoint wraps in { data: {...} }
+      setCached(cacheKey, card);
+      return card;
     }
 
     // First try: name + number (+ set name if provided)
