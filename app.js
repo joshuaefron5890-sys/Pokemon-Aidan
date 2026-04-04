@@ -1,5 +1,6 @@
 const API_BASE = "https://api.pokemontcg.io/v2/cards";
-const CACHE_KEY = "pokemon_portfolio_cache_v5";
+const TCGDEX_BASE = "https://api.tcgdex.net/v2/en/cards";
+const CACHE_KEY = "pokemon_portfolio_cache_v6";
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 const FETCH_TIMEOUT_MS = 5000;             // 5 seconds per card
 const PAGE_SIZE = 20;
@@ -54,6 +55,28 @@ function setCached(query, card) {
 
 // ── API ────────────────────────────────────────────────────
 
+// Normalize a TCGdex card response to the same shape as pokemontcg.io
+function normalizeTcgdexCard(json) {
+  if (!json || !json.name) return null;
+  const imgBase = json.image || "";
+  return {
+    id: json.id,
+    name: json.name,
+    number: String(json.localId || json.number || ""),
+    images: {
+      large: imgBase ? `${imgBase}/high.webp` : "",
+      small: imgBase ? `${imgBase}/low.webp` : "",
+    },
+    set: {
+      name: json.set?.name || "",
+      printedTotal: json.set?.cardCount?.total ?? json.set?.total ?? "?",
+      total: json.set?.cardCount?.total ?? json.set?.total ?? "?",
+    },
+    rarity: json.rarity || "",
+    tcgplayer: null, // TCGdex has no price data
+  };
+}
+
 async function apiFetch(url) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -78,8 +101,20 @@ async function fetchCard(query, setName, cardId) {
   try {
     // If we have an exact card ID, fetch directly — no search needed
     if (cardId) {
-      const json = await apiFetch(`${API_BASE}/${cardId}`);
-      const card = json?.data || null; // single-card endpoint wraps in { data: {...} }
+      let card = null;
+      try {
+        const json = await apiFetch(`${API_BASE}/${cardId}`);
+        card = json?.data || null; // single-card endpoint wraps in { data: {...} }
+      } catch { /* pokemontcg.io 404 or network error — fall through to TCGdex */ }
+
+      // TCGdex fallback for cards not yet in pokemontcg.io (e.g. MEP promos)
+      if (!card) {
+        try {
+          const tcgJson = await apiFetch(`${TCGDEX_BASE}/${cardId}`);
+          card = normalizeTcgdexCard(tcgJson);
+        } catch { /* TCGdex also failed — card stays null */ }
+      }
+
       setCached(cacheKey, card);
       return card;
     }

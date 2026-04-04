@@ -147,4 +147,24 @@ const CARD_LIST = [
     setName: "Crown Zenith: Galarian Gallery",
     tcgUrl: "https://www.tcgplayer.com/product/477057/pokemon-crown-zenith-galarian-gallery-mewtwo-vstar",
   },
+  {
+    query: "Giacomo 138/131",
+    cardId: "sv8pt5-138",
+    setName: "Prismatic Evolutions",
+  },
+  {
+    query: "Arboliva ex 023/182",
+    cardId: "sv10-23",
+    setName: "Destined Rivals",
+  },
+  {
+    query: "Okidogi ex 036/064",
+    cardId: "sv6pt5-36",
+    setName: "Shrouded Fable",
+  },
+  {
+    query: "Kyurem ex 028/086",
+    cardId: "zsv10pt5-28",
+    setName: "Black Bolt",
+  },
 ];
