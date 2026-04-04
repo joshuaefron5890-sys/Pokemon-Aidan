@@ -1,5 +1,5 @@
 const API_BASE = "https://api.pokemontcg.io/v2/cards";
-const CACHE_KEY = "pokemon_portfolio_cache_v2"; // bumped to invalidate stale entries
+const CACHE_KEY = "pokemon_portfolio_cache_v3"; // bumped to invalidate stale entries
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 const FETCH_TIMEOUT_MS = 5000;             // 5 seconds per card
 const PAGE_SIZE = 20;
@@ -81,9 +81,12 @@ async function fetchCardByQuery(query) {
 
   const [namePart, numberPart] = parseCardQuery(query);
 
+  // Escape special chars for Lucene query syntax (apostrophes, colons, etc.)
+  const escapedName = namePart.replace(/(['\-\+\&\|\!\(\)\{\}\[\]\^~\*\?\\:\/])/g, "\\$1");
+
   try {
     // First try: exact name + number
-    const q1 = `name:"${namePart}" number:"${numberPart}"`;
+    const q1 = `name:"${escapedName}" number:"${numberPart}"`;
     const json1 = await apiFetch(`${API_BASE}?q=${encodeURIComponent(q1)}&pageSize=10`);
     if (json1.data && json1.data.length > 0) {
       const card = json1.data.find(c => c.name.toLowerCase() === namePart.toLowerCase())
@@ -92,11 +95,21 @@ async function fetchCardByQuery(query) {
       return card;
     }
 
-    // Fallback: name only
-    const q2 = `name:"${namePart}"`;
+    // Second try: name only (with escaping)
+    const q2 = `name:"${escapedName}"`;
     const json2 = await apiFetch(`${API_BASE}?q=${encodeURIComponent(q2)}&pageSize=10`);
-    const card = (json2.data || []).find(c => c.name.toLowerCase() === namePart.toLowerCase())
-      || json2.data?.[0]
+    if (json2.data && json2.data.length > 0) {
+      const card = json2.data.find(c => c.name.toLowerCase() === namePart.toLowerCase())
+        || json2.data[0];
+      setCached(query, card);
+      return card;
+    }
+
+    // Third try: wildcard name search (handles partial matches like "Ethan's Ho-Oh ex")
+    const q3 = `name:"${escapedName}*"`;
+    const json3 = await apiFetch(`${API_BASE}?q=${encodeURIComponent(q3)}&pageSize=10`);
+    const card = (json3.data || []).find(c => c.name.toLowerCase() === namePart.toLowerCase())
+      || json3.data?.[0]
       || null;
     setCached(query, card);
     return card;
