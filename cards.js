@@ -1,17 +1,53 @@
 // Aidan's Pokemon Card Collection
-// Format: "Card Name Set-Number/Total" or "Card Name Number/Total"
-// Add or remove cards here to update the portfolio
+// Each entry can be a plain string or an object with overrides:
+// { query, setName, tcgUrl }
 
 const CARD_LIST = [
-  "Bulbasaur 133/132",
-  "Mega Sharpedo ex 113/094",
-  "Whirlipede 133/086",
-  "Throh 128/086",
-  "Rowlet 043",
-  "Marill 232/217",
-  "Pidgeotto 208/197",
-  "Team Rocket's Wobbuffet 203",
-  "Mega Skarmory ex 055/088",
+  {
+    query: "Bulbasaur 133/132",
+    setName: "Mega Evolution",
+    tcgUrl: "https://www.tcgplayer.com/product/654472/pokemon-me01-mega-evolution-bulbasaur-133-132",
+  },
+  {
+    query: "Mega Sharpedo ex 113/094",
+    setName: "Phantasmal Flames",
+    tcgUrl: "https://www.tcgplayer.com/product/662192/pokemon-me02-phantasmal-flames-mega-sharpedo-ex-113-094",
+  },
+  {
+    query: "Whirlipede 133/086",
+    setName: "Black Bolt",
+    tcgUrl: "https://www.tcgplayer.com/product/642588/pokemon-sv-black-bolt-whirlipede-133-086",
+  },
+  {
+    query: "Throh 128/086",
+    setName: "Black Bolt",
+    tcgUrl: "https://www.tcgplayer.com/product/642583/pokemon-sv-black-bolt-throh-128-086",
+  },
+  {
+    query: "Rowlet 043",
+    setName: "Mega Evolution",
+    tcgUrl: "https://www.tcgplayer.com/product/684467/pokemon-me-mega-evolution-promo-rowlet-043",
+  },
+  {
+    query: "Marill 232/217",
+    setName: "Ascended Heroes",
+    tcgUrl: "https://www.tcgplayer.com/product/676044/pokemon-me-ascended-heroes-marill-232-217",
+  },
+  {
+    query: "Pidgeotto 208/197",
+    setName: "Obsidian Flames",
+    tcgUrl: "https://www.tcgplayer.com/product/509956/pokemon-sv03-obsidian-flames-pidgeotto-208-197",
+  },
+  {
+    query: "Team Rocket's Wobbuffet 203",
+    setName: "Scarlet & Violet Black Star Promos",
+    tcgUrl: "https://www.tcgcollector.com/cards/49288/team-rockets-wobbuffet-scarlet-and-violet-promos-203",
+  },
+  {
+    query: "Mega Skarmory ex 055/088",
+    setName: "Perfect Order",
+    tcgUrl: "https://www.tcgplayer.com/product/684351/pokemon-me03-perfect-order-mega-skarmory-ex-055-088",
+  },
   {
     query: "Servine 088/086",
     setName: "Black Bolt",
@@ -22,6 +58,14 @@ const CARD_LIST = [
     setName: "Phantasmal Flames",
     tcgUrl: "https://www.tcgplayer.com/product/662152/pokemon-me02-phantasmal-flames-dewgong-097-094?Language=English",
   },
-  "Blastoise-EX XY30",
-  "Salazzle ex 101/088",
+  {
+    query: "Blastoise-EX XY30",
+    setName: "XY Black Star Promos",
+    tcgUrl: "https://www.tcgplayer.com/product/96393/pokemon-xy-promos-blastoise-ex-xy30?Language=English",
+  },
+  {
+    query: "Salazzle ex 101/088",
+    setName: "Perfect Order",
+    tcgUrl: "https://www.tcgplayer.com/product/684377/pokemon-me03-perfect-order-salazzle-ex-101-088",
+  },
 ];
