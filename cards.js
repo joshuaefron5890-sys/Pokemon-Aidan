@@ -12,7 +12,11 @@ const CARD_LIST = [
   "Pidgeotto 208/197",
   "Team Rocket's Wobbuffet 203",
   "Mega Skarmory ex 055/088",
-  "Servine 088/086",
+  {
+    query: "Servine 088/086",
+    tcgUrl: "https://www.tcgplayer.com/product/642537/pokemon-sv-black-bolt-servine-088-086?Language=English",
+    imageUrl: "https://product-images.tcgplayer.com/fit-in/437x437/642537.jpg",
+  },
   {
     query: "Dewgong 097/094",
     tcgUrl: "https://www.tcgplayer.com/product/662152/pokemon-me02-phantasmal-flames-dewgong-097-094?Language=English",
