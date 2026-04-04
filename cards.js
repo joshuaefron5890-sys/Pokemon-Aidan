@@ -172,6 +172,8 @@ const CARD_LIST = [
     query: "Dedenne 093/088",
     cardId: "me3-93",
     setName: "Perfect Order",
+    imageUrl: "Dedenne.jpg",
+    fallbackPrice: 13.42,
   },
   {
     query: "Ethan's Ho-Oh ex 209/182",
