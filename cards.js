@@ -261,6 +261,12 @@ const CARD_LIST = [
     setName: "Pokemon 151",
   },
   {
+    query: "Zeraora V 166/198",
+    cardId: "swsh6-166",
+    setName: "Chilling Reign",
+    tcgUrl: "https://www.tcgplayer.com/product/241712/pokemon-swsh06-chilling-reign-zeraora-v-alternate-full-art?page=1&Language=English",
+  },
+  {
     query: "Mega Lucario ex 113/217",
     cardId: "me2pt5-113",
     setName: "Ascended Heroes",
