@@ -1,55 +1,65 @@
 // Aidan's Pokemon Card Collection
-// Each entry can be a plain string or an object with overrides:
-// { query, setName, tcgUrl }
+// Every card uses a direct pokemontcg.io cardId for reliable lookups.
+// Cards marked ⚠️ are from sets not yet in the API — show as placeholders.
 
 const CARD_LIST = [
   {
     query: "Bulbasaur 133/132",
+    cardId: "me1-133",
     setName: "Mega Evolution",
     tcgUrl: "https://www.tcgplayer.com/product/654472/pokemon-me01-mega-evolution-bulbasaur-133-132",
   },
   {
     query: "Mega Sharpedo ex 113/094",
+    cardId: "me2-113",
     setName: "Phantasmal Flames",
     tcgUrl: "https://www.tcgplayer.com/product/662192/pokemon-me02-phantasmal-flames-mega-sharpedo-ex-113-094",
   },
   {
     query: "Whirlipede 133/086",
+    cardId: "zsv10pt5-133",
     setName: "Black Bolt",
     tcgUrl: "https://www.tcgplayer.com/product/642588/pokemon-sv-black-bolt-whirlipede-133-086",
   },
   {
     query: "Throh 128/086",
+    cardId: "zsv10pt5-128",
     setName: "Black Bolt",
     tcgUrl: "https://www.tcgplayer.com/product/642583/pokemon-sv-black-bolt-throh-128-086",
   },
   {
     query: "Rowlet 043",
-    setName: "Mega Evolution",
+    cardId: "mep-43", // ⚠️ MEP set not yet in pokemontcg.io — shows placeholder
+    setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/684467/pokemon-me-mega-evolution-promo-rowlet-043?page=1&Language=English",
   },
   {
     query: "Marill 232/217",
+    cardId: "me2pt5-232",
     setName: "Ascended Heroes",
     tcgUrl: "https://www.tcgplayer.com/product/676044/pokemon-me-ascended-heroes-marill-232-217",
   },
   {
     query: "Pidgeotto 208/197",
+    cardId: "sv3-208",
     setName: "Obsidian Flames",
     tcgUrl: "https://www.tcgplayer.com/product/509956/pokemon-sv03-obsidian-flames-pidgeotto-208-197",
   },
   {
     query: "Team Rocket's Wobbuffet 203",
+    cardId: "svp-203",
     setName: "Scarlet & Violet Black Star Promos",
     tcgUrl: "https://www.tcgcollector.com/cards/49288/team-rockets-wobbuffet-scarlet-and-violet-promos-203",
   },
   {
     query: "Mega Skarmory ex 055/088",
+    cardId: "me3-55",
     setName: "Perfect Order",
     tcgUrl: "https://www.tcgplayer.com/product/684351/pokemon-me03-perfect-order-mega-skarmory-ex-055-088",
   },
   {
     query: "Servine 088/086",
+    cardId: "zsv10pt5-88",
     setName: "Black Bolt",
     tcgUrl: "https://www.tcgplayer.com/product/642537/pokemon-sv-black-bolt-servine-088-086?Language=English&page=1",
   },
@@ -61,16 +71,19 @@ const CARD_LIST = [
   },
   {
     query: "Blastoise-EX XY30",
+    cardId: "xyp-XY30",
     setName: "XY Black Star Promos",
     tcgUrl: "https://www.tcgplayer.com/product/96393/pokemon-xy-promos-blastoise-ex-xy30?Language=English",
   },
   {
     query: "Salazzle ex 101/088",
+    cardId: "me3-101",
     setName: "Perfect Order",
     tcgUrl: "https://www.tcgplayer.com/product/684377/pokemon-me03-perfect-order-salazzle-ex-101-088",
   },
   {
     query: "Tyrunt 070",
+    cardId: "mep-70", // ⚠️ MEP set not yet in pokemontcg.io — shows placeholder
     setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/685562/pokemon-me-mega-evolution-promo-tyrunt-070",
   },
@@ -82,41 +95,49 @@ const CARD_LIST = [
   },
   {
     query: "Popplio 045",
+    cardId: "mep-45", // ⚠️ MEP set not yet in pokemontcg.io — shows placeholder
     setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/684469/pokemon-me-mega-evolution-promo-popplio-045",
   },
   {
     query: "Mismagius ex 112/094",
+    cardId: "me2-112",
     setName: "Phantasmal Flames",
     tcgUrl: "https://www.tcgplayer.com/product/662200/pokemon-me02-phantasmal-flames-mismagius-ex-112-094",
   },
   {
     query: "Mudsdale 175/162",
+    cardId: "sv5-175",
     setName: "Temporal Forces",
     tcgUrl: "https://www.tcgplayer.com/product/542896/pokemon-sv05-temporal-forces-mudsdale-175-162",
   },
   {
     query: "Drayton 232/191",
+    cardId: "sv8-232",
     setName: "Surging Sparks",
     tcgUrl: "https://www.tcgplayer.com/product/589924/pokemon-sv08-surging-sparks-drayton-232-191",
   },
   {
     query: "Friends in Paldea 137/131",
+    cardId: "sv8pt5-137",
     setName: "Prismatic Evolutions",
     tcgUrl: "https://www.tcgplayer.com/product/610492/pokemon-sv-prismatic-evolutions-friends-in-paldea-137-131",
   },
   {
     query: "Cheren 258/217",
+    cardId: "me2pt5-258",
     setName: "Ascended Heroes",
     tcgUrl: "https://www.tcgplayer.com/product/676070/pokemon-me-ascended-heroes-cheren",
   },
   {
     query: "Ethan's Ho-Oh ex 039/182",
+    cardId: "sv10-39",
     setName: "Destined Rivals",
     tcgUrl: "https://www.tcgplayer.com/product/632858/pokemon-sv10-destined-rivals-ethans-ho-oh-ex-039-182",
   },
   {
     query: "Arven's Mabosstiff ex 139/182",
+    cardId: "sv10-139",
     setName: "Destined Rivals",
     tcgUrl: "https://www.tcgplayer.com/product/632946/pokemon-sv10-destined-rivals-arvens-mabosstiff-ex-139-182",
   },
