@@ -56,7 +56,7 @@ const CARD_LIST = [
   {
     query: "Dewgong 097/094",
     setName: "Phantasmal Flames",
-    tcgUrl: "https://www.tcgplayer.com/product/662152/pokemon-me02-phantasmal-flames-dewgong-097-094?Language=English",
+    tcgUrl: "https://www.tcgplayer.com/product/662152/pokemon-me02-phantasmal-flames-dewgong-097-094?Language=English&page=1",
   },
   {
     query: "Blastoise-EX XY30",
