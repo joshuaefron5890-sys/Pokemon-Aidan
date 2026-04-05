@@ -276,6 +276,8 @@ header h1 {
   align-items: center;
   justify-content: flex-end;
   gap: .75rem;
+  position: relative;
+  z-index: 50;
 }
 
 .filter-group {
