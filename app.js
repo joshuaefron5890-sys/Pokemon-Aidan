@@ -491,10 +491,7 @@ async function loadCollection() {
   buildSeriesDropdown();
   buildGradeDropdown();
 
-  const missing = sortedResults.filter(r => r.price == null).length;
-  loadingEl.textContent = missing > 0
-    ? `${missing} card${missing !== 1 ? "s" : ""} without price data`
-    : "";
+  loadingEl.textContent = "";
 
   if (DEBUG) renderDebugTable(sortedResults);
 
