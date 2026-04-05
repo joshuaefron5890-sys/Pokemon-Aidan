@@ -31,8 +31,7 @@ function showLogin() {
 
 const VIEW_LABELS = {
   binder:    "My Binder",
-  emma:      "Emma's Binder",
-  benji:     "Benji's Binder",
+  shared:    "Shared Binders",
   assistant: "Card Assistant",
 };
 

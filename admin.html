@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" />
-  <link rel="stylesheet" href="admin.css?v=3" />
+  <link rel="stylesheet" href="admin.css?v=4" />
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
@@ -63,20 +63,12 @@
 
         <!-- Section 2: Shared Binders -->
         <div class="nav-section">
-          <div class="nav-section-label">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button class="nav-item" data-view="shared">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
               <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
             Shared Binders
-          </div>
-          <button class="nav-item nav-sub" data-view="emma">
-            <span class="binder-dot" style="background:#f472b6"></span>
-            Emma's Binder
-          </button>
-          <button class="nav-item nav-sub" data-view="benji">
-            <span class="binder-dot" style="background:#34d399"></span>
-            Benji's Binder
           </button>
         </div>
 
@@ -122,26 +114,33 @@
         <iframe src="/" title="My Binder" id="binder-iframe"></iframe>
       </div>
 
-      <!-- View: Emma's Binder -->
-      <div class="view hidden" id="view-emma">
-        <div class="placeholder-view">
-          <div class="placeholder-card">
-            <div class="placeholder-avatar" style="background: linear-gradient(135deg,#f472b6,#ec4899)">E</div>
-            <h2>Emma's Binder</h2>
-            <p>This binder is coming soon. Once Emma's collection is set up, it will appear here.</p>
-            <div class="placeholder-badge">Coming Soon</div>
+      <!-- View: Shared Binders gallery -->
+      <div class="view hidden" id="view-shared">
+        <div class="shared-view">
+          <div class="shared-header">
+            <h2>Shared Binders</h2>
+            <p>Community collections from friends and family</p>
           </div>
-        </div>
-      </div>
+          <div class="binders-grid">
 
-      <!-- View: Benji's Binder -->
-      <div class="view hidden" id="view-benji">
-        <div class="placeholder-view">
-          <div class="placeholder-card">
-            <div class="placeholder-avatar" style="background: linear-gradient(135deg,#34d399,#10b981)">B</div>
-            <h2>Benji's Binder</h2>
-            <p>This binder is coming soon. Once Benji's collection is set up, it will appear here.</p>
-            <div class="placeholder-badge">Coming Soon</div>
+            <div class="binder-card">
+              <div class="binder-card-avatar" style="background: linear-gradient(135deg,#f472b6,#ec4899)">E</div>
+              <div class="binder-card-info">
+                <div class="binder-card-name">Emma's Binder</div>
+                <div class="binder-card-meta">Coming soon</div>
+              </div>
+              <div class="binder-card-badge">Coming Soon</div>
+            </div>
+
+            <div class="binder-card">
+              <div class="binder-card-avatar" style="background: linear-gradient(135deg,#34d399,#10b981)">B</div>
+              <div class="binder-card-info">
+                <div class="binder-card-name">Benji's Binder</div>
+                <div class="binder-card-meta">Coming soon</div>
+              </div>
+              <div class="binder-card-badge">Coming Soon</div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -244,6 +243,6 @@
     </div>
   </div>
 
-  <script src="admin.js?v=3"></script>
+  <script src="admin.js?v=4"></script>
 </body>
 </html>
