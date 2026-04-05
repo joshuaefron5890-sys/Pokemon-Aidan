@@ -225,7 +225,10 @@ a { color: inherit; text-decoration: none; }
   gap: 1rem;
   transition: border-color .15s, box-shadow .15s, transform .15s;
   cursor: default;
+  text-decoration: none;
+  color: inherit;
 }
+a.binder-card { cursor: pointer; }
 .binder-card:hover {
   border-color: rgba(96,165,250,.35);
   box-shadow: 0 8px 24px rgba(0,0,0,.3);

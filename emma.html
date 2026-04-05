@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emma's Pokémon Card Collection</title>
+  <link rel="stylesheet" href="style.css?v=49" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+</head>
+<body>
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="header-inner">
+      <h1>Emma's Pokémon Collection</h1>
+    </div>
+  </header>
+
+  <!-- ── Stats Bar ── -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Total Value</div>
+      <div class="stat-value" id="total-value">…</div>
+    </div>
+    <div class="stat-card stat-count">
+      <div class="stat-label">Cards</div>
+      <div class="stat-value" id="card-count">…</div>
+    </div>
+  </div>
+
+  <!-- ── Toolbar (search + filters) ── -->
+  <div class="toolbar" id="filter-bar">
+    <div class="search-bar-inner">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        id="search-input"
+        type="text"
+        placeholder="Search by name, set, or number…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <kbd class="search-shortcut" id="search-shortcut">/</kbd>
+      <button id="search-clear" class="search-clear" aria-label="Clear search">✕</button>
+    </div>
+    <div class="filter-group">
+      <div class="filter-dropdown" id="series-dropdown">
+        <button class="filter-btn" id="series-btn" aria-haspopup="listbox" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18M7 12h10M11 18h2"/>
+          </svg>
+          <span id="series-label">All Series</span>
+          <svg class="filter-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="filter-panel" id="series-panel" role="listbox">
+          <div class="filter-panel-search">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input id="series-search" type="text" placeholder="Search series…" autocomplete="off" />
+          </div>
+          <ul id="series-options"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="filter-group">
+      <div class="filter-dropdown" id="grade-dropdown">
+        <button class="filter-btn" id="grade-btn" aria-haspopup="listbox" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+          </svg>
+          <span id="grade-label">All Cards</span>
+          <svg class="filter-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="filter-panel" id="grade-panel" role="listbox">
+          <ul id="grade-options"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="search-status" class="search-status"></div>
+
+  <!-- ── Loading status ── -->
+  <div class="loading-bar">
+    <span id="loading-status">Loading collection…</span>
+  </div>
+
+  <!-- ── Card Grid ── -->
+  <main class="grid-container">
+    <div id="card-grid">
+      <div id="load-sentinel" class="load-sentinel">Loading more…</div>
+    </div>
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer>
+    Prices sourced from <a href="https://www.tcgplayer.com/" target="_blank" rel="noopener">TCGPlayer</a>
+    via the <a href="https://pokemontcg.io/" target="_blank" rel="noopener">Pokémon TCG API</a>.
+    Click any card to view on TCGPlayer.
+  </footer>
+
+  <script src="emma-cards.js"></script>
+  <script src="app.js?v=44"></script>
+  <script src="background.js?v=44"></script>
+</body>
+</html>
