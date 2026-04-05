@@ -108,7 +108,10 @@ async function tool_get_collection() {
       count: 0,
       cards: [],
       diagnostics,
-      preview: content.slice(0, 300),
+      contentLength: content.length,
+      hasWordQuery: content.includes("query"),
+      hasWordCardId: content.includes("cardId"),
+      first500: content.slice(0, 500),
     };
   }
 
