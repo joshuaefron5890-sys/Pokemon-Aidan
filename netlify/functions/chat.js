@@ -93,9 +93,17 @@ async function tool_lookup_card({ query, cardId }) {
 }
 
 async function tool_get_collection() {
+  console.log("get_collection: fetching", GH_FILE_URL);
+  console.log("get_collection: GITHUB_TOKEN set?", !!GITHUB_TOKEN);
+  console.log("get_collection: GITHUB_REPO =", GITHUB_REPO);
+
   const { content } = await getCardsFile();
+  console.log("get_collection: file length =", content.length);
+  console.log("get_collection: first 200 chars =", content.slice(0, 200));
+
   const queries  = [...content.matchAll(/query:\s*"([^"]+)"/g)].map(m => m[1]);
   const cardIds  = [...content.matchAll(/cardId:\s*"([^"]+)"/g)].map(m => m[1]);
+  console.log("get_collection: found", queries.length, "cards");
   return {
     count: queries.length,
     cards: queries.map((q, i) => ({ query: q, cardId: cardIds[i] })),
