@@ -252,9 +252,10 @@ function createSkeletonCard() {
   return el;
 }
 
-// ── Search ─────────────────────────────────────────────────
+// ── Filters ────────────────────────────────────────────────
 
 let currentFilter = "";
+let currentSeries = "";
 
 function normalizeSearch(str) {
   // Lowercase and collapse whitespace — no regex on user input so special chars are safe
@@ -276,9 +277,66 @@ function matchesFilter(query, card, overrides) {
 }
 
 function getFilteredResults() {
-  return sortedResults.filter(({ query, card, overrides }) =>
-    matchesFilter(query, card, overrides)
-  );
+  return sortedResults.filter(({ query, card, overrides }) => {
+    if (currentSeries && (card?.set?.series || "") !== currentSeries) return false;
+    return matchesFilter(query, card, overrides);
+  });
+}
+
+function buildSeriesDropdown() {
+  const btn = document.getElementById("series-btn");
+  const panel = document.getElementById("series-panel");
+  const labelEl = document.getElementById("series-label");
+  const searchEl = document.getElementById("series-search");
+  const listEl = document.getElementById("series-options");
+
+  // Collect unique series, sorted
+  const allSeries = [...new Set(
+    sortedResults.map(r => r.card?.set?.series).filter(Boolean)
+  )].sort();
+
+  // Build options: "All Series" + each unique series
+  const options = [{ label: "All Series", value: "" }, ...allSeries.map(s => ({ label: s, value: s }))];
+
+  function renderOptions(query = "") {
+    const q = query.toLowerCase();
+    listEl.innerHTML = "";
+    options.forEach(({ label, value }) => {
+      if (q && value && !label.toLowerCase().includes(q)) return;
+      const li = document.createElement("li");
+      li.textContent = label;
+      if (value === currentSeries) li.classList.add("selected");
+      li.addEventListener("click", () => {
+        currentSeries = value;
+        labelEl.textContent = value || "All Series";
+        btn.classList.toggle("active", !!value);
+        panel.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+        resetAndRender();
+      });
+      listEl.appendChild(li);
+    });
+  }
+
+  renderOptions();
+
+  // Toggle open/close
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    const isOpen = panel.classList.toggle("open");
+    btn.setAttribute("aria-expanded", isOpen);
+    if (isOpen) { searchEl.value = ""; renderOptions(); searchEl.focus(); }
+  });
+
+  // Live search within dropdown
+  searchEl.addEventListener("input", () => renderOptions(searchEl.value));
+  searchEl.addEventListener("click", e => e.stopPropagation());
+
+  // Close on outside click
+  document.addEventListener("click", () => {
+    panel.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+  });
 }
 
 // ── Pagination ─────────────────────────────────────────────
@@ -382,6 +440,7 @@ async function loadCollection() {
   currentPage = 0;
   setupIntersectionObserver();
   renderNextPage();
+  buildSeriesDropdown();
 
   const missing = sortedResults.filter(r => r.price == null).length;
   loadingEl.textContent = missing > 0

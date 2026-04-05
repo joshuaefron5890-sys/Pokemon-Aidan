@@ -14,31 +14,12 @@
 
   <!-- ── Header ── -->
   <header>
-    <div class="header-top">
-      <div class="header-pokeball" aria-hidden="true">
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="50" r="47" fill="#fff" stroke="#222" stroke-width="4"/>
-          <path d="M3 50 A47 47 0 0 1 97 50 Z" fill="#e63946"/>
-          <rect x="3" y="46" width="94" height="8" fill="#222"/>
-          <circle cx="50" cy="50" r="12" fill="#fff" stroke="#222" stroke-width="4"/>
-          <circle cx="50" cy="50" r="6" fill="#f7c948"/>
-        </svg>
-      </div>
+    <div class="header-inner">
       <div class="header-photo-wrap">
         <img src="Aidan.jpg" alt="Aidan" class="header-photo" />
       </div>
-      <div class="header-pokeball" aria-hidden="true">
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="50" r="47" fill="#fff" stroke="#222" stroke-width="4"/>
-          <path d="M3 50 A47 47 0 0 1 97 50 Z" fill="#e63946"/>
-          <rect x="3" y="46" width="94" height="8" fill="#222"/>
-          <circle cx="50" cy="50" r="12" fill="#fff" stroke="#222" stroke-width="4"/>
-          <circle cx="50" cy="50" r="6" fill="#f7c948"/>
-        </svg>
-      </div>
+      <h1>Aidan's Pokémon Collection</h1>
     </div>
-    <h1>Aidan's Pokémon Collection</h1>
-    <p class="subtitle">Sorted by market value &bull; Powered by TCGPlayer prices</p>
   </header>
 
   <!-- ── Stats Bar ── -->
@@ -72,6 +53,32 @@
     <div id="search-status" class="search-status"></div>
   </div>
 
+  <!-- ── Filter Bar ── -->
+  <div class="filter-bar" id="filter-bar">
+    <div class="filter-group">
+      <div class="filter-dropdown" id="series-dropdown">
+        <button class="filter-btn" id="series-btn" aria-haspopup="listbox" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18M7 12h10M11 18h2"/>
+          </svg>
+          <span id="series-label">All Series</span>
+          <svg class="filter-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="filter-panel" id="series-panel" role="listbox">
+          <div class="filter-panel-search">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input id="series-search" type="text" placeholder="Search series…" autocomplete="off" />
+          </div>
+          <ul id="series-options"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Loading status ── -->
   <div class="loading-bar">
     <span id="loading-status">Loading collection…</span>
@@ -91,8 +98,8 @@
     Click any card to view on TCGPlayer.
   </footer>
 
-  <script src="cards.js?v=42"></script>
-  <script src="app.js?v=42"></script>
-  <script src="background.js?v=42"></script>
+  <script src="cards.js?v=43"></script>
+  <script src="app.js?v=43"></script>
+  <script src="background.js?v=43"></script>
 </body>
 </html>
