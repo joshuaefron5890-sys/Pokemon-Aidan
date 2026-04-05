@@ -262,4 +262,6 @@ async function loadCollection() {
     : "";
 }
 
-document.addEventListener("DOMContentLoaded", loadCollection);
+if (!window.BINDER_LOADER) {
+  document.addEventListener("DOMContentLoaded", loadCollection);
+}
