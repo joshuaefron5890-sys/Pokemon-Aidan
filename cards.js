@@ -196,6 +196,7 @@ const CARD_LIST = [
     query: "Hydrapple 188/182",
     cardId: "sv10-188",
     setName: "Destined Rivals",
+    fallbackPrice: 2.54,
   },
   {
     query: "Palossand ex 221/191",
