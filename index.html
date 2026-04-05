@@ -113,5 +113,20 @@
   <script src="cards.js?v=44"></script>
   <script src="app.js?v=44"></script>
   <script src="background.js?v=44"></script>
+
+  <!-- Netlify Identity: processes confirmation/recovery tokens in the URL hash
+       and redirects to /admin after login -->
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.on("init", user => {
+        if (!user) {
+          window.netlifyIdentity.on("login", () => {
+            document.location.href = "/admin";
+          });
+        }
+      });
+    }
+  </script>
 </body>
 </html>
