@@ -1,22 +1,14 @@
-// Add Card Modal — shown to authenticated admin on index.html
-// Uses existing /.netlify/functions/chat endpoint for card lookup + add
+// Add Card Modal — lives in admin.html, shown in the My Binder view
+// Uses /.netlify/functions/chat endpoint for card lookup + add
 
 /* global netlifyIdentity */
 
 (function () {
-  const modal     = document.getElementById("add-card-modal");
-  const ctaWrap   = document.getElementById("add-card-cta");
-  const openBtn   = document.getElementById("add-card-btn");
-  const closeBtn  = document.getElementById("acm-close");
+  const modal  = document.getElementById("add-card-modal");
+  const openBtn = document.getElementById("add-card-btn");
+  const closeBtn = document.getElementById("acm-close");
 
-  if (!modal || !ctaWrap) return;
-
-  // Show CTA only when admin is logged in
-  if (window.netlifyIdentity) {
-    netlifyIdentity.on("init",   user => user && ctaWrap.classList.remove("hidden"));
-    netlifyIdentity.on("login",  ()   => ctaWrap.classList.remove("hidden"));
-    netlifyIdentity.on("logout", ()   => ctaWrap.classList.add("hidden"));
-  }
+  if (!modal || !openBtn) return;
 
   // ── Open / close ─────────────────────────────────────────
 
