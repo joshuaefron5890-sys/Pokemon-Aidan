@@ -530,6 +530,7 @@ const CARD_LIST = [
     setName: "Trick or Trade",
     tcgUrl: "https://www.tcgplayer.com/product/283785/pokemon-trick-or-trade-booster-bundle-mewtwo?page=1&Language=English",
     imageUrl: "Mewtwo.jpg",
+    fallbackPrice: 0.28,
   },
   {
     query: "Giacomo 138/131",

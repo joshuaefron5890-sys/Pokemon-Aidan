@@ -250,6 +250,35 @@ function createSkeletonCard() {
   return el;
 }
 
+// ── Search ─────────────────────────────────────────────────
+
+let currentFilter = "";
+
+function normalizeSearch(str) {
+  // Lowercase and collapse whitespace — no regex on user input so special chars are safe
+  return String(str).toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function matchesFilter(query, card, overrides) {
+  if (!currentFilter) return true;
+  const target = normalizeSearch([
+    card ? card.name : "",
+    card ? card.set?.name : "",
+    card ? card.number : "",
+    overrides.query || query,
+    overrides.setName || "",
+  ].join(" "));
+  // Every space-separated token must appear somewhere in the target
+  return normalizeSearch(currentFilter).split(" ").filter(Boolean)
+    .every(token => target.includes(token));
+}
+
+function getFilteredResults() {
+  return sortedResults.filter(({ query, card, overrides }) =>
+    matchesFilter(query, card, overrides)
+  );
+}
+
 // ── Pagination ─────────────────────────────────────────────
 
 let sortedResults = [];
@@ -258,13 +287,31 @@ let currentPage = 0;
 function renderNextPage() {
   const grid = document.getElementById("card-grid");
   const sentinel = document.getElementById("load-sentinel");
+  const filtered = getFilteredResults();
   const start = currentPage * PAGE_SIZE;
-  const slice = sortedResults.slice(start, start + PAGE_SIZE);
+  const slice = filtered.slice(start, start + PAGE_SIZE);
   slice.forEach(({ query, card, price, overrides, isStaticPrice }) =>
     grid.insertBefore(createCardElement(query, card, price, overrides, isStaticPrice), sentinel)
   );
   currentPage++;
-  if (currentPage * PAGE_SIZE >= sortedResults.length) sentinel.style.display = "none";
+  if (currentPage * PAGE_SIZE >= filtered.length) sentinel.style.display = "none";
+  else sentinel.style.display = "";
+}
+
+function resetAndRender() {
+  const grid = document.getElementById("card-grid");
+  const sentinel = document.getElementById("load-sentinel");
+  const statusEl = document.getElementById("search-status");
+  grid.querySelectorAll(".card-item").forEach(el => el.remove());
+  sentinel.style.display = "";
+  currentPage = 0;
+  const filtered = getFilteredResults();
+  if (currentFilter && statusEl) {
+    statusEl.textContent = `${filtered.length} of ${sortedResults.length} cards`;
+  } else if (statusEl) {
+    statusEl.textContent = "";
+  }
+  renderNextPage();
 }
 
 function setupIntersectionObserver() {
@@ -338,6 +385,22 @@ async function loadCollection() {
     : "";
 
   if (DEBUG) renderDebugTable(sortedResults);
+
+  // ── Search wiring ──
+  const searchInput = document.getElementById("search-input");
+  const searchClear = document.getElementById("search-clear");
+  searchInput.addEventListener("input", () => {
+    currentFilter = searchInput.value;
+    searchClear.style.display = currentFilter ? "block" : "none";
+    resetAndRender();
+  });
+  searchClear.addEventListener("click", () => {
+    searchInput.value = "";
+    currentFilter = "";
+    searchClear.style.display = "none";
+    resetAndRender();
+    searchInput.focus();
+  });
 }
 
 function renderDebugTable(results) {

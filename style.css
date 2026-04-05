@@ -164,6 +164,56 @@ header p.subtitle {
   color: var(--accent2);
 }
 
+/* ── Search Bar ─────────────────────────────────────────── */
+.search-bar-wrap {
+  max-width: 600px;
+  margin: 0 auto 1rem;
+  padding: 0 1.5rem;
+}
+.search-bar-inner {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  padding: .5rem 1rem;
+  gap: .5rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.search-bar-inner:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(247,201,72,.15);
+}
+.search-icon { font-size: 1rem; opacity: .6; }
+#search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: .95rem;
+  font-family: inherit;
+}
+#search-input::placeholder { color: var(--text-muted); }
+.search-clear {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: .9rem;
+  padding: 0 .2rem;
+  line-height: 1;
+  display: none;
+}
+.search-clear:hover { color: var(--text); }
+.search-status {
+  text-align: center;
+  font-size: .8rem;
+  color: var(--text-muted);
+  margin-top: .4rem;
+  min-height: 1.2rem;
+}
+
 /* ── Loading / Status ──────────────────────────────────── */
 .loading-bar {
   text-align: center;

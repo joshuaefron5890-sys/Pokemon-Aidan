@@ -53,6 +53,22 @@
     </div>
   </div>
 
+  <!-- ── Search Bar ── -->
+  <div class="search-bar-wrap">
+    <div class="search-bar-inner">
+      <span class="search-icon">🔍</span>
+      <input
+        id="search-input"
+        type="text"
+        placeholder="Search by name, set, or number…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button id="search-clear" class="search-clear" aria-label="Clear search">✕</button>
+    </div>
+    <div id="search-status" class="search-status"></div>
+  </div>
+
   <!-- ── Loading status ── -->
   <div class="loading-bar">
     <span id="loading-status">Loading collection…</span>
@@ -72,8 +88,8 @@
     Click any card to view on TCGPlayer.
   </footer>
 
-  <script src="cards.js?v=40"></script>
-  <script src="app.js?v=40"></script>
-  <script src="background.js?v=40"></script>
+  <script src="cards.js?v=41"></script>
+  <script src="app.js?v=41"></script>
+  <script src="background.js?v=41"></script>
 </body>
 </html>
