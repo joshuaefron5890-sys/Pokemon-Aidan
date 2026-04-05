@@ -206,6 +206,7 @@ function createCardElement(query, card, price, overrides = {}, isStaticPrice = f
   const imgSrc = overrides.imageUrl || card?.images?.large || card?.images?.small || "";
   const cardName = card ? card.name : query;
   const setName = card?.set?.name || "";
+  const series = card?.set?.series || "";
   const cardNumber = card
     ? `${card.number}/${card.set?.printedTotal || card.set?.total || "?"}`
     : query.split(" ").pop();
@@ -224,6 +225,7 @@ function createCardElement(query, card, price, overrides = {}, isStaticPrice = f
       </div>
       <div class="card-info">
         <div class="card-name">${cardName}</div>
+        ${series ? `<div class="card-series">${series}</div>` : ""}
         ${setName ? `<div class="card-set">${setName}</div>` : ""}
         <div class="card-meta">
           <span class="card-number">#${cardNumber}</span>
@@ -306,10 +308,12 @@ function resetAndRender() {
   sentinel.style.display = "";
   currentPage = 0;
   const filtered = getFilteredResults();
-  if (currentFilter && statusEl) {
-    statusEl.textContent = `${filtered.length} of ${sortedResults.length} cards`;
-  } else if (statusEl) {
-    statusEl.textContent = "";
+  if (statusEl) {
+    if (currentFilter) {
+      statusEl.innerHTML = `<span class="search-status-pill"><strong>${filtered.length}</strong> of ${sortedResults.length} cards matched</span>`;
+    } else {
+      statusEl.innerHTML = "";
+    }
   }
   renderNextPage();
 }
@@ -400,6 +404,18 @@ async function loadCollection() {
     searchClear.style.display = "none";
     resetAndRender();
     searchInput.focus();
+  });
+
+  // Press "/" anywhere to focus search (unless already in an input)
+  document.addEventListener("keydown", e => {
+    if (e.key === "/" && document.activeElement !== searchInput) {
+      e.preventDefault();
+      searchInput.focus();
+      searchInput.select();
+    }
+    if (e.key === "Escape" && document.activeElement === searchInput) {
+      searchInput.blur();
+    }
   });
 }
 
