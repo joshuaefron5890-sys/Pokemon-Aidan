@@ -378,6 +378,7 @@ const CARD_LIST = [
     cardId: "svp-209",
     setName: "Scarlet & Violet Black Star Promos",
     tcgUrl: "https://www.tcgplayer.com/product/644833/pokemon-sv-scarlet-and-violet-promo-cards-thundurus-209?page=1&Language=English",
+    imageUrl: "Thundurus.jpg",
     fallbackPrice: 1.96,
   },
   {
