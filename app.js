@@ -256,6 +256,7 @@ function createSkeletonCard() {
 
 let currentFilter = "";
 let currentSeries = "";
+let currentGradeFilter = "";
 
 function normalizeSearch(str) {
   // Lowercase and collapse whitespace — no regex on user input so special chars are safe
@@ -279,6 +280,8 @@ function matchesFilter(query, card, overrides) {
 function getFilteredResults() {
   return sortedResults.filter(({ query, card, overrides }) => {
     if (currentSeries && (card?.set?.series || "") !== currentSeries) return false;
+    if (currentGradeFilter === "graded" && !overrides.grade) return false;
+    if (currentGradeFilter === "non-graded" && overrides.grade) return false;
     return matchesFilter(query, card, overrides);
   });
 }
@@ -333,6 +336,51 @@ function buildSeriesDropdown() {
   searchEl.addEventListener("click", e => e.stopPropagation());
 
   // Close on outside click
+  document.addEventListener("click", () => {
+    panel.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+  });
+}
+
+function buildGradeDropdown() {
+  const btn = document.getElementById("grade-btn");
+  const panel = document.getElementById("grade-panel");
+  const labelEl = document.getElementById("grade-label");
+
+  const options = [
+    { label: "All Cards",       value: "" },
+    { label: "Graded Only",     value: "graded" },
+    { label: "Non-Graded Only", value: "non-graded" },
+  ];
+
+  function renderOptions() {
+    const listEl = document.getElementById("grade-options");
+    listEl.innerHTML = "";
+    options.forEach(({ label, value }) => {
+      const li = document.createElement("li");
+      li.textContent = label;
+      if (value === currentGradeFilter) li.classList.add("selected");
+      li.addEventListener("click", () => {
+        currentGradeFilter = value;
+        labelEl.textContent = label;
+        btn.classList.toggle("active", !!value);
+        panel.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+        resetAndRender();
+      });
+      listEl.appendChild(li);
+    });
+  }
+
+  renderOptions();
+
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    const isOpen = panel.classList.toggle("open");
+    btn.setAttribute("aria-expanded", isOpen);
+    if (isOpen) renderOptions();
+  });
+
   document.addEventListener("click", () => {
     panel.classList.remove("open");
     btn.setAttribute("aria-expanded", "false");
@@ -441,6 +489,7 @@ async function loadCollection() {
   setupIntersectionObserver();
   renderNextPage();
   buildSeriesDropdown();
+  buildGradeDropdown();
 
   const missing = sortedResults.filter(r => r.price == null).length;
   loadingEl.textContent = missing > 0
