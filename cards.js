@@ -26,6 +26,8 @@ const CARD_LIST = [
     cardId: "zsv10pt5-128",
     setName: "Black Bolt",
     tcgUrl: "https://www.tcgplayer.com/product/642583/pokemon-sv-black-bolt-throh-128-086",
+    imageUrl: "Throh.jpg",
+    fallbackPrice: 5.09,
   },
   {
     query: "Rowlet 043",
@@ -132,6 +134,8 @@ const CARD_LIST = [
     cardId: "sv8pt5-137",
     setName: "Prismatic Evolutions",
     tcgUrl: "https://www.tcgplayer.com/product/610492/pokemon-sv-prismatic-evolutions-friends-in-paldea-137-131",
+    imageUrl: "Friends.jpg",
+    fallbackPrice: 0.99,
   },
   {
     query: "Cheren 258/217",
