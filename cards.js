@@ -343,6 +343,8 @@ const CARD_LIST = [
     query: "Slaking ex 227/191",
     cardId: "sv8-227",
     setName: "Surging Sparks",
+    imageUrl: "Slaking.jpg",
+    fallbackPrice: 0.89,
   },
   {
     query: "Arcanine ex 032/198",
@@ -573,6 +575,8 @@ const CARD_LIST = [
     cardId: "sv1-19",
     setName: "Scarlet & Violet",
     tcgUrl: "https://www.tcgplayer.com/product/487856/pokemon-sv01-scarlet-and-violet-base-set-spidops-ex-019-198?page=1&Language=English",
+    imageUrl: "Spidops.jpg",
+    fallbackPrice: 0.70,
   },
   {
     query: "Incineroar ex 034/162",
