@@ -222,6 +222,15 @@
       window.netlifyIdentity.on("init", user => {
         if (!user) {
           window.netlifyIdentity.on("login", () => {
+            // If user was mid-wizard (e.g. returning after email confirmation),
+            // send them back to /create to finish setting up their binder.
+            const wizardState = localStorage.getItem("wizard_state_v1");
+            if (wizardState) {
+              try {
+                const s = JSON.parse(wizardState);
+                if (s.owner && s.slug) { document.location.href = "/create"; return; }
+              } catch {}
+            }
             document.location.href = "/admin";
           });
         }
