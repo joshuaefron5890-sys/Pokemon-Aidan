@@ -171,6 +171,8 @@ const CARD_LIST = [
     query: "Toxtricity 103/094",
     cardId: "me2-103",
     setName: "Phantasmal Flames",
+    imageUrl: "Toxtricity.jpg",
+    fallbackPrice: 1.66,
   },
   {
     query: "Dedenne 093/088",
