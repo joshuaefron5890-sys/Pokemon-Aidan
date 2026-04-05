@@ -138,8 +138,9 @@
     lookupLabel.textContent = "Searching…";
 
     try {
-      const token = window.netlifyIdentity?.currentUser()?.token?.access_token;
-      if (!token) throw new Error("Please log in first.");
+      const user = window.netlifyIdentity?.currentUser();
+      if (!user) throw new Error("Please log in first.");
+      const token = await user.jwt();
 
       // Use the admin chat function with a single lookup request
       const res = await fetch("/.netlify/functions/chat", {
@@ -230,7 +231,7 @@
     confirmLabel.textContent = "Adding…";
 
     try {
-      const token = window.netlifyIdentity?.currentUser()?.token?.access_token;
+      const token = await window.netlifyIdentity?.currentUser()?.jwt();
 
       // Ask the chat agent to add the card
       const addMsg = `Add this card to the collection: cardId="${foundCard.cardId}", query="${foundCard.query}", setName="${foundCard.setName}"${foundCard.marketPrice ? `, fallbackPrice=${foundCard.marketPrice}` : ""}${foundCard.tcgUrl ? `, tcgUrl="${foundCard.tcgUrl}"` : ""}`;

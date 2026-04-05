@@ -516,6 +516,9 @@ a.binder-card { cursor: pointer; }
 .popup-header-left { display: flex; align-items: center; gap: .6rem; }
 .popup-title { font-size: .875rem; font-weight: 600; }
 .popup-subtitle { font-size: .7rem; color: var(--text-muted); }
+.popup-header-actions { display: flex; align-items: center; gap: .2rem; }
+.popup-action-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: .25rem .35rem; border-radius: 6px; transition: background .15s, color .15s; display: flex; align-items: center; }
+.popup-action-btn:hover { background: var(--surface2); color: var(--text); }
 .popup-close { background: none; border: none; color: var(--text-muted); font-size: .85rem; cursor: pointer; padding: .2rem .4rem; border-radius: 6px; transition: background .15s, color .15s; }
 .popup-close:hover { background: var(--surface2); color: var(--text); }
 

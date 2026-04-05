@@ -32,7 +32,7 @@ function showLogin() {
 const VIEW_LABELS = {
   binder:    "My Binder",
   shared:    "Shared Binders",
-  assistant: "Card Assistant",
+  assistant: "Card Assistant",  // accessed via popup full-screen button
 };
 
 function showView(id) {
@@ -162,6 +162,12 @@ bubble.addEventListener("click", () => {
 popupClose.addEventListener("click", () => {
   popup.classList.remove("open");
   bubble.classList.remove("active");
+});
+
+document.getElementById("popup-fullscreen").addEventListener("click", () => {
+  popup.classList.remove("open");
+  bubble.classList.remove("active");
+  showView("assistant");
 });
 
 // ── Core send function ──────────────────────────────────────
