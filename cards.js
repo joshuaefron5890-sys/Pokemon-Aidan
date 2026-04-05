@@ -462,6 +462,21 @@ const CARD_LIST = [
     setName: "Journey Together",
   },
   {
+    query: "Flutter Mane 078/162",
+    cardId: "sv5-78",
+    setName: "Temporal Forces",
+  },
+  {
+    query: "Hop's Zacian ex 111/159",
+    cardId: "sv9-111",
+    setName: "Journey Together",
+  },
+  {
+    query: "Veluza ex 043/159",
+    cardId: "sv9-43",
+    setName: "Journey Together",
+  },
+  {
     query: "Giacomo 138/131",
     cardId: "sv8pt5-138",
     setName: "Prismatic Evolutions",
