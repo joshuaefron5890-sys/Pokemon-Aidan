@@ -524,6 +524,12 @@ const CARD_LIST = [
     setName: "SWSH Black Star Promos",
   },
   {
+    query: "Mewtwo 056/172",
+    cardId: "tottg-56",
+    setName: "Trick or Trade",
+    tcgUrl: "https://www.tcgplayer.com/product/283785/pokemon-trick-or-trade-booster-bundle-mewtwo?page=1&Language=English",
+  },
+  {
     query: "Giacomo 138/131",
     cardId: "sv8pt5-138",
     setName: "Prismatic Evolutions",
