@@ -81,6 +81,7 @@ const CARD_LIST = [
     cardId: "xyp-XY30",
     setName: "XY Black Star Promos",
     tcgUrl: "https://www.tcgplayer.com/product/96393/pokemon-xy-promos-blastoise-ex-xy30?Language=English",
+    fallbackPrice: 0.99,
   },
   {
     query: "Salazzle ex 101/088",
