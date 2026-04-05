@@ -499,6 +499,31 @@ const CARD_LIST = [
     setName: "Destined Rivals",
   },
   {
+    query: "Latios 073/182",
+    cardId: "sv10-73",
+    setName: "Destined Rivals",
+  },
+  {
+    query: "Team Rocket's Zapdos 070/182",
+    cardId: "sv10-70",
+    setName: "Destined Rivals",
+  },
+  {
+    query: "Gourgeist 077/203",
+    cardId: "swsh7-77",
+    setName: "Evolving Skies",
+  },
+  {
+    query: "Gengar 057/198",
+    cardId: "swsh6-57",
+    setName: "Chilling Reign",
+  },
+  {
+    query: "Pikachu SWSH234",
+    cardId: "swshp-SWSH234",
+    setName: "SWSH Black Star Promos",
+  },
+  {
     query: "Giacomo 138/131",
     cardId: "sv8pt5-138",
     setName: "Prismatic Evolutions",
