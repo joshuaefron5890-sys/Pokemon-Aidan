@@ -431,6 +431,27 @@ const CARD_LIST = [
     setName: "Mega Evolution",
   },
   {
+    query: "Sandy Shocks ex 056/131",
+    cardId: "sv8pt5-56",
+    setName: "Prismatic Evolutions",
+  },
+  {
+    query: "Koraidon ex 197",
+    cardId: "svp-197",
+    setName: "Scarlet & Violet Black Star Promos",
+  },
+  {
+    query: "Chandelure 033/192",
+    cardId: "swsh2-33",
+    setName: "Rebel Clash",
+    tcgUrl: "https://www.tcgplayer.com/product/213109/pokemon-swsh02-rebel-clash-chandelure?page=1&Language=English",
+  },
+  {
+    query: "Regice ex 048/217",
+    cardId: "me2pt5-48",
+    setName: "Ascended Heroes",
+  },
+  {
     query: "Giacomo 138/131",
     cardId: "sv8pt5-138",
     setName: "Prismatic Evolutions",
