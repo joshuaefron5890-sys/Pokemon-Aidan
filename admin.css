@@ -398,9 +398,38 @@ a { color: inherit; text-decoration: none; }
   text-align: center;
 }
 
+/* ── Card Thumbnail Grid ───────────────────────────────────── */
+
+.cards-thumb-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-top: .65rem;
+  max-width: 480px;
+}
+
+.card-thumb {
+  width: 72px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  transition: transform .15s, box-shadow .15s;
+  cursor: default;
+  background: var(--surface2);
+}
+
+.card-thumb:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(0,0,0,.5);
+  z-index: 10;
+  position: relative;
+}
+
 /* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .message { max-width: 95%; }
   .admin-header-left .admin-title { font-size: .85rem; }
   .user-email { display: none; }
+  .card-thumb { width: 58px; height: 80px; }
 }

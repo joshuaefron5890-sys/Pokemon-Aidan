@@ -305,6 +305,10 @@ When a user uploads a card image, identify it from the image and look it up auto
 
 Card ID patterns: sv1-1 (SV base), sv3pt5-1 (151), swsh1-1 (SWSH base), base1-1 (Base Set), xyp-XY30 (XY promo). Promo cards often need fallbackPrice and imageUrl.
 
+Whenever you list cards from the collection (e.g. showing search results or the full collection), append a machine-readable block at the very end of your response in this exact format — the UI will render it as thumbnails:
+<cards>[{"query":"Card Name 001/102","cardId":"base1-1"},{"query":"Other Card","cardId":"sv1-2"}]</cards>
+Include up to 30 cards in the block. Do not explain the block to the user.
+
 Be concise and confirm before making changes.`;
 
 // ── Agentic loop ───────────────────────────────────────────

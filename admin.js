@@ -164,10 +164,13 @@ function appendMessage(role, text) {
     wrap.appendChild(avatar);
   }
 
+  // Strip <cards> block from display text before rendering
+  const cardsMatch = text.match(/<cards>([\s\S]*?)<\/cards>/);
+  const displayText = text.replace(/<cards>[\s\S]*?<\/cards>/g, "").trim();
+
   const bubble = document.createElement("div");
   bubble.className = "message-bubble";
-  // Basic markdown: bold, inline code, line breaks
-  bubble.innerHTML = text
+  bubble.innerHTML = displayText
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
@@ -175,6 +178,31 @@ function appendMessage(role, text) {
     .replace(/\n/g, "<br>");
 
   wrap.appendChild(bubble);
+
+  // Render card thumbnails if agent included a <cards> block
+  if (cardsMatch) {
+    try {
+      const cards = JSON.parse(cardsMatch[1]);
+      if (cards.length) {
+        const grid = document.createElement("div");
+        grid.className = "cards-thumb-grid";
+        cards.slice(0, 30).forEach(card => {
+          const lastDash = card.cardId.lastIndexOf("-");
+          const setId = card.cardId.slice(0, lastDash);
+          const num   = card.cardId.slice(lastDash + 1);
+          const img = document.createElement("img");
+          img.src   = `https://images.pokemontcg.io/${setId}/${num}.png`;
+          img.alt   = card.query;
+          img.title = card.query;
+          img.className = "card-thumb";
+          img.onerror = () => img.remove();
+          grid.appendChild(img);
+        });
+        wrap.appendChild(grid);
+      }
+    } catch (_) { /* malformed JSON — skip */ }
+  }
+
   messagesEl.appendChild(wrap);
   messagesEl.scrollTop = messagesEl.scrollHeight;
   return wrap;
