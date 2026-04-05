@@ -12,15 +12,20 @@ const GH_FILE_URL   = `https://api.github.com/repos/${GITHUB_REPO}/contents/card
 // ── cards.js file helpers ──────────────────────────────────
 
 async function getCardsFile() {
-  const res = await fetch(GH_FILE_URL, {
-    headers: {
-      Authorization: `Bearer ${GITHUB_TOKEN}`,
-      Accept: "application/vnd.github.v3+json",
-    },
-  });
-  if (!res.ok) throw new Error(`GitHub read error: ${res.status}`);
+  const headers = { Accept: "application/vnd.github.v3+json" };
+  if (GITHUB_TOKEN) headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
+
+  const res = await fetch(GH_FILE_URL, { headers });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`GitHub read failed (${res.status}): ${body.slice(0, 200)}`);
+  }
+
   const data = await res.json();
-  const content = Buffer.from(data.content, "base64").toString("utf8");
+  if (!data.content) throw new Error(`GitHub response missing content field. Keys: ${Object.keys(data).join(", ")}`);
+
+  const content = Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf8");
   return { content, sha: data.sha };
 }
 
