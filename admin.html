@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" />
-  <link rel="stylesheet" href="admin.css?v=2" />
+  <link rel="stylesheet" href="admin.css?v=3" />
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
@@ -31,82 +31,219 @@
     </div>
   </div>
 
-  <!-- ── Admin UI (shown after login) ── -->
-  <div id="admin-ui" class="hidden">
+  <!-- ── Admin app shell ── -->
+  <div id="admin-app" class="hidden">
 
-    <header class="admin-header">
-      <div class="admin-header-inner">
-        <div class="admin-header-left">
-          <svg viewBox="0 0 100 100" width="30" height="30" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="50" cy="50" r="47" fill="#fff" stroke="#1e3a5f" stroke-width="4"/>
-            <path d="M3 50 A47 47 0 0 1 97 50 Z" fill="#e63946"/>
-            <rect x="3" y="46" width="94" height="8" fill="#1e3a5f"/>
-            <circle cx="50" cy="50" r="11" fill="#fff" stroke="#1e3a5f" stroke-width="3"/>
-            <circle cx="50" cy="50" r="5" fill="#f7c948"/>
-          </svg>
-          <div>
-            <div class="admin-title">Collection Manager</div>
-            <div id="user-email" class="user-email"></div>
-          </div>
-        </div>
-        <div class="admin-header-right">
-          <a href="/" class="btn-ghost">← View Site</a>
-          <button id="logout-btn" class="btn-ghost">Sign Out</button>
-        </div>
-      </div>
-    </header>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
 
-    <div class="chat-container">
-      <div id="messages" class="messages">
-        <div class="message assistant">
-          <div class="avatar">🤖</div>
-          <div class="message-bubble">
-            Hi! I'm your Pokémon card assistant. I can help you:
-            <ul>
-              <li>Add new cards (just describe them or upload a photo)</li>
-              <li>Update prices or images on existing cards</li>
-              <li>Remove cards from the collection</li>
-              <li>Check what's currently in the collection</li>
-            </ul>
-            Try: <em>"Add Charizard ex 006/165 from the 151 set"</em>
-          </div>
-        </div>
+      <div class="sidebar-header">
+        <svg viewBox="0 0 100 100" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="47" fill="#fff" stroke="#1e3a5f" stroke-width="4"/>
+          <path d="M3 50 A47 47 0 0 1 97 50 Z" fill="#e63946"/>
+          <rect x="3" y="46" width="94" height="8" fill="#1e3a5f"/>
+          <circle cx="50" cy="50" r="10" fill="#fff" stroke="#1e3a5f" stroke-width="3"/>
+          <circle cx="50" cy="50" r="5" fill="#f7c948"/>
+        </svg>
+        <span class="sidebar-title">Binder Admin</span>
+        <button class="sidebar-close" id="sidebar-close" aria-label="Close menu">✕</button>
       </div>
 
-      <div class="input-area">
-        <div id="image-preview-row" class="image-preview-row hidden">
-          <img id="preview-img" src="" alt="Card preview" />
-          <button id="remove-image" class="remove-image-btn" title="Remove image">✕</button>
-        </div>
-        <div class="input-row">
-          <label for="image-upload" class="attach-btn" title="Upload a card photo">
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2"/>
-              <circle cx="8.5" cy="8.5" r="1.5"/>
-              <polyline points="21 15 16 10 5 21"/>
+      <nav class="sidebar-nav">
+
+        <!-- Section 1: My Binder -->
+        <div class="nav-section">
+          <button class="nav-item" data-view="binder">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
             </svg>
-          </label>
-          <input type="file" id="image-upload" accept="image/*" class="hidden" />
-          <textarea
-            id="chat-input"
-            placeholder="Describe a card to add, or paste a photo…"
-            rows="1"
-            autocomplete="off"
-            spellcheck="false"
-          ></textarea>
-          <button id="send-btn" class="send-btn" disabled aria-label="Send">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"/>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-            </svg>
+            My Binder
           </button>
         </div>
-        <p class="input-hint">Shift+Enter for new line · Paste an image with Ctrl/Cmd+V</p>
+
+        <!-- Section 2: Shared Binders -->
+        <div class="nav-section">
+          <div class="nav-section-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Shared Binders
+          </div>
+          <button class="nav-item nav-sub" data-view="emma">
+            <span class="binder-dot" style="background:#f472b6"></span>
+            Emma's Binder
+          </button>
+          <button class="nav-item nav-sub" data-view="benji">
+            <span class="binder-dot" style="background:#34d399"></span>
+            Benji's Binder
+          </button>
+        </div>
+
+        <!-- Section 3: Card Assistant -->
+        <div class="nav-section">
+          <button class="nav-item" data-view="assistant">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Card Assistant
+          </button>
+        </div>
+
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-icon">👤</div>
+          <div class="sidebar-user-info">
+            <div id="user-email" class="user-email-text"></div>
+            <button id="logout-btn" class="logout-link">Sign out</button>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Mobile header -->
+    <div class="mobile-header">
+      <button class="hamburger" id="hamburger" aria-label="Open menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <span class="mobile-title" id="mobile-title">My Binder</span>
+    </div>
+
+    <!-- Main content -->
+    <div class="main-content">
+
+      <!-- View: My Binder -->
+      <div class="view" id="view-binder">
+        <iframe src="/" title="My Binder" id="binder-iframe"></iframe>
+      </div>
+
+      <!-- View: Emma's Binder -->
+      <div class="view hidden" id="view-emma">
+        <div class="placeholder-view">
+          <div class="placeholder-card">
+            <div class="placeholder-avatar" style="background: linear-gradient(135deg,#f472b6,#ec4899)">E</div>
+            <h2>Emma's Binder</h2>
+            <p>This binder is coming soon. Once Emma's collection is set up, it will appear here.</p>
+            <div class="placeholder-badge">Coming Soon</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View: Benji's Binder -->
+      <div class="view hidden" id="view-benji">
+        <div class="placeholder-view">
+          <div class="placeholder-card">
+            <div class="placeholder-avatar" style="background: linear-gradient(135deg,#34d399,#10b981)">B</div>
+            <h2>Benji's Binder</h2>
+            <p>This binder is coming soon. Once Benji's collection is set up, it will appear here.</p>
+            <div class="placeholder-badge">Coming Soon</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View: Card Assistant -->
+      <div class="view hidden" id="view-assistant">
+        <div class="chat-container">
+          <div id="messages" class="messages">
+            <div class="message assistant">
+              <div class="avatar">🤖</div>
+              <div class="message-bubble">
+                Hi! I'm your Pokémon card assistant. I can help you:
+                <ul>
+                  <li>Add new cards (describe them or upload a photo)</li>
+                  <li>Update prices or images on existing cards</li>
+                  <li>Remove cards from the collection</li>
+                  <li>Show what's currently in the collection</li>
+                </ul>
+                Try: <em>"Add Charizard ex 006/165 from the 151 set"</em>
+              </div>
+            </div>
+          </div>
+
+          <div class="input-area">
+            <div id="image-preview-row" class="image-preview-row hidden">
+              <img id="preview-img" src="" alt="Card preview" />
+              <button id="remove-image" class="remove-image-btn" title="Remove image">✕</button>
+            </div>
+            <div class="input-row">
+              <label for="image-upload" class="attach-btn" title="Upload a card photo">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+              </label>
+              <input type="file" id="image-upload" accept="image/*" class="hidden" />
+              <textarea id="chat-input" placeholder="Describe a card to add, or paste a photo…" rows="1" autocomplete="off" spellcheck="false"></textarea>
+              <button id="send-btn" class="send-btn" disabled aria-label="Send">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
+            <p class="input-hint">Shift+Enter for new line · Paste an image with Ctrl/Cmd+V</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.main-content -->
+  </div><!-- /#admin-app -->
+
+  <!-- ── Floating chat bubble + popup ── -->
+  <button id="chat-bubble" class="chat-bubble" aria-label="Update My Binder" title="Update My Binder">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    <span>Update My Binder</span>
+  </button>
+
+  <div id="chat-popup" class="chat-popup">
+    <div class="popup-header">
+      <div class="popup-header-left">
+        <div class="avatar small">🤖</div>
+        <div>
+          <div class="popup-title">Card Assistant</div>
+          <div class="popup-subtitle">Add, update or remove cards</div>
+        </div>
+      </div>
+      <button id="popup-close" class="popup-close" aria-label="Close">✕</button>
+    </div>
+
+    <div id="popup-messages" class="messages popup-messages">
+      <div class="message assistant">
+        <div class="avatar small">🤖</div>
+        <div class="message-bubble">Hi! What would you like to update?</div>
       </div>
     </div>
 
+    <div class="input-area popup-input-area">
+      <div id="popup-image-preview-row" class="image-preview-row hidden">
+        <img id="popup-preview-img" src="" alt="Card preview" />
+        <button id="popup-remove-image" class="remove-image-btn">✕</button>
+      </div>
+      <div class="input-row">
+        <label for="popup-image-upload" class="attach-btn" title="Upload card photo">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </label>
+        <input type="file" id="popup-image-upload" accept="image/*" class="hidden" />
+        <textarea id="popup-chat-input" placeholder="Ask me anything…" rows="1" autocomplete="off" spellcheck="false"></textarea>
+        <button id="popup-send-btn" class="send-btn" disabled aria-label="Send">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 
-  <script src="admin.js?v=2"></script>
+  <script src="admin.js?v=3"></script>
 </body>
 </html>

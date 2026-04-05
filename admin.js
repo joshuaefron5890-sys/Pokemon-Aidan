@@ -1,7 +1,8 @@
 /* global netlifyIdentity */
 
-let history = [];      // conversation history sent to the agent
-let pendingImage = null; // { data: base64, mediaType: "image/jpeg" }
+// ── Shared chat state ───────────────────────────────────────
+let history = [];
+let pendingImage = null;
 
 // ── Auth ────────────────────────────────────────────────────
 
@@ -11,37 +12,68 @@ netlifyIdentity.on("logout", ()   => showLogin());
 
 document.getElementById("login-btn").addEventListener("click",
   () => netlifyIdentity.open("login"));
-
 document.getElementById("logout-btn").addEventListener("click",
   () => netlifyIdentity.logout());
 
 function showAdmin(user) {
   document.getElementById("login-screen").classList.add("hidden");
-  document.getElementById("admin-ui").classList.remove("hidden");
+  document.getElementById("admin-app").classList.remove("hidden");
   document.getElementById("user-email").textContent = user.email;
-  document.getElementById("chat-input").focus();
+  showView("binder");
 }
 
 function showLogin() {
-  document.getElementById("admin-ui").classList.add("hidden");
+  document.getElementById("admin-app").classList.add("hidden");
   document.getElementById("login-screen").classList.remove("hidden");
 }
 
-// ── Image handling ──────────────────────────────────────────
+// ── Navigation ──────────────────────────────────────────────
 
-const imageUpload    = document.getElementById("image-upload");
-const previewRow     = document.getElementById("image-preview-row");
-const previewImg     = document.getElementById("preview-img");
-const removeImageBtn = document.getElementById("remove-image");
+const VIEW_LABELS = {
+  binder:    "My Binder",
+  emma:      "Emma's Binder",
+  benji:     "Benji's Binder",
+  assistant: "Card Assistant",
+};
 
-imageUpload.addEventListener("change", e => {
+function showView(id) {
+  // Hide all views
+  document.querySelectorAll(".view").forEach(v => v.classList.add("hidden"));
+  // Show target
+  const target = document.getElementById(`view-${id}`);
+  if (target) target.classList.remove("hidden");
+
+  // Update nav active state
+  document.querySelectorAll(".nav-item").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.view === id);
+  });
+
+  // Update mobile title
+  const mobileTitle = document.getElementById("mobile-title");
+  if (mobileTitle) mobileTitle.textContent = VIEW_LABELS[id] || id;
+
+  // Close sidebar on mobile
+  document.getElementById("sidebar").classList.remove("open");
+}
+
+document.querySelectorAll(".nav-item[data-view]").forEach(btn => {
+  btn.addEventListener("click", () => showView(btn.dataset.view));
+});
+
+// Mobile sidebar toggle
+document.getElementById("hamburger")?.addEventListener("click", () =>
+  document.getElementById("sidebar").classList.toggle("open"));
+document.getElementById("sidebar-close")?.addEventListener("click", () =>
+  document.getElementById("sidebar").classList.remove("open"));
+
+// ── Image handling (shared) ─────────────────────────────────
+
+document.getElementById("image-upload").addEventListener("change", e => {
   const file = e.target.files[0];
   if (file) readImage(file);
 });
+document.getElementById("remove-image").addEventListener("click", clearImage);
 
-removeImageBtn.addEventListener("click", clearImage);
-
-// Paste image from clipboard
 document.addEventListener("paste", e => {
   const item = [...e.clipboardData.items].find(i => i.type.startsWith("image/"));
   if (item) readImage(item.getAsFile());
@@ -52,135 +84,170 @@ function readImage(file) {
   reader.onload = ev => {
     const [, data] = ev.target.result.split(",");
     pendingImage = { data, mediaType: file.type };
-    previewImg.src = ev.target.result;
-    previewRow.classList.remove("hidden");
-    updateSendBtn();
+    document.getElementById("preview-img").src = ev.target.result;
+    document.getElementById("popup-preview-img").src = ev.target.result;
+    document.getElementById("image-preview-row").classList.remove("hidden");
+    document.getElementById("popup-image-preview-row").classList.remove("hidden");
+    updateSendBtns();
   };
   reader.readAsDataURL(file);
 }
 
 function clearImage() {
   pendingImage = null;
-  previewRow.classList.add("hidden");
-  previewImg.src = "";
-  imageUpload.value = "";
-  updateSendBtn();
+  document.getElementById("image-preview-row").classList.add("hidden");
+  document.getElementById("popup-image-preview-row").classList.add("hidden");
+  document.getElementById("image-upload").value = "";
+  document.getElementById("popup-image-upload").value = "";
+  updateSendBtns();
 }
 
-// ── Input ───────────────────────────────────────────────────
+document.getElementById("popup-remove-image").addEventListener("click", clearImage);
+
+// ── Chat inputs (sidebar assistant) ────────────────────────
 
 const chatInput = document.getElementById("chat-input");
 const sendBtn   = document.getElementById("send-btn");
 
 chatInput.addEventListener("input", () => {
-  updateSendBtn();
-  chatInput.style.height = "auto";
-  chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + "px";
+  updateSendBtns();
+  autoResize(chatInput);
 });
-
 chatInput.addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    if (!sendBtn.disabled) send();
-  }
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!sendBtn.disabled) sendMessage(false); }
+});
+sendBtn.addEventListener("click", () => sendMessage(false));
+
+// ── Chat inputs (floating popup) ───────────────────────────
+
+const popupInput   = document.getElementById("popup-chat-input");
+const popupSendBtn = document.getElementById("popup-send-btn");
+
+popupInput.addEventListener("input", () => {
+  updateSendBtns();
+  autoResize(popupInput);
+});
+popupInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!popupSendBtn.disabled) sendMessage(true); }
+});
+popupSendBtn.addEventListener("click", () => sendMessage(true));
+
+document.getElementById("popup-image-upload").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (file) readImage(file);
 });
 
-sendBtn.addEventListener("click", send);
-
-function updateSendBtn() {
-  sendBtn.disabled = !chatInput.value.trim() && !pendingImage;
+function updateSendBtns() {
+  const hasContent = (chatInput.value.trim() || pendingImage);
+  sendBtn.disabled = !hasContent;
+  popupSendBtn.disabled = !hasContent;
 }
 
-// ── Chat ────────────────────────────────────────────────────
+function autoResize(el) {
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 160) + "px";
+}
 
-async function send() {
-  const text = chatInput.value.trim();
+// ── Floating chat bubble ────────────────────────────────────
+
+const bubble  = document.getElementById("chat-bubble");
+const popup   = document.getElementById("chat-popup");
+const popupClose = document.getElementById("popup-close");
+
+bubble.addEventListener("click", () => {
+  const isOpen = popup.classList.toggle("open");
+  bubble.classList.toggle("active", isOpen);
+  if (isOpen) popupInput.focus();
+});
+
+popupClose.addEventListener("click", () => {
+  popup.classList.remove("open");
+  bubble.classList.remove("active");
+});
+
+// ── Core send function ──────────────────────────────────────
+
+async function sendMessage(isPopup) {
+  const input = isPopup ? popupInput : chatInput;
+  const text  = input.value.trim();
   if (!text && !pendingImage) return;
 
-  // Build the message content for the API
   const content = [];
   if (pendingImage) {
-    content.push({
-      type: "image",
-      source: { type: "base64", media_type: pendingImage.mediaType, data: pendingImage.data },
-    });
+    content.push({ type: "image", source: { type: "base64", media_type: pendingImage.mediaType, data: pendingImage.data } });
   }
   if (text) content.push({ type: "text", text });
 
-  // Display in UI
-  appendMessage("user", text || "📷 Card image");
+  // Append to BOTH message lists
+  appendMessage("user", text || "📷 Card image", false);
+  appendMessage("user", text || "📷 Card image", true);
 
-  // Add to conversation history
   history.push({
     role: "user",
     content: content.length === 1 && content[0].type === "text" ? text : content,
   });
 
-  // Clear input state
-  chatInput.value = "";
-  chatInput.style.height = "auto";
-  sendBtn.disabled = true;
+  input.value = "";
+  input.style.height = "auto";
   clearImage();
 
-  // Typing indicator
-  const typing = appendTyping();
+  const typing1 = appendTyping(false);
+  const typing2 = appendTyping(true);
 
   try {
     const token = netlifyIdentity.currentUser()?.token?.access_token;
     const res = await fetch("/.netlify/functions/chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ messages: history }),
     });
-
     const data = await res.json();
-    typing.remove();
+    typing1.remove();
+    typing2.remove();
 
     if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
 
     history.push({ role: "assistant", content: data.reply });
-    appendMessage("assistant", data.reply);
+    appendMessage("assistant", data.reply, false);
+    appendMessage("assistant", data.reply, true);
   } catch (err) {
-    typing.remove();
-    appendMessage("error", `⚠️ ${err.message}`);
+    typing1.remove();
+    typing2.remove();
+    appendMessage("error", `⚠️ ${err.message}`, false);
+    appendMessage("error", `⚠️ ${err.message}`, true);
   }
 }
 
 // ── Render helpers ──────────────────────────────────────────
 
-const messagesEl = document.getElementById("messages");
+function appendMessage(role, text, isPopup) {
+  const listEl = isPopup
+    ? document.getElementById("popup-messages")
+    : document.getElementById("messages");
 
-function appendMessage(role, text) {
+  const cardsMatch = text.match ? text.match(/<cards>([\s\S]*?)<\/cards>/) : null;
+  const displayText = text.replace ? text.replace(/<cards>[\s\S]*?<\/cards>/g, "").trim() : text;
+
   const wrap = document.createElement("div");
   wrap.className = `message ${role}`;
 
   if (role === "assistant") {
-    const avatar = document.createElement("div");
-    avatar.className = "avatar";
-    avatar.textContent = "🤖";
-    wrap.appendChild(avatar);
+    const av = document.createElement("div");
+    av.className = "avatar";
+    av.textContent = "🤖";
+    wrap.appendChild(av);
   }
-
-  // Strip <cards> block from display text before rendering
-  const cardsMatch = text.match(/<cards>([\s\S]*?)<\/cards>/);
-  const displayText = text.replace(/<cards>[\s\S]*?<\/cards>/g, "").trim();
 
   const bubble = document.createElement("div");
   bubble.className = "message-bubble";
   bubble.innerHTML = displayText
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\n/g, "<br>");
-
   wrap.appendChild(bubble);
 
-  // Render card thumbnails if agent included a <cards> block
-  if (cardsMatch) {
+  if (cardsMatch && !isPopup) {
     try {
       const cards = JSON.parse(cardsMatch[1]);
       if (cards.length) {
@@ -190,33 +257,33 @@ function appendMessage(role, text) {
           const lastDash = card.cardId.lastIndexOf("-");
           const setId = card.cardId.slice(0, lastDash);
           const num   = card.cardId.slice(lastDash + 1);
-          const img = document.createElement("img");
-          img.src   = `https://images.pokemontcg.io/${setId}/${num}.png`;
-          img.alt   = card.query;
-          img.title = card.query;
+          const img   = document.createElement("img");
+          img.src     = `https://images.pokemontcg.io/${setId}/${num}.png`;
+          img.alt     = card.query;
+          img.title   = card.query;
           img.className = "card-thumb";
           img.onerror = () => img.remove();
           grid.appendChild(img);
         });
         wrap.appendChild(grid);
       }
-    } catch (_) { /* malformed JSON — skip */ }
+    } catch (_) {}
   }
 
-  messagesEl.appendChild(wrap);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+  listEl.appendChild(wrap);
+  listEl.scrollTop = listEl.scrollHeight;
   return wrap;
 }
 
-function appendTyping() {
+function appendTyping(isPopup) {
+  const listEl = isPopup
+    ? document.getElementById("popup-messages")
+    : document.getElementById("messages");
+
   const wrap = document.createElement("div");
   wrap.className = "message assistant";
-  wrap.innerHTML = `
-    <div class="avatar">🤖</div>
-    <div class="message-bubble typing">
-      <span></span><span></span><span></span>
-    </div>`;
-  messagesEl.appendChild(wrap);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+  wrap.innerHTML = `<div class="avatar">🤖</div><div class="message-bubble typing"><span></span><span></span><span></span></div>`;
+  listEl.appendChild(wrap);
+  listEl.scrollTop = listEl.scrollHeight;
   return wrap;
 }
