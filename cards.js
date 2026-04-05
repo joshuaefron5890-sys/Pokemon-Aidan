@@ -450,6 +450,7 @@ const CARD_LIST = [
     query: "Regice ex 048/217",
     cardId: "me2pt5-48",
     setName: "Ascended Heroes",
+    fallbackPrice: 0.65,
   },
   {
     query: "N's Zoroark ex 058/159",
@@ -475,6 +476,12 @@ const CARD_LIST = [
     query: "Veluza ex 043/159",
     cardId: "sv9-43",
     setName: "Journey Together",
+  },
+  {
+    query: "Iron Crown ex 146",
+    cardId: "svp-146",
+    setName: "Scarlet & Violet Black Star Promos",
+    tcgUrl: "https://www.tcgplayer.com/product/579992/pokemon-sv-scarlet-and-violet-promo-cards-iron-crown-ex-146?page=1&Language=English",
   },
   {
     query: "Raging Bolt ex 123/162",
