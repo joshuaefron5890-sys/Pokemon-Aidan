@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Your Pokémon Binder</title>
+  <link rel="stylesheet" href="create.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body>
+
+<div class="wizard-shell">
+
+  <!-- Nav -->
+  <nav class="wizard-nav">
+    <a href="/" class="wizard-logo">
+      <svg viewBox="0 0 100 100" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="47" fill="#fff" stroke="#1e3a5f" stroke-width="4"/>
+        <path d="M3 50 A47 47 0 0 1 97 50 Z" fill="#e63946"/>
+        <rect x="3" y="46" width="94" height="8" fill="#1e3a5f"/>
+        <circle cx="50" cy="50" r="10" fill="#fff" stroke="#1e3a5f" stroke-width="3"/>
+        <circle cx="50" cy="50" r="5" fill="#f7c948"/>
+      </svg>
+      Pokémon Binder
+    </a>
+    <div class="step-pills">
+      <div class="step-pill active" id="pill-1"></div>
+      <div class="step-pill" id="pill-2"></div>
+      <div class="step-pill" id="pill-3"></div>
+      <div class="step-pill" id="pill-4"></div>
+    </div>
+  </nav>
+
+  <!-- Wizard body -->
+  <div class="wizard-body">
+    <div class="wizard-card">
+
+      <!-- ── Step 1: Binder info ── -->
+      <div class="wizard-step active" id="step-1">
+        <div class="step-eyebrow">Step 1 of 4</div>
+        <h2>Create your binder</h2>
+        <p class="sub">Set up your personal Pokémon card portfolio page.</p>
+
+        <div class="field">
+          <label for="owner-name">Your name</label>
+          <input type="text" id="owner-name" placeholder="e.g. Sarah" autocomplete="given-name" />
+        </div>
+
+        <div class="field">
+          <label>Binder URL</label>
+          <div class="slug-row">
+            <span class="slug-prefix">/binder/</span>
+            <input type="text" id="binder-slug" placeholder="sarah" autocomplete="off" spellcheck="false" />
+          </div>
+          <div id="slug-status"></div>
+        </div>
+
+        <div class="field">
+          <label>Visibility</label>
+          <div class="vis-group">
+            <label class="vis-option checked" id="opt-public">
+              <input type="radio" name="visibility" value="public" checked />
+              <span class="vis-label">🌐 Public</span>
+              <span class="vis-desc">Anyone can view your binder</span>
+            </label>
+            <label class="vis-option" id="opt-private">
+              <input type="radio" name="visibility" value="private" />
+              <span class="vis-label">🔒 Private</span>
+              <span class="vis-desc">Only you can see it</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="step1-error" class="field-error"></div>
+        <button class="btn-primary" id="step1-next">
+          Continue
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+
+      <!-- ── Step 2: Account ── -->
+      <div class="wizard-step" id="step-2">
+        <div class="step-eyebrow">Step 2 of 4</div>
+        <h2>Create your account</h2>
+        <p class="sub">Sign in to manage your binder. Your email is never shown publicly.</p>
+
+        <div class="field">
+          <label for="signup-email">Email</label>
+          <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+
+        <div class="field">
+          <label for="signup-password">Password</label>
+          <input type="password" id="signup-password" placeholder="Min. 8 characters" autocomplete="new-password" />
+        </div>
+
+        <div id="step2-error" class="field-error"></div>
+        <button class="btn-primary" id="step2-next">
+          <span id="step2-label">Create Account</span>
+          <div class="spinner hidden" id="step2-spinner"></div>
+        </button>
+
+        <p style="text-align:center;margin-top:1rem;font-size:.82rem;color:var(--muted)">
+          Already have an account?
+          <button id="login-instead" style="background:none;border:none;color:var(--accent2);cursor:pointer;font-family:inherit;font-size:.82rem">Log in</button>
+        </p>
+      </div>
+
+      <!-- ── Step 3: Add cards (AI wizard) ── -->
+      <div class="wizard-step" id="step-3">
+        <div class="step-eyebrow">Step 3 of 4</div>
+        <h2>Add your cards</h2>
+        <p class="sub">Tell me what cards you have — I'll look them up for you.</p>
+
+        <div class="card-chat-window">
+          <div class="card-chat-messages" id="wizard-msgs">
+            <div class="cc-msg assistant">
+              <div class="cc-av">🤖</div>
+              <div class="cc-bubble">What cards do you want to add? You can describe them like "Charizard ex from 151" or "Pikachu VMAX 044/185".</div>
+            </div>
+          </div>
+          <div class="cc-input-row">
+            <textarea id="wizard-input" placeholder="Describe a card…" rows="1" autocomplete="off" spellcheck="false"></textarea>
+            <button class="cc-send" id="wizard-send" disabled aria-label="Send">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="confirmed-tray">
+          <div class="tray-label">Confirmed cards <span id="tray-count">(0)</span></div>
+          <div id="tray-list" class="tray-list">
+            <span class="tray-empty" id="tray-empty">No cards yet</span>
+          </div>
+        </div>
+
+        <div id="step3-error" class="field-error"></div>
+        <button class="btn-primary" id="step3-next" disabled>
+          <span id="step3-label">Create My Binder</span>
+          <div class="spinner hidden" id="step3-spinner"></div>
+        </button>
+        <p style="text-align:center;margin-top:.75rem">
+          <button id="skip-cards" class="btn-secondary">Skip — add cards later</button>
+        </p>
+      </div>
+
+      <!-- ── Step 4: Success ── -->
+      <div class="wizard-step" id="step-4">
+        <div style="text-align:center">
+          <div class="success-icon">🎉</div>
+          <h2>Your binder is live!</h2>
+          <p class="sub">Share it with anyone — or keep it private for yourself.</p>
+
+          <div class="success-url" id="success-url" title="Click to copy"></div>
+
+          <button class="btn-primary" id="go-to-binder">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            View My Binder
+          </button>
+          <p style="text-align:center;margin-top:.75rem;font-size:.82rem;color:var(--muted)">
+            You can manage your cards from your binder page.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /.wizard-shell -->
+
+<script src="create.js"></script>
+</body>
+</html>

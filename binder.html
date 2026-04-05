@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokémon Binder</title>
+  <link rel="stylesheet" href="/style.css?v=49" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+
+  <!-- Netlify Identity for private binder auth + owner tools -->
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+  <!-- Must run before app.js to suppress auto-init -->
+  <script>window.BINDER_LOADER = true;</script>
+</head>
+<body>
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+  <!-- ── Private binder lock screen ── -->
+  <div id="private-lock" class="private-lock hidden">
+    <div class="private-lock-card">
+      <div class="lock-icon">🔒</div>
+      <h2 class="lock-owner"></h2>
+      <p>This binder is private. Log in to view it.</p>
+      <button class="btn-primary lock-login-btn">Log In</button>
+      <a href="/" class="back-link">← Back to home</a>
+    </div>
+  </div>
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="header-inner">
+      <h1 id="page-title">Loading…</h1>
+    </div>
+  </header>
+
+  <!-- ── Stats Bar ── -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Total Value</div>
+      <div class="stat-value" id="total-value">…</div>
+    </div>
+    <div class="stat-card stat-count">
+      <div class="stat-label">Cards</div>
+      <div class="stat-value" id="card-count">…</div>
+    </div>
+  </div>
+
+  <!-- ── Toolbar ── -->
+  <div class="toolbar" id="filter-bar">
+    <div class="search-bar-inner">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input id="search-input" type="text" placeholder="Search by name, set, or number…" autocomplete="off" spellcheck="false" />
+      <kbd class="search-shortcut" id="search-shortcut">/</kbd>
+      <button id="search-clear" class="search-clear" aria-label="Clear search">✕</button>
+    </div>
+    <div class="filter-group">
+      <div class="filter-dropdown" id="series-dropdown">
+        <button class="filter-btn" id="series-btn" aria-haspopup="listbox" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M7 12h10M11 18h2"/></svg>
+          <span id="series-label">All Series</span>
+          <svg class="filter-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="filter-panel" id="series-panel" role="listbox">
+          <div class="filter-panel-search">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="series-search" type="text" placeholder="Search series…" autocomplete="off" />
+          </div>
+          <ul id="series-options"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="filter-group">
+      <div class="filter-dropdown" id="grade-dropdown">
+        <button class="filter-btn" id="grade-btn" aria-haspopup="listbox" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          <span id="grade-label">All Cards</span>
+          <svg class="filter-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="filter-panel" id="grade-panel" role="listbox">
+          <ul id="grade-options"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="search-status" class="search-status"></div>
+
+  <!-- ── Loading status ── -->
+  <div class="loading-bar">
+    <span id="loading-status">Loading binder…</span>
+  </div>
+
+  <!-- ── Card Grid ── -->
+  <main class="grid-container">
+    <div id="card-grid">
+      <div id="load-sentinel" class="load-sentinel">Loading more…</div>
+    </div>
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer>
+    Prices sourced from <a href="https://www.tcgplayer.com/" target="_blank" rel="noopener">TCGPlayer</a>
+    via the <a href="https://pokemontcg.io/" target="_blank" rel="noopener">Pokémon TCG API</a>.
+    Click any card to view on TCGPlayer.
+  </footer>
+
+  <!-- ── Owner: floating chat bubble ── -->
+  <button id="owner-bubble" class="chat-bubble hidden" aria-label="Update My Binder">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    <span>Update Binder</span>
+  </button>
+
+  <!-- ── Owner: chat popup ── -->
+  <div id="owner-popup" class="chat-popup">
+    <div class="popup-header">
+      <div class="popup-header-left">
+        <div class="avatar small">🤖</div>
+        <div>
+          <div class="popup-title">Card Assistant</div>
+          <div class="popup-subtitle">Add, update or remove cards</div>
+        </div>
+      </div>
+      <button id="owner-popup-close" class="popup-close" aria-label="Close">✕</button>
+    </div>
+    <div id="binder-popup-messages" class="messages popup-messages">
+      <div class="message assistant">
+        <div class="avatar small">🤖</div>
+        <div class="message-bubble">Hi! What would you like to update?</div>
+      </div>
+    </div>
+    <div class="input-area popup-input-area">
+      <div class="input-row">
+        <textarea id="binder-chat-input" placeholder="Add a card, update price…" rows="1" autocomplete="off" spellcheck="false"></textarea>
+        <button id="binder-send-btn" class="send-btn" disabled aria-label="Send">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/binder-loader.js"></script>
+  <script src="/app.js?v=45"></script>
+  <script src="/background.js?v=44"></script>
+</body>
+</html>

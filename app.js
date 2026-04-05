@@ -571,4 +571,6 @@ function renderDebugTable(results) {
   document.querySelector(".grid-container").before(wrap);
 }
 
-document.addEventListener("DOMContentLoaded", loadCollection);
+if (!window.BINDER_LOADER) {
+  document.addEventListener("DOMContentLoaded", loadCollection);
+}

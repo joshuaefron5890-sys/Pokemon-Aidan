@@ -4,3 +4,9 @@
 
 [build.environment]
   NODE_VERSION = "18"
+
+# Route /binder/* to binder.html (SPA-style, 200 = rewrite not redirect)
+[[redirects]]
+  from   = "/binder/*"
+  to     = "/binder.html"
+  status = 200

@@ -96,6 +96,14 @@
     <span id="loading-status">Loading collection…</span>
   </div>
 
+  <!-- ── Add Card CTA ── -->
+  <div id="add-card-cta" class="add-card-cta hidden">
+    <button id="add-card-btn" class="add-card-btn" aria-label="Add new card">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Add New Card
+    </button>
+  </div>
+
   <!-- ── Card Grid ── -->
   <main class="grid-container">
     <div id="card-grid">
@@ -110,9 +118,101 @@
     Click any card to view on TCGPlayer.
   </footer>
 
+  <!-- ── Add Card Modal ── -->
+  <div id="add-card-modal" class="acm-backdrop hidden" role="dialog" aria-modal="true" aria-label="Add new card">
+    <div class="acm-sheet">
+      <div class="acm-header">
+        <h3 class="acm-title">Add a Card</h3>
+        <button id="acm-close" class="acm-close" aria-label="Close">✕</button>
+      </div>
+
+      <!-- Step A: Input method -->
+      <div id="acm-step-input" class="acm-body">
+        <p class="acm-sub">How do you want to find this card?</p>
+
+        <!-- Tab bar -->
+        <div class="acm-tabs">
+          <button class="acm-tab active" data-tab="name">Card Name</button>
+          <button class="acm-tab" data-tab="link">TCG Link</button>
+          <button class="acm-tab" data-tab="photo">Photo</button>
+        </div>
+
+        <!-- Tab: Name + number -->
+        <div class="acm-tab-panel active" id="tab-name">
+          <div class="acm-field">
+            <input type="text" id="acm-card-name" placeholder="e.g. Charizard ex 006/165" autocomplete="off" />
+            <p class="acm-hint">Include the card number for more accurate results.</p>
+          </div>
+        </div>
+
+        <!-- Tab: TCG link -->
+        <div class="acm-tab-panel" id="tab-link">
+          <div class="acm-field">
+            <input type="url" id="acm-tcg-link" placeholder="https://www.tcgplayer.com/product/..." autocomplete="off" />
+            <p class="acm-hint">Paste the full TCGPlayer URL for the card.</p>
+          </div>
+        </div>
+
+        <!-- Tab: Photo upload -->
+        <div class="acm-tab-panel" id="tab-photo">
+          <div class="acm-dropzone" id="acm-dropzone">
+            <div class="acm-drop-icon">🖼️</div>
+            <p class="acm-drop-label">Drag & drop a photo here</p>
+            <p class="acm-drop-sub">or</p>
+            <label class="acm-file-btn">
+              Select from computer
+              <input type="file" id="acm-photo-input" accept="image/*" />
+            </label>
+            <div id="acm-photo-preview-wrap" class="hidden">
+              <img id="acm-photo-preview" alt="Card photo" />
+              <button id="acm-photo-clear" class="acm-photo-clear">Remove</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="acm-input-error" class="acm-error"></div>
+        <button id="acm-lookup-btn" class="acm-primary-btn">
+          <span id="acm-lookup-label">Find Card</span>
+          <div class="acm-spinner hidden" id="acm-spinner"></div>
+        </button>
+      </div>
+
+      <!-- Step B: Confirm card -->
+      <div id="acm-step-confirm" class="acm-body hidden">
+        <p class="acm-sub">Is this the right card?</p>
+        <div class="acm-preview-row">
+          <img id="acm-preview-img" class="acm-preview-card" alt="Card preview" />
+          <div class="acm-preview-info">
+            <div class="acm-preview-name" id="acm-preview-name"></div>
+            <div class="acm-preview-set"  id="acm-preview-set"></div>
+            <div class="acm-preview-num"  id="acm-preview-num"></div>
+            <div class="acm-preview-price" id="acm-preview-price"></div>
+          </div>
+        </div>
+        <div id="acm-confirm-error" class="acm-error"></div>
+        <button id="acm-confirm-btn" class="acm-primary-btn">
+          <span id="acm-confirm-label">Add to Collection</span>
+          <div class="acm-spinner hidden" id="acm-confirm-spinner"></div>
+        </button>
+        <button id="acm-back-btn" class="acm-secondary-btn">← Try again</button>
+      </div>
+
+      <!-- Step C: Success -->
+      <div id="acm-step-done" class="acm-body hidden">
+        <div class="acm-success">
+          <div class="acm-success-icon">✅</div>
+          <p class="acm-success-msg" id="acm-success-msg">Card added! The page will update in ~1 minute.</p>
+          <button id="acm-done-btn" class="acm-primary-btn" style="margin-top:1rem">Done</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <script src="cards.js?v=44"></script>
-  <script src="app.js?v=44"></script>
+  <script src="app.js?v=45"></script>
   <script src="background.js?v=44"></script>
+  <script src="add-card-modal.js"></script>
 
   <!-- Netlify Identity: processes confirmation/recovery tokens in the URL hash
        and redirects to /admin after login -->
