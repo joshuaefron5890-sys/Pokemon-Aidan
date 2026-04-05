@@ -315,6 +315,8 @@ const CARD_LIST = [
     query: "Terapagos ex 180/131",
     cardId: "sv8pt5-180",
     setName: "Prismatic Evolutions",
+    imageUrl: "Terapagos.jpg",
+    fallbackPrice: 8.26,
   },
   {
     query: "Rowlet 090/088",
