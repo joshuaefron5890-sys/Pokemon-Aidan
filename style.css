@@ -145,15 +145,21 @@ header h1 {
   color: var(--accent2);
 }
 
-/* ── Search Bar ─────────────────────────────────────────── */
-.search-bar-wrap {
-  max-width: 680px;
-  margin: .5rem auto .6rem;
+/* ── Toolbar (search + filters on one line) ─────────────── */
+.toolbar {
+  max-width: 1400px;
+  margin: .5rem auto .75rem;
   padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  position: relative;
+  z-index: 50;
 }
 
 .search-bar-inner {
-  position: relative;
+  flex: 1;
+  max-width: 420px;
   display: flex;
   align-items: center;
   gap: .75rem;
@@ -177,7 +183,7 @@ header h1 {
     0 4px 20px rgba(247, 201, 72, 0.1),
     0 12px 36px rgba(0,0,0,.3),
     inset 0 1px 0 rgba(255,255,255,.06);
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .search-icon {
@@ -266,19 +272,6 @@ header h1 {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ── Filter Bar ─────────────────────────────────────────── */
-.filter-bar {
-  max-width: 1400px;
-  margin: 0 auto .75rem;
-  padding: 0 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: .75rem;
-  position: relative;
-  z-index: 50;
 }
 
 .filter-group {
