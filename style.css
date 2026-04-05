@@ -146,7 +146,7 @@ header h1 {
 /* ── Search Bar ─────────────────────────────────────────── */
 .search-bar-wrap {
   max-width: 680px;
-  margin: .5rem auto 1.75rem;
+  margin: .5rem auto .6rem;
   padding: 0 1.5rem;
 }
 
@@ -269,7 +269,7 @@ header h1 {
 /* ── Filter Bar ─────────────────────────────────────────── */
 .filter-bar {
   max-width: 1400px;
-  margin: 0 auto 1.25rem;
+  margin: 0 auto .75rem;
   padding: 0 1.5rem;
   display: flex;
   align-items: center;
@@ -287,8 +287,8 @@ header h1 {
   display: inline-flex;
   align-items: center;
   gap: .45rem;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  border: 1.5px solid rgba(96,165,250,.25);
   border-radius: 10px;
   padding: .5rem .85rem;
   color: var(--text);
@@ -298,10 +298,16 @@ header h1 {
   cursor: pointer;
   transition: border-color .15s, background .15s, box-shadow .15s;
   white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
 }
 .filter-btn:hover {
-  border-color: rgba(247,201,72,.4);
-  background: var(--surface2);
+  border-color: rgba(247,201,72,.55);
+  background: rgba(96,165,250,.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,.35);
+}
+.filter-btn[aria-expanded="true"] {
+  border-color: rgba(247,201,72,.55);
+  background: rgba(96,165,250,.1);
 }
 .filter-btn.active {
   border-color: var(--accent);
