@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap');
+
 /* ── Variables ─────────────────────────────────────────── */
 :root {
   --bg:        #071624;
@@ -35,7 +37,7 @@ body > *:not(#bg-canvas) {
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: "Segoe UI", system-ui, sans-serif;
+  font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -375,7 +377,8 @@ header h1 {
   scrollbar-color: var(--border) transparent;
 }
 
-#series-options li {
+#series-options li,
+#grade-options li {
   display: flex;
   align-items: center;
   gap: .5rem;
@@ -385,12 +388,15 @@ header h1 {
   transition: background .1s;
   color: var(--text);
 }
-#series-options li:hover { background: var(--surface2); }
-#series-options li.selected {
+#series-options li:hover,
+#grade-options li:hover { background: var(--surface2); }
+#series-options li.selected,
+#grade-options li.selected {
   color: var(--accent);
   background: rgba(247,201,72,.07);
 }
-#series-options li.selected::after {
+#series-options li.selected::after,
+#grade-options li.selected::after {
   content: "✓";
   margin-left: auto;
   font-size: .8rem;
