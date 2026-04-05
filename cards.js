@@ -477,6 +477,21 @@ const CARD_LIST = [
     setName: "Journey Together",
   },
   {
+    query: "Raging Bolt ex 123/162",
+    cardId: "sv5-123",
+    setName: "Temporal Forces",
+  },
+  {
+    query: "Iron Thorns ex 077/167",
+    cardId: "sv6-77",
+    setName: "Twilight Masquerade",
+  },
+  {
+    query: "Dondozo ex 066/182",
+    cardId: "sv10-66",
+    setName: "Destined Rivals",
+  },
+  {
     query: "Giacomo 138/131",
     cardId: "sv8pt5-138",
     setName: "Prismatic Evolutions",
