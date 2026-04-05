@@ -452,6 +452,16 @@ const CARD_LIST = [
     setName: "Ascended Heroes",
   },
   {
+    query: "N's Zoroark ex 058/159",
+    cardId: "sv9-58",
+    setName: "Journey Together",
+  },
+  {
+    query: "Dudunsparce ex 121/159",
+    cardId: "sv9-121",
+    setName: "Journey Together",
+  },
+  {
     query: "Giacomo 138/131",
     cardId: "sv8pt5-138",
     setName: "Prismatic Evolutions",
