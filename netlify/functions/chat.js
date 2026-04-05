@@ -4,9 +4,10 @@
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const GITHUB_TOKEN  = process.env.GITHUB_TOKEN;
-const GITHUB_REPO   = process.env.GITHUB_REPO || "joshuaefron5890-sys/Pokemon-Aidan";
+// Hardcoded to avoid env var misconfiguration
+const GITHUB_REPO   = "joshuaefron5890-sys/Pokemon-Aidan";
 const TCG_API       = "https://api.pokemontcg.io/v2";
-const GH_FILE_URL   = `https://api.github.com/repos/${GITHUB_REPO}/contents/cards.js`;
+const GH_FILE_URL   = `https://api.github.com/repos/${GITHUB_REPO}/contents/cards.js?ref=main`;
 
 // ── cards.js file helpers ──────────────────────────────────
 
