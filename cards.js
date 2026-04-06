@@ -607,6 +607,7 @@ const CARD_LIST = [
     query: "Team Rocket's Dugtrio 239/217",
     cardId: "me2pt5-239",
     setName: "Ascended Heroes",
+    fallbackPrice: 11.69,
   },
   {
     query: "Mega Dragonite 271/217",
@@ -648,8 +649,9 @@ const CARD_LIST = [
   },
   {
     query: "Elesa's Sparkle 246/172",
-    cardId: "swsh9-246",
-    setName: "Brilliant Stars",
+    cardId: "swsh12pt5-246",
+    setName: "Crown Zenith",
+    tcgUrl: "https://www.tcgplayer.com/product/477241/pokemon-crown-zenith-elesas-sparkle-full-art?page=1&Language=English",
     fallbackPrice: 16.95,
   },
   {
