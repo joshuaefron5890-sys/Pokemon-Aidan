@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "slug": "callie",
+    "owner": "Callie",
+    "email": "callie.m.frisch@gmail.com",
+    "public": true,
+    "hasPhoto": false,
+    "cardCount": 1,
+    "createdAt": "2026-04-06T00:51:08.011Z"
+  }
+]
