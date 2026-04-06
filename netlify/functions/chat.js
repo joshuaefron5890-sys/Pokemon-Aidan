@@ -30,24 +30,36 @@ async function getCardsFile() {
 }
 
 async function putCardsFile(content, sha, message) {
-  const res = await fetch(GH_FILE_URL, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${GITHUB_TOKEN}`,
-      Accept: "application/vnd.github.v3+json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      message,
-      content: Buffer.from(content, "utf8").toString("base64"),
-      sha,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(`GitHub write error: ${JSON.stringify(err)}`);
+  let useSha = sha;
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const res = await fetch(GH_FILE_URL, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Accept: "application/vnd.github.v3+json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message,
+        content: Buffer.from(content, "utf8").toString("base64"),
+        sha: useSha,
+      }),
+    });
+
+    if (res.ok) return res.json();
+
+    // 409 = SHA mismatch (stale after a recent deploy). Re-fetch the current
+    // SHA and retry once — the content we're writing is already correct.
+    if (res.status === 409 && attempt === 0) {
+      const current = await getCardsFile();
+      useSha = current.sha;
+      continue;
+    }
+
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(`GitHub write error (${res.status}): ${err.message || JSON.stringify(err)}`);
   }
-  return res.json();
 }
 
 function formatCard(card) {
