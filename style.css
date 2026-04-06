@@ -676,6 +676,17 @@ footer a {
   }
   .stats-bar { gap: 1rem; }
   .stat-card { padding: .75rem 1.25rem; min-width: 130px; }
+
+  .toolbar {
+    flex-wrap: wrap;
+  }
+  .search-bar-inner {
+    max-width: 100%;
+    width: 100%;
+  }
+  .filter-group {
+    flex: 1;
+  }
 }
 
 /* ── Private binder lock screen ────────────────────────── */
