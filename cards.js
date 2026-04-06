@@ -618,6 +618,8 @@ const CARD_LIST = [
     query: "Charizard V 019/189",
     cardId: "swsh3-19",
     setName: "Darkness Ablaze",
+    tcgUrl: "https://www.ebay.com/itm/255036773745",
+    fallbackPrice: 38.00,
     grade: 9,
   },
   {
