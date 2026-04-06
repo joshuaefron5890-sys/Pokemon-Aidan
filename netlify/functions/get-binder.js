@@ -5,6 +5,8 @@
 const { getFile } = require("./_gh");
 const GITHUB_REPO = "joshuaefron5890-sys/Pokemon-Aidan";
 
+const NO_CACHE = { "Cache-Control": "no-store, no-cache, must-revalidate", "Content-Type": "application/json" };
+
 exports.handler = async (event, context) => {
   if (event.httpMethod !== "GET") return { statusCode: 405 };
 
@@ -26,7 +28,7 @@ exports.handler = async (event, context) => {
     if (!binder.public && !isOwner) {
       return {
         statusCode: 403,
-        headers: { "Content-Type": "application/json" },
+        headers: NO_CACHE,
         body: JSON.stringify({ error: "private", owner: binder.owner }),
       };
     }
@@ -37,7 +39,7 @@ exports.handler = async (event, context) => {
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: NO_CACHE,
       body: JSON.stringify({
         slug:      binder.slug,
         owner:     binder.owner,
@@ -52,7 +54,7 @@ exports.handler = async (event, context) => {
     console.error("get-binder error:", err);
     return {
       statusCode: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: NO_CACHE,
       body: JSON.stringify({ error: err.message }),
     };
   }

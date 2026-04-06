@@ -602,4 +602,40 @@ const CARD_LIST = [
     cardId: "sv8pt5-143",
     setName: "Prismatic Evolutions",
   },
+  {
+    query: "Mega Dragonite 271/217",
+    cardId: "me2pt5-271",
+    setName: "Ascended Heroes",
+  },
+  {
+    query: "Charmeleon 169/165",
+    cardId: "sv3pt5-169",
+    setName: "Pokemon 151",
+  },
+  {
+    query: "Bulbasaur 133/132",
+    cardId: "me1-133",
+    setName: "Mega Evolution",
+    tcgUrl: "https://www.tcgplayer.com/product/654472/pokemon-me01-mega-evolution-bulbasaur-133-132",
+  },
+  {
+    query: "Meowth 106/094",
+    cardId: "me2-106",
+    setName: "Phantasmal Flames",
+  },
+  {
+    query: "Mega Gengar ex 230/193",
+    cardId: "sv2-230",
+    setName: "Paldea Evolved",
+  },
+  {
+    query: "Cynthia's Garchomp ex 111/217",
+    cardId: "me2pt5-111",
+    setName: "Ascended Heroes",
+  },
+  {
+    query: "Single Strike Urshifu vMAX 168/163",
+    cardId: "swsh5-168",
+    setName: "Battle Styles",
+  },
 ];
