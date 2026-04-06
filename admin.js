@@ -199,7 +199,8 @@ async function sendMessage(isPopup) {
   const typing2 = appendTyping(true);
 
   try {
-    const token = netlifyIdentity.currentUser()?.token?.access_token;
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
     const res = await fetch("/.netlify/functions/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
