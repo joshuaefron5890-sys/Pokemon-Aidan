@@ -626,6 +626,8 @@ const CARD_LIST = [
     query: "Blaziken 001",
     cardId: "pop1-1",
     setName: "POP Series 1",
+    tcgUrl: "https://www.ebay.ca/itm/265153401807",
+    fallbackPrice: 499.99,
     grade: 10,
   },
   {
