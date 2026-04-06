@@ -530,6 +530,7 @@ const CARD_LIST = [
     query: "Gengar 057/198",
     cardId: "swsh6-57",
     setName: "Chilling Reign",
+    tcgUrl: "https://www.tcgplayer.com/product/241716/pokemon-swsh06-chilling-reign-gengar?page=1&Language=English",
   },
   {
     query: "Pikachu SWSH234",
