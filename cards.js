@@ -668,9 +668,10 @@ const CARD_LIST = [
     fallbackPrice: 75.00,
   },
   {
-    query: "Venusaur & Celebi GX 001/173",
+    query: "Pheromosa & Buzzwole GX 001/173",
     cardId: "sm12a-1",
     setName: "Tag All Stars",
+    tcgUrl: "https://www.tcgplayer.com/product/572655/pokemon-japan-sm12a-tag-team-gx-tag-all-stars-pheromosa-and-buzzwole-gx?page=1&Language=all",
   },
   {
     query: "Machamp vMAX 194/189",
