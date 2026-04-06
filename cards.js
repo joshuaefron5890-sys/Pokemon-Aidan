@@ -637,6 +637,7 @@ const CARD_LIST = [
     cardId: "m2a-230",
     setName: "High Class Pack Mega Dream EX",
     tcgUrl: "https://www.tcgplayer.com/product/665902/pokemon-japan-m2a-high-class-pack-mega-dream-ex-mega-gengar-ex-230-193?page=1&Language=all",
+    fallbackPrice: 26.23,
   },
   {
     query: "Cynthia's Garchomp ex 111/217",
