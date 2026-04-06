@@ -417,6 +417,7 @@ const CARD_LIST = [
     query: "Iron Leaves ex 176/131",
     cardId: "sv8pt5-176",
     setName: "Prismatic Evolutions",
+    tcgUrl: "https://www.tcgplayer.com/product/610531/pokemon-sv-prismatic-evolutions-iron-leaves-ex?page=1&Language=English",
   },
   {
     query: "Team Rocket's Orbeetle 198/182",
