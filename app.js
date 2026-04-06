@@ -1,7 +1,7 @@
 const API_BASE = "https://api.pokemontcg.io/v2/cards";
 const TCGDEX_BASE = "https://api.tcgdex.net/v2/en/cards";
 const CACHE_KEY = "pokemon_portfolio_cache_v6";
-const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+const CACHE_TTL_MS = 48 * 60 * 60 * 1000; // 48 hours
 const FETCH_TIMEOUT_MS = 5000;             // 5 seconds per card
 const PAGE_SIZE = 20;
 
