@@ -589,6 +589,7 @@ const CARD_LIST = [
     cardId: "sv5-34",
     setName: "Temporal Forces",
     tcgUrl: "https://www.tcgplayer.com/product/542778/pokemon-sv05-temporal-forces-incineroar-ex-034-162?page=1&Language=English",
+    fallbackPrice: 0.30,
   },
   {
     query: "Azumarill ex 084/217",
@@ -644,6 +645,7 @@ const CARD_LIST = [
     query: "Elesa's Sparkle 246/172",
     cardId: "swsh9-246",
     setName: "Brilliant Stars",
+    fallbackPrice: 16.95,
   },
   {
     query: "Machamp vMAX 194/198",
