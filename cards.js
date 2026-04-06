@@ -356,6 +356,8 @@ const CARD_LIST = [
     query: "Arcanine ex 032/198",
     cardId: "sv1-32",
     setName: "Scarlet & Violet",
+    tcgUrl: "https://www.tcgplayer.com/product/487872/pokemon-sv01-scarlet-and-violet-base-set-arcanine-ex-032-198?page=1&Language=English",
+    fallbackPrice: 0.99,
   },
   {
     query: "Gouging Fire ex 144",
