@@ -49,7 +49,9 @@
 
         <div class="field">
           <label>Profile Photo <span class="field-opt">Optional</span></label>
-          <div class="photo-upload-wrap">
+          <div class="photo-upload-wrap" id="photo-upload-wrap">
+
+            <!-- State 1: empty -->
             <div class="photo-placeholder" id="photo-placeholder">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
               <span>Drag & drop or</span>
@@ -58,10 +60,30 @@
                 <input type="file" id="photo-file-input" accept="image/*" />
               </label>
             </div>
-            <div class="photo-has-image hidden" id="photo-has-image">
-              <img id="photo-preview" class="photo-preview-img" alt="Profile photo preview" />
-              <button type="button" id="photo-remove" class="photo-remove-btn">✕ Remove</button>
+
+            <!-- State 2: crop/resize -->
+            <div class="crop-area hidden" id="crop-area">
+              <p class="crop-hint">Drag to reposition &nbsp;·&nbsp; Scroll or pinch to zoom</p>
+              <div class="crop-canvas-wrap">
+                <canvas id="crop-canvas" width="260" height="260"></canvas>
+              </div>
+              <div class="crop-zoom-row">
+                <span class="zoom-icon">−</span>
+                <input type="range" id="crop-zoom" min="1" max="3" step="0.01" value="1" />
+                <span class="zoom-icon">+</span>
+              </div>
+              <div class="crop-btns">
+                <button type="button" id="crop-apply" class="btn-primary" style="flex:1;padding:.55rem 1rem;font-size:.9rem">Use Photo</button>
+                <button type="button" id="crop-cancel" class="btn-secondary" style="padding:.55rem 1rem;font-size:.9rem">Cancel</button>
+              </div>
             </div>
+
+            <!-- State 3: confirmed -->
+            <div class="photo-has-image hidden" id="photo-has-image">
+              <img id="photo-preview" class="photo-preview-img" alt="Profile photo" />
+              <button type="button" id="photo-remove" class="photo-remove-btn">✕ Change Photo</button>
+            </div>
+
           </div>
         </div>
 

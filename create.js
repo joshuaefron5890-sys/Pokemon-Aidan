@@ -43,55 +43,227 @@ function goTo(n) {
 
 // ── Step 1: Binder info ────────────────────────────────────
 
-// Photo upload — compress to 400×400 JPEG before storing
-let pendingPhoto = null; // raw base64 (no data: prefix)
+// ── Photo upload + crop ────────────────────────────────────
+
+let pendingPhoto = null; // raw base64 (no data: prefix), set after cropping
 
 const photoFileInput  = document.getElementById("photo-file-input");
 const photoPlaceholder = document.getElementById("photo-placeholder");
 const photoHasImage   = document.getElementById("photo-has-image");
 const photoPreview    = document.getElementById("photo-preview");
+const cropArea        = document.getElementById("crop-area");
+const cropCanvas      = document.getElementById("crop-canvas");
+const cropZoomSlider  = document.getElementById("crop-zoom");
+
+const CROP_SIZE = 260; // canvas display size in px
+const OUT_SIZE  = 400; // exported JPEG size in px
+
+// Crop state
+let cropImg = null;
+let cropX = 0, cropY = 0, cropZoom = 1;
+let dragging = false, dragSX, dragSY, panSX, panSY;
+let lastPinchDist = null;
+
+// ── File input / drag-drop ──────────────────────────────────
 
 photoFileInput.addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (file) compressPhoto(file);
+  if (e.target.files[0]) openCrop(e.target.files[0]);
 });
 
-// Drag-and-drop onto the upload wrap
-document.querySelector(".photo-upload-wrap")?.addEventListener("dragover", e => e.preventDefault());
-document.querySelector(".photo-upload-wrap")?.addEventListener("drop", e => {
+const uploadWrap = document.getElementById("photo-upload-wrap");
+uploadWrap.addEventListener("dragover", e => e.preventDefault());
+uploadWrap.addEventListener("drop", e => {
   e.preventDefault();
   const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith("image/")) compressPhoto(file);
+  if (file && file.type.startsWith("image/")) openCrop(file);
 });
 
-function compressPhoto(file) {
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const img = new Image();
-    img.onload = () => {
-      const MAX = 400;
-      let w = img.width, h = img.height;
-      if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
-      else        { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
-      const canvas = document.createElement("canvas");
-      canvas.width = w; canvas.height = h;
-      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-      pendingPhoto = dataUrl.split(",")[1]; // raw base64 only
-      photoPreview.src = dataUrl;
-      photoPlaceholder.classList.add("hidden");
-      photoHasImage.classList.remove("hidden");
-    };
-    img.src = ev.target.result;
+// ── Open crop UI ────────────────────────────────────────────
+
+function openCrop(file) {
+  const url = URL.createObjectURL(file);
+  cropImg = new Image();
+  cropImg.onload = () => {
+    URL.revokeObjectURL(url);
+    // Initial zoom: shorter side fills the circle
+    cropZoom = CROP_SIZE / Math.min(cropImg.naturalWidth, cropImg.naturalHeight);
+    // Center the image
+    cropX = (CROP_SIZE - cropImg.naturalWidth  * cropZoom) / 2;
+    cropY = (CROP_SIZE - cropImg.naturalHeight * cropZoom) / 2;
+    cropZoomSlider.value = 1;
+    renderCrop();
+    photoPlaceholder.classList.add("hidden");
+    photoHasImage.classList.add("hidden");
+    cropArea.classList.remove("hidden");
   };
-  reader.readAsDataURL(file);
+  cropImg.src = url;
 }
 
-document.getElementById("photo-remove")?.addEventListener("click", () => {
+// ── Render crop preview ─────────────────────────────────────
+
+function renderCrop() {
+  if (!cropImg) return;
+  const ctx = cropCanvas.getContext("2d");
+  cropCanvas.width  = CROP_SIZE;
+  cropCanvas.height = CROP_SIZE;
+
+  const w = cropImg.naturalWidth  * cropZoom;
+  const h = cropImg.naturalHeight * cropZoom;
+
+  // Dim layer (full image, desaturated)
+  ctx.globalAlpha = 0.35;
+  ctx.drawImage(cropImg, cropX, cropY, w, h);
+  ctx.globalAlpha = 1;
+
+  // Full-brightness circle
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(CROP_SIZE / 2, CROP_SIZE / 2, CROP_SIZE / 2 - 1, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.drawImage(cropImg, cropX, cropY, w, h);
+  ctx.restore();
+
+  // Golden ring
+  ctx.strokeStyle = "rgba(247,201,72,.85)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(CROP_SIZE / 2, CROP_SIZE / 2, CROP_SIZE / 2 - 1, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+// ── Zoom ────────────────────────────────────────────────────
+
+function applyZoom(newZoom) {
+  newZoom = Math.max(1, Math.min(3, newZoom));
+  // Zoom from center of canvas
+  const pivotX = CROP_SIZE / 2, pivotY = CROP_SIZE / 2;
+  const ratio  = newZoom / cropZoom;
+  cropX = pivotX - (pivotX - cropX) * ratio;
+  cropY = pivotY - (pivotY - cropY) * ratio;
+  cropZoom = newZoom;
+  clampPan();
+  renderCrop();
+}
+
+cropZoomSlider.addEventListener("input", () => {
+  // Slider goes 1–3; map to zoom relative to fit
+  const baseZoom = CROP_SIZE / Math.min(cropImg.naturalWidth, cropImg.naturalHeight);
+  applyZoom(baseZoom * parseFloat(cropZoomSlider.value));
+});
+
+// Scroll-to-zoom on canvas
+cropCanvas.addEventListener("wheel", e => {
+  e.preventDefault();
+  const baseZoom = CROP_SIZE / Math.min(cropImg.naturalWidth, cropImg.naturalHeight);
+  const newRaw   = (cropZoom / baseZoom) - e.deltaY * 0.002;
+  cropZoomSlider.value = Math.max(1, Math.min(3, newRaw));
+  applyZoom(baseZoom * parseFloat(cropZoomSlider.value));
+}, { passive: false });
+
+// ── Pan — mouse ─────────────────────────────────────────────
+
+cropCanvas.addEventListener("mousedown", e => {
+  dragging = true; dragSX = e.clientX; dragSY = e.clientY;
+  panSX = cropX; panSY = cropY;
+  cropCanvas.style.cursor = "grabbing";
+});
+window.addEventListener("mousemove", e => {
+  if (!dragging) return;
+  cropX = panSX + (e.clientX - dragSX);
+  cropY = panSY + (e.clientY - dragSY);
+  clampPan(); renderCrop();
+});
+window.addEventListener("mouseup", () => {
+  dragging = false;
+  cropCanvas.style.cursor = "grab";
+});
+
+// ── Pan + pinch — touch ──────────────────────────────────────
+
+cropCanvas.addEventListener("touchstart", e => {
+  if (e.touches.length === 1) {
+    dragging = true;
+    dragSX = e.touches[0].clientX; dragSY = e.touches[0].clientY;
+    panSX = cropX; panSY = cropY;
+    lastPinchDist = null;
+  } else if (e.touches.length === 2) {
+    dragging = false;
+    lastPinchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+  }
+}, { passive: true });
+
+cropCanvas.addEventListener("touchmove", e => {
+  e.preventDefault();
+  if (e.touches.length === 1 && dragging) {
+    cropX = panSX + (e.touches[0].clientX - dragSX);
+    cropY = panSY + (e.touches[0].clientY - dragSY);
+    clampPan(); renderCrop();
+  } else if (e.touches.length === 2 && lastPinchDist !== null) {
+    const dist  = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    const baseZoom = CROP_SIZE / Math.min(cropImg.naturalWidth, cropImg.naturalHeight);
+    const newRaw   = (cropZoom / baseZoom) * (dist / lastPinchDist);
+    lastPinchDist  = dist;
+    cropZoomSlider.value = Math.max(1, Math.min(3, newRaw));
+    applyZoom(baseZoom * parseFloat(cropZoomSlider.value));
+  }
+}, { passive: false });
+
+cropCanvas.addEventListener("touchend", () => { dragging = false; lastPinchDist = null; });
+
+// ── Clamp pan so image never fully leaves the circle ─────────
+
+function clampPan() {
+  const w = cropImg.naturalWidth  * cropZoom;
+  const h = cropImg.naturalHeight * cropZoom;
+  const r = CROP_SIZE / 2;
+  // Image edge must stay within r pixels of the center
+  cropX = Math.min(r, Math.max(r - w, cropX));
+  cropY = Math.min(r, Math.max(r - h, cropY));
+}
+
+// ── Apply / Cancel ──────────────────────────────────────────
+
+document.getElementById("crop-apply").addEventListener("click", () => {
+  const scale = OUT_SIZE / CROP_SIZE;
+  const out   = document.createElement("canvas");
+  out.width = out.height = OUT_SIZE;
+  const ctx = out.getContext("2d");
+
+  // Clip to circle
+  ctx.beginPath();
+  ctx.arc(OUT_SIZE / 2, OUT_SIZE / 2, OUT_SIZE / 2, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.drawImage(cropImg,
+    cropX * scale, cropY * scale,
+    cropImg.naturalWidth * cropZoom * scale,
+    cropImg.naturalHeight * cropZoom * scale
+  );
+
+  const dataUrl = out.toDataURL("image/jpeg", 0.85);
+  pendingPhoto  = dataUrl.split(",")[1];
+  photoPreview.src = dataUrl;
+
+  cropArea.classList.add("hidden");
+  photoHasImage.classList.remove("hidden");
+});
+
+document.getElementById("crop-cancel").addEventListener("click", () => {
+  cropArea.classList.add("hidden");
+  photoPlaceholder.classList.remove("hidden");
+  photoFileInput.value = "";
+});
+
+document.getElementById("photo-remove").addEventListener("click", () => {
   pendingPhoto = null;
   photoFileInput.value = "";
-  photoPlaceholder.classList.remove("hidden");
   photoHasImage.classList.add("hidden");
+  photoPlaceholder.classList.remove("hidden");
 });
 
 const ownerInput = document.getElementById("owner-name");
