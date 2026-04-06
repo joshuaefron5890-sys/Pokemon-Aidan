@@ -15,7 +15,8 @@ async function getCardsFile() {
   const headers = { Accept: "application/vnd.github.v3+json" };
   if (GITHUB_TOKEN) headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
 
-  const res = await fetch(GH_FILE_URL, { headers });
+  // Timestamp busts GitHub's CDN cache so we always get the true latest SHA
+  const res = await fetch(`${GH_FILE_URL}&t=${Date.now()}`, { headers });
 
   if (!res.ok) {
     const body = await res.text();
@@ -30,35 +31,43 @@ async function getCardsFile() {
 }
 
 async function putCardsFile(content, sha, message) {
-  let useSha = sha;
+  const res = await fetch(GH_FILE_URL, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${GITHUB_TOKEN}`,
+      Accept: "application/vnd.github.v3+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      message,
+      content: Buffer.from(content, "utf8").toString("base64"),
+      sha,
+    }),
+  });
 
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await fetch(GH_FILE_URL, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        Accept: "application/vnd.github.v3+json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message,
-        content: Buffer.from(content, "utf8").toString("base64"),
-        sha: useSha,
-      }),
-    });
-
-    if (res.ok) return res.json();
-
-    // 409 = SHA mismatch (stale after a recent deploy). Re-fetch the current
-    // SHA and retry once — the content we're writing is already correct.
-    if (res.status === 409 && attempt === 0) {
-      const current = await getCardsFile();
-      useSha = current.sha;
-      continue;
-    }
-
+  if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(`GitHub write error (${res.status}): ${err.message || JSON.stringify(err)}`);
+    const status = res.status;
+    const e = new Error(`GitHub write error (${status}): ${err.message || JSON.stringify(err)}`);
+    e.status = status;
+    throw e;
+  }
+  return res.json();
+}
+
+// Retry a read-modify-write operation up to 3 times on 409 conflicts.
+// Each attempt re-reads the file so the SHA + content are always fresh.
+async function withRetry(fn) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (err.status === 409 && attempt < 2) {
+        await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
+        continue;
+      }
+      throw err;
+    }
   }
 }
 
@@ -140,72 +149,76 @@ async function tool_get_collection() {
 }
 
 async function tool_add_card(card) {
-  const { content, sha } = await getCardsFile();
-  if (content.includes(`cardId: "${card.cardId}"`)) {
-    return { error: `"${card.cardId}" is already in the collection.` };
-  }
-  const entry = formatCard(card);
-  const newContent = content.replace(/(\n\];\s*)$/, `\n${entry}\n];`);
-  await putCardsFile(newContent, sha, `Add ${card.query} via admin agent`);
-  return { success: true, message: `Added "${card.query}" — the site will redeploy in about a minute.` };
+  return withRetry(async () => {
+    const { content, sha } = await getCardsFile();
+    if (content.includes(`cardId: "${card.cardId}"`)) {
+      return { error: `"${card.cardId}" is already in the collection.` };
+    }
+    const entry = formatCard(card);
+    const newContent = content.replace(/(\n\];\s*)$/, `\n${entry}\n];`);
+    await putCardsFile(newContent, sha, `Add ${card.query} via admin agent`);
+    return { success: true, message: `Added "${card.query}" — the site will redeploy in about a minute.` };
+  });
 }
 
 async function tool_update_card({ cardId, updates }) {
-  const { content, sha } = await getCardsFile();
-  const lines = content.split("\n");
+  return withRetry(async () => {
+    const { content, sha } = await getCardsFile();
+    const lines = content.split("\n");
 
-  // Find the line containing this cardId
-  let pivot = -1;
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes(`cardId:`) && lines[i].includes(`"${cardId}"`)) {
-      pivot = i; break;
+    let pivot = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].includes(`cardId:`) && lines[i].includes(`"${cardId}"`)) {
+        pivot = i; break;
+      }
     }
-  }
-  if (pivot === -1) return { error: `Card "${cardId}" not found.` };
+    if (pivot === -1) return { error: `Card "${cardId}" not found.` };
 
-  // Walk back/forward to find block boundaries
-  let start = pivot;
-  while (start > 0 && !lines[start].trim().startsWith("{")) start--;
-  let end = pivot;
-  while (end < lines.length - 1 && !lines[end].trim().match(/^\},?$/)) end++;
+    let start = pivot;
+    while (start > 0 && !lines[start].trim().startsWith("{")) start--;
+    let end = pivot;
+    while (end < lines.length - 1 && !lines[end].trim().match(/^\},?$/)) end++;
 
-  let block = lines.slice(start, end + 1).join("\n");
+    let block = lines.slice(start, end + 1).join("\n");
 
-  for (const [key, value] of Object.entries(updates)) {
-    const valueStr = typeof value === "string" ? `"${value}"` : String(value);
-    const existing = new RegExp(`(    ${key}:\\s*)([^,\\n]+)(,)`);
-    if (existing.test(block)) {
-      block = block.replace(existing, `$1${valueStr}$3`);
-    } else {
-      block = block.replace(/(  },?)$/, `    ${key}: ${valueStr},\n  },`);
+    for (const [key, value] of Object.entries(updates)) {
+      const valueStr = typeof value === "string" ? `"${value}"` : String(value);
+      const existing = new RegExp(`(    ${key}:\\s*)([^,\\n]+)(,)`);
+      if (existing.test(block)) {
+        block = block.replace(existing, `$1${valueStr}$3`);
+      } else {
+        block = block.replace(/(  },?)$/, `    ${key}: ${valueStr},\n  },`);
+      }
     }
-  }
 
-  const newLines = [...lines.slice(0, start), block, ...lines.slice(end + 1)];
-  await putCardsFile(newLines.join("\n"), sha, `Update ${cardId} via admin agent`);
-  return { success: true, message: `Updated "${cardId}" (${Object.keys(updates).join(", ")}).` };
+    const newLines = [...lines.slice(0, start), block, ...lines.slice(end + 1)];
+    await putCardsFile(newLines.join("\n"), sha, `Update ${cardId} via admin agent`);
+    return { success: true, message: `Updated "${cardId}" (${Object.keys(updates).join(", ")}).` };
+  });
 }
 
 async function tool_remove_card({ cardId }) {
-  const { content, sha } = await getCardsFile();
-  const lines = content.split("\n");
+  return withRetry(async () => {
+    const { content, sha } = await getCardsFile();
+    const lines = content.split("\n");
 
-  let pivot = -1;
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes(`cardId:`) && lines[i].includes(`"${cardId}"`)) {
-      pivot = i; break;
+    let pivot = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].includes(`cardId:`) && lines[i].includes(`"${cardId}"`)) {
+        pivot = i; break;
+      }
     }
-  }
-  if (pivot === -1) return { error: `Card "${cardId}" not found.` };
+    if (pivot === -1) return { error: `Card "${cardId}" not found.` };
 
-  let start = pivot;
-  while (start > 0 && !lines[start].trim().startsWith("{")) start--;
-  let end = pivot;
-  while (end < lines.length - 1 && !lines[end].trim().match(/^\},?$/)) end++;
+    let start = pivot;
+    while (start > 0 && !lines[start].trim().startsWith("{")) start--;
+    let end = pivot;
+    while (end < lines.length - 1 && !lines[end].trim().match(/^\},?$/)) end++;
 
-  const newLines = [...lines.slice(0, start), ...lines.slice(end + 1)];
-  await putCardsFile(newLines.join("\n"), sha, `Remove ${cardId} via admin agent`);
-  return { success: true, message: `Removed "${cardId}" from the collection.` };
+    const newLines = [...lines.slice(0, start), ...lines.slice(end + 1)];
+    await putCardsFile(newLines.join("\n"), sha, `Remove ${cardId} via admin agent`);
+    return { success: true, message: `Removed "${cardId}" from the collection.` };
+  });
 }
 
 async function executeTool(name, input) {
