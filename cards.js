@@ -624,6 +624,20 @@ const CARD_LIST = [
     grade: 9,
   },
   {
+    query: "Meowth (Old Maid)",
+    setName: "Japanese Old Maid 2019",
+    tcgUrl: "https://www.ebay.com/itm/397772385405",
+    price: 75.00,
+    grade: 10,
+  },
+  {
+    query: "Dark Sylveon V SWSH134",
+    cardId: "swshp-SWSH134",
+    setName: "SWSH Black Star Promos",
+    tcgUrl: "https://www.ebay.com/itm/297959238726",
+    grade: 8,
+  },
+  {
     query: "Alakazam ex 201/165",
     cardId: "sv3pt5-201",
     setName: "Pokemon 151",
