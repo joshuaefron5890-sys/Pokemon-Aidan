@@ -627,7 +627,7 @@ const CARD_LIST = [
     query: "Meowth (Old Maid)",
     setName: "Japanese Old Maid 2019",
     tcgUrl: "https://www.ebay.com/itm/397772385405",
-    price: 75.00,
+    price: 21.00,
     grade: 10,
   },
   {
