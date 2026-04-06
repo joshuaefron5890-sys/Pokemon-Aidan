@@ -604,6 +604,11 @@ const CARD_LIST = [
     setName: "Prismatic Evolutions",
   },
   {
+    query: "Team Rocket's Dugtrio 239/217",
+    cardId: "me2pt5-239",
+    setName: "Ascended Heroes",
+  },
+  {
     query: "Mega Dragonite 271/217",
     cardId: "me2pt5-271",
     setName: "Ascended Heroes",
