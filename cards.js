@@ -668,6 +668,11 @@ const CARD_LIST = [
     fallbackPrice: 75.00,
   },
   {
+    query: "Darkrai GX 088/147",
+    cardId: "sm3-88",
+    setName: "Burning Shadows",
+  },
+  {
     query: "Pheromosa & Buzzwole GX 001/173",
     cardId: "sm12a-1",
     setName: "Tag All Stars",
