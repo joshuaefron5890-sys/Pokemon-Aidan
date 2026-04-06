@@ -53,6 +53,23 @@ function setCached(query, card) {
   saveCache(cache);
 }
 
+// ── Backup store (persistent, no expiry) ──────────────────
+// Saves last known-good API price + image so they survive
+// cache expiry and API failures.
+
+const BACKUP_KEY = "pokemon_portfolio_backup_v1";
+
+function loadBackupStore() {
+  try {
+    const raw = localStorage.getItem(BACKUP_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveBackupStore(store) {
+  try { localStorage.setItem(BACKUP_KEY, JSON.stringify(store)); } catch {}
+}
+
 // ── API ────────────────────────────────────────────────────
 
 // Normalize a TCGdex card response to the same shape as pokemontcg.io
@@ -456,6 +473,8 @@ async function loadCollection() {
   for (let i = 0; i < skeletonCount; i++) grid.insertBefore(createSkeletonCard(), sentinel);
 
   // Fetch all in parallel — cached cards return immediately, others have a 5s timeout
+  const backupStore = loadBackupStore();
+  const newBackupEntries = {};
   let doneCount = 0;
   const results = await Promise.all(
     CARD_LIST.map(async entry => {
@@ -463,13 +482,41 @@ async function loadCollection() {
       const overrides = entryOverrides(entry);
       const card = await fetchCard(query, overrides.setName, overrides.cardId);
       const apiPrice = getMarketPrice(card);
-      const price = apiPrice ?? overrides.fallbackPrice ?? null;
-      const isStaticPrice = apiPrice == null && overrides.fallbackPrice != null;
+
+      const backupKey = overrides.cardId || (overrides.setName ? `${query}|${overrides.setName}` : query);
+      const backup = backupStore[backupKey] || null;
+
+      // Price: live API → explicit fallback → last known-good backup
+      const price = apiPrice ?? overrides.fallbackPrice ?? backup?.price ?? null;
+      const isStaticPrice = apiPrice == null && (overrides.fallbackPrice != null || backup?.price != null);
+
+      // Save good API data to backup for future cache misses
+      const apiImage = card?.images?.large || card?.images?.small || null;
+      if (apiPrice != null || apiImage) {
+        newBackupEntries[backupKey] = {
+          ...(backup || {}),
+          ...(apiPrice != null ? { price: apiPrice } : {}),
+          ...(apiImage        ? { imageUrl: apiImage } : {}),
+          ts: Date.now(),
+        };
+      }
+
+      // Image: explicit override → API → last known-good backup
+      const needsBackupImage = !overrides.imageUrl && !apiImage;
+      const enrichedOverrides = (needsBackupImage && backup?.imageUrl)
+        ? { ...overrides, imageUrl: backup.imageUrl }
+        : overrides;
+
       doneCount++;
       if (freshCount > 0) loadingEl.textContent = `Loading ${doneCount} / ${CARD_LIST.length}…`;
-      return { query, card, price, overrides, isStaticPrice };
+      return { query, card, price, overrides: enrichedOverrides, isStaticPrice };
     })
   );
+
+  // Flush any new backup entries in one write
+  if (Object.keys(newBackupEntries).length > 0) {
+    saveBackupStore({ ...backupStore, ...newBackupEntries });
+  }
 
   // Sort by price descending (no price → end)
   sortedResults = results.sort((a, b) => {
