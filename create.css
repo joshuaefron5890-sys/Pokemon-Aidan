@@ -148,6 +148,7 @@ input::placeholder { color: var(--muted); }
 
 .field-error { color: var(--red); font-size: .8rem; margin-top: .4rem; }
 .field-opt { font-size: .75rem; font-weight: 400; color: var(--muted); margin-left: .3rem; }
+.hidden { display: none !important; }
 
 /* ── Photo upload ─────────────────────────────────────────── */
 .photo-upload-wrap {
