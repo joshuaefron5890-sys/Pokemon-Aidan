@@ -654,6 +654,7 @@ const CARD_LIST = [
     cardId: "swsh12pt5-246",
     setName: "Crown Zenith",
     tcgUrl: "https://www.tcgplayer.com/product/477241/pokemon-crown-zenith-elesas-sparkle-full-art?page=1&Language=English",
+    imageUrl: "Elesa.jpg",
     fallbackPrice: 16.95,
   },
   {
