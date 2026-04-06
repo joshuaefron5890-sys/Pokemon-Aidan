@@ -624,6 +624,12 @@ const CARD_LIST = [
     grade: 9,
   },
   {
+    query: "Alakazam ex 201/165",
+    cardId: "sv3pt5-201",
+    setName: "Pokemon 151",
+    grade: 10,
+  },
+  {
     query: "Dark Raichu 083/082",
     cardId: "rocket-83",
     setName: "Team Rocket",
