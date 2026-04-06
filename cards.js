@@ -649,13 +649,15 @@ const CARD_LIST = [
   },
   {
     query: "Machamp vMAX 194/198",
-    cardId: "swsh6-194",
-    setName: "Chilling Reign",
+    cardId: "swsh10-200",
+    setName: "Astral Radiance",
+    tcgUrl: "https://www.tcgplayer.com/product/272448/pokemon-swsh10-astral-radiance-machamp-vmax-secret?Language=English&page=1",
   },
   {
     query: "Garchomp & Giratina GX 247/236",
     cardId: "sm11-247",
     setName: "Unified Minds",
+    fallbackPrice: 75.00,
   },
   {
     query: "Machamp vMAX 194/189",
@@ -663,9 +665,15 @@ const CARD_LIST = [
     setName: "Darkness Ablaze",
   },
   {
+    query: "Decidueye GX SV47/SV94",
+    cardId: "sm11pt5-SV47",
+    setName: "Hidden Fates",
+  },
+  {
     query: "Kartana GX SV65/SV94",
     cardId: "sm11pt5-SV65",
     setName: "Hidden Fates",
     tcgUrl: "https://www.tcgplayer.com/product/197827/pokemon-hidden-fates-shiny-vault-kartana-gx?page=1&Language=English",
+    fallbackPrice: 11.40,
   },
 ];
