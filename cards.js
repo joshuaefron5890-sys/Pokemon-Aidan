@@ -609,6 +609,12 @@ const CARD_LIST = [
     setName: "Prismatic Evolutions",
   },
   {
+    query: "Pikachu 058/102",
+    cardId: "base1-58",
+    setName: "Base Set",
+    grade: 4,
+  },
+  {
     query: "Team Rocket's Dugtrio 239/217",
     cardId: "me2pt5-239",
     setName: "Ascended Heroes",
