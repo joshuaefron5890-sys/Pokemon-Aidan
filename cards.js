@@ -634,8 +634,9 @@ const CARD_LIST = [
   },
   {
     query: "Mega Gengar ex 230/193",
-    cardId: "sv2-230",
-    setName: "Paldea Evolved",
+    cardId: "m2a-230",
+    setName: "High Class Pack Mega Dream EX",
+    tcgUrl: "https://www.tcgplayer.com/product/665902/pokemon-japan-m2a-high-class-pack-mega-dream-ex-mega-gengar-ex-230-193?page=1&Language=all",
   },
   {
     query: "Cynthia's Garchomp ex 111/217",
