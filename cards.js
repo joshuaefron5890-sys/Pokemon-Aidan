@@ -624,6 +624,13 @@ const CARD_LIST = [
     grade: 9,
   },
   {
+    query: "Charmeleon 005 (Topsun Green Back)",
+    setName: "1997 Topsun Japanese",
+    imageUrl: "https://i.ebayimg.com/images/g/NSUAAeSw18hn05OV/s-l960.webp",
+    price: 15.00,
+    grade: 4,
+  },
+  {
     query: "Meowth (Old Maid)",
     setName: "Japanese Old Maid 2019",
     tcgUrl: "https://www.ebay.com/itm/397772385405",
