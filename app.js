@@ -486,9 +486,10 @@ async function loadCollection() {
       const backupKey = overrides.cardId || (overrides.setName ? `${query}|${overrides.setName}` : query);
       const backup = backupStore[backupKey] || null;
 
-      // Price: live API → explicit fallback → last known-good backup
-      const price = apiPrice ?? overrides.fallbackPrice ?? backup?.price ?? null;
-      const isStaticPrice = apiPrice == null && (overrides.fallbackPrice != null || backup?.price != null);
+      // Price: forced override → live API → explicit fallback → last known-good backup
+      // Use overrides.price to pin a price regardless of what the API returns (e.g. graded cards)
+      const price = overrides.price ?? apiPrice ?? overrides.fallbackPrice ?? backup?.price ?? null;
+      const isStaticPrice = overrides.price != null || (apiPrice == null && (overrides.fallbackPrice != null || backup?.price != null));
 
       // Save good API data to backup for future cache misses
       const apiImage = card?.images?.large || card?.images?.small || null;

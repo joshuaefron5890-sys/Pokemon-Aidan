@@ -612,6 +612,7 @@ const CARD_LIST = [
     query: "Pikachu 058/102",
     cardId: "base1-58",
     setName: "Base Set",
+    price: 5.00,
     grade: 4,
   },
   {
@@ -633,7 +634,7 @@ const CARD_LIST = [
     cardId: "pop1-1",
     setName: "POP Series 1",
     tcgUrl: "https://www.ebay.ca/itm/265153401807",
-    fallbackPrice: 499.99,
+    price: 499.99,
     grade: 10,
   },
   {
