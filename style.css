@@ -679,13 +679,14 @@ footer a {
 
   .toolbar {
     flex-wrap: wrap;
+    justify-content: center;
   }
   .search-bar-inner {
     max-width: 100%;
     width: 100%;
   }
   .filter-group {
-    flex: 1;
+    flex: 0 0 auto;
   }
 }
 
