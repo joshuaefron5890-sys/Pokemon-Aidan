@@ -615,6 +615,18 @@ const CARD_LIST = [
     grade: 4,
   },
   {
+    query: "Charizard V 019/189",
+    cardId: "swsh3-19",
+    setName: "Darkness Ablaze",
+    grade: 9,
+  },
+  {
+    query: "Blaziken 001",
+    cardId: "pop1-1",
+    setName: "POP Series 1",
+    grade: 10,
+  },
+  {
     query: "Team Rocket's Dugtrio 239/217",
     cardId: "me2pt5-239",
     setName: "Ascended Heroes",
