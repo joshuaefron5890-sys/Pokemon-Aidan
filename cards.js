@@ -632,10 +632,26 @@ const CARD_LIST = [
     query: "Cynthia's Garchomp ex 111/217",
     cardId: "me2pt5-111",
     setName: "Ascended Heroes",
+    fallbackPrice: 0.80,
   },
   {
     query: "Single Strike Urshifu vMAX 168/163",
     cardId: "swsh5-168",
     setName: "Battle Styles",
+  },
+  {
+    query: "Elesa's Sparkle 246/172",
+    cardId: "swsh9-246",
+    setName: "Brilliant Stars",
+  },
+  {
+    query: "Machamp vMAX 194/198",
+    cardId: "swsh6-194",
+    setName: "Chilling Reign",
+  },
+  {
+    query: "Garchomp & Giratina GX 247/236",
+    cardId: "sm11-247",
+    setName: "Unified Minds",
   },
 ];
