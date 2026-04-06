@@ -10,6 +10,21 @@
 
   if (!modal || !openBtn) return;
 
+  // ── Safe JSON fetch ───────────────────────────────────────
+  // Handles HTML error pages (timeouts, 502s) gracefully
+
+  async function safeJson(res) {
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("application/json")) {
+      const text = await res.text();
+      const snippet = text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 120);
+      throw new Error(`Server error (${res.status})${snippet ? ": " + snippet : " — please try again."}`);
+    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+    return data;
+  }
+
   // ── Open / close ─────────────────────────────────────────
 
   openBtn.addEventListener("click", openModal);
@@ -143,22 +158,14 @@
       const token = await user.jwt();
 
       // Use the admin chat function with a single lookup request
-      const res = await fetch("/.netlify/functions/chat", {
+      const data = await safeJson(await fetch("/.netlify/functions/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          messages: [
-            userMessage,
-          ],
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+        body: JSON.stringify({ messages: [userMessage] }),
+      }));
 
-      // Parse the reply to extract card details
-      // The chat function returns a description — we need to look for a JSON block or parse the text
-      // For reliability, re-ask specifically for JSON
-      const extractRes = await fetch("/.netlify/functions/chat", {
+      // Re-ask specifically for JSON to extract card details reliably
+      const extracted = await safeJson(await fetch("/.netlify/functions/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -171,9 +178,7 @@
             },
           ],
         }),
-      });
-      const extracted = await extractRes.json();
-      if (!extractRes.ok) throw new Error(extracted.error || "Could not extract card data");
+      }));
 
       // Find JSON in the response
       const jsonMatch = extracted.reply.match(/\{[\s\S]*"cardId"[\s\S]*\}/);
@@ -236,13 +241,11 @@
       // Ask the chat agent to add the card
       const addMsg = `Add this card to the collection: cardId="${foundCard.cardId}", query="${foundCard.query}", setName="${foundCard.setName}"${foundCard.marketPrice ? `, fallbackPrice=${foundCard.marketPrice}` : ""}${foundCard.tcgUrl ? `, tcgUrl="${foundCard.tcgUrl}"` : ""}`;
 
-      const res = await fetch("/.netlify/functions/chat", {
+      const data = await safeJson(await fetch("/.netlify/functions/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ messages: [{ role: "user", content: addMsg }] }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+      }));
 
       document.getElementById("acm-success-msg").textContent =
         `"${foundCard.query}" added! The page will update in ~1 minute.`;

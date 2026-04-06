@@ -385,7 +385,7 @@ exports.handler = async (event, context) => {
   try {
     const { messages } = JSON.parse(event.body);
     if (!Array.isArray(messages) || !messages.length) {
-      return { statusCode: 400, body: JSON.stringify({ error: "No messages provided." }) };
+      return { statusCode: 400, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: "No messages provided." }) };
     }
 
     const reply = await runAgent(messages);
