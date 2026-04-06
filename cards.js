@@ -673,6 +673,7 @@ const CARD_LIST = [
     query: "Decidueye GX SV47/SV94",
     cardId: "sm11pt5-SV47",
     setName: "Hidden Fates",
+    tcgUrl: "https://www.tcgplayer.com/product/197774/pokemon-hidden-fates-shiny-vault-decidueye-gx?page=1&Language=English",
   },
   {
     query: "Kartana GX SV65/SV94",
