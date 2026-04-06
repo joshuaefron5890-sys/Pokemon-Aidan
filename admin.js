@@ -137,9 +137,8 @@ document.getElementById("popup-image-upload").addEventListener("change", e => {
 });
 
 function updateSendBtns() {
-  const hasContent = (chatInput.value.trim() || pendingImage);
-  sendBtn.disabled = !hasContent;
-  popupSendBtn.disabled = !hasContent;
+  sendBtn.disabled      = !(chatInput.value.trim()   || pendingImage);
+  popupSendBtn.disabled = !(popupInput.value.trim()  || pendingImage);
 }
 
 function autoResize(el) {
