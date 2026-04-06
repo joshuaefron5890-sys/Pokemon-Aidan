@@ -627,7 +627,7 @@ const CARD_LIST = [
     query: "Dark Raichu 083/082",
     cardId: "rocket-83",
     setName: "Team Rocket",
-    tcgUrl: "https://www.ebay.com/itm/167905732024",
+    tcgUrl: "https://www.tcgplayer.com/product/84647/pokemon-team-rocket-dark-raichu?page=1&Language=English",
     price: 99.00,
     grade: 7,
   },
