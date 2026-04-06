@@ -655,4 +655,10 @@ const CARD_LIST = [
     cardId: "sm11-247",
     setName: "Unified Minds",
   },
+  {
+    query: "Kartana GX SV65/SV94",
+    cardId: "sm11pt5-SV65",
+    setName: "Hidden Fates",
+    tcgUrl: "https://www.tcgplayer.com/product/197827/pokemon-hidden-fates-shiny-vault-kartana-gx?page=1&Language=English",
+  },
 ];
