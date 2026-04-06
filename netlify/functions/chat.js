@@ -308,7 +308,7 @@ const TOOLS = [
   },
 ];
 
-const SYSTEM = `You are a friendly Pokemon card portfolio assistant for Aidan's Pokemon Binder (aidanpokemonbinder.netlify.app).
+const SYSTEM = `You are a friendly Pokemon card portfolio assistant for Aidan's Pokemon Binder (digitalpokemonbinder.netlify.app).
 
 You help admins manage the card collection conversationally. The collection is stored in cards.js in GitHub and the site auto-deploys on every change.
 
