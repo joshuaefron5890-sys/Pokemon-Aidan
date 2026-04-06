@@ -2,6 +2,7 @@
 // No auth required
 
 const { getFile } = require("./_gh");
+const GITHUB_REPO = "joshuaefron5890-sys/Pokemon-Aidan";
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "GET") return { statusCode: 405 };
@@ -12,7 +13,12 @@ exports.handler = async (event) => {
 
     const publicBinders = manifest
       .filter(b => b.public)
-      .map(({ slug, owner, cardCount, createdAt }) => ({ slug, owner, cardCount, createdAt }));
+      .map(({ slug, owner, cardCount, createdAt, hasPhoto }) => ({
+        slug, owner, cardCount, createdAt,
+        photoUrl: hasPhoto
+          ? `https://raw.githubusercontent.com/${GITHUB_REPO}/main/binders/photos/${slug}.jpg`
+          : null,
+      }));
 
     return {
       statusCode: 200,

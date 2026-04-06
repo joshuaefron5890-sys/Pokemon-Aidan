@@ -43,6 +43,57 @@ function goTo(n) {
 
 // ── Step 1: Binder info ────────────────────────────────────
 
+// Photo upload — compress to 400×400 JPEG before storing
+let pendingPhoto = null; // raw base64 (no data: prefix)
+
+const photoFileInput  = document.getElementById("photo-file-input");
+const photoPlaceholder = document.getElementById("photo-placeholder");
+const photoHasImage   = document.getElementById("photo-has-image");
+const photoPreview    = document.getElementById("photo-preview");
+
+photoFileInput.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (file) compressPhoto(file);
+});
+
+// Drag-and-drop onto the upload wrap
+document.querySelector(".photo-upload-wrap")?.addEventListener("dragover", e => e.preventDefault());
+document.querySelector(".photo-upload-wrap")?.addEventListener("drop", e => {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith("image/")) compressPhoto(file);
+});
+
+function compressPhoto(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 400;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
+      else        { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+      pendingPhoto = dataUrl.split(",")[1]; // raw base64 only
+      photoPreview.src = dataUrl;
+      photoPlaceholder.classList.add("hidden");
+      photoHasImage.classList.remove("hidden");
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById("photo-remove")?.addEventListener("click", () => {
+  pendingPhoto = null;
+  photoFileInput.value = "";
+  photoPlaceholder.classList.remove("hidden");
+  photoHasImage.classList.add("hidden");
+});
+
 const ownerInput = document.getElementById("owner-name");
 const slugInput  = document.getElementById("binder-slug");
 const slugStatus = document.getElementById("slug-status");
@@ -332,6 +383,7 @@ async function createBinder() {
         owner:    wizardData.owner,
         isPublic: wizardData.isPublic,
         cards:    wizardData.cards,
+        photo:    pendingPhoto || null,
       }),
     });
     const data = await res.json();

@@ -56,8 +56,56 @@ function showView(id) {
 }
 
 document.querySelectorAll(".nav-item[data-view]").forEach(btn => {
-  btn.addEventListener("click", () => showView(btn.dataset.view));
+  btn.addEventListener("click", () => {
+    showView(btn.dataset.view);
+    if (btn.dataset.view === "shared") loadSharedBinders();
+  });
 });
+
+// ── Dynamic binder gallery ──────────────────────────────────
+
+let sharedLoaded = false;
+
+async function loadSharedBinders() {
+  if (sharedLoaded) return;
+  sharedLoaded = true;
+
+  const grid = document.querySelector(".binders-grid");
+  if (!grid) return;
+
+  try {
+    const res  = await fetch("/.netlify/functions/list-binders");
+    const list = await res.json();
+    if (!Array.isArray(list)) return;
+
+    list.forEach(b => {
+      // Skip slugs already shown as static cards
+      if (grid.querySelector(`[href="/binder/${b.slug}"]`)) return;
+
+      const initial = b.owner.charAt(0).toUpperCase();
+      const colors  = ["#6366f1,#8b5cf6", "#f59e0b,#ef4444", "#10b981,#059669", "#3b82f6,#2563eb"];
+      const grad    = colors[b.slug.charCodeAt(0) % colors.length];
+
+      const avatarInner = b.photoUrl
+        ? `<img src="${b.photoUrl}" alt="${initial}" onerror="this.remove()" />`
+        : initial;
+
+      const card = document.createElement("a");
+      card.className = "binder-card";
+      card.href = `/binder/${b.slug}`;
+      card.target = "_blank";
+      card.rel = "noopener";
+      card.innerHTML = `
+        <div class="binder-card-avatar ${b.photoUrl ? "binder-card-avatar--photo" : ""}" style="background:linear-gradient(135deg,${grad})">${avatarInner}</div>
+        <div class="binder-card-info">
+          <div class="binder-card-name">${b.owner}'s Binder</div>
+          <div class="binder-card-meta">${b.cardCount || 0} card${b.cardCount !== 1 ? "s" : ""}</div>
+        </div>
+        <div class="binder-card-badge">View</div>`;
+      grid.appendChild(card);
+    });
+  } catch {}
+}
 
 // Mobile sidebar toggle
 document.getElementById("hamburger")?.addEventListener("click", () =>

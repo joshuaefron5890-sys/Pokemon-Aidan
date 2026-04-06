@@ -2,7 +2,7 @@
 // POST { slug, owner, isPublic, cards }
 // Requires Netlify Identity auth
 
-const { getFile, putFile } = require("./_gh");
+const { getFile, putFile, putBinaryFile } = require("./_gh");
 const MANIFEST = "binders/manifest.json";
 
 function slugValid(slug) {
@@ -22,7 +22,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { slug, owner, isPublic, cards } = JSON.parse(event.body);
+    const { slug, owner, isPublic, cards, photo } = JSON.parse(event.body);
 
     if (!slugValid(slug)) {
       return { statusCode: 400, body: JSON.stringify({ error: "Invalid slug. Use 3-30 lowercase letters, numbers, and hyphens." }) };
@@ -44,20 +44,27 @@ exports.handler = async (event, context) => {
     }
 
     const now = new Date().toISOString();
+    const hasPhoto = typeof photo === "string" && photo.length > 0;
     const binder = {
       slug,
       owner:     owner.trim(),
       email:     user.email,
       public:    Boolean(isPublic),
+      hasPhoto,
       createdAt: now,
       cards:     Array.isArray(cards) ? cards : [],
     };
+
+    // Store profile photo as a separate binary file
+    if (hasPhoto) {
+      await putBinaryFile(`binders/photos/${slug}.jpg`, photo, null, `Upload photo for ${owner.trim()}`);
+    }
 
     // Write binder JSON
     await putFile(`binders/${slug}.json`, JSON.stringify(binder, null, 2), null, `Create binder for ${owner.trim()}`);
 
     // Update manifest
-    manifest.push({ slug, owner: owner.trim(), email: user.email, public: Boolean(isPublic), cardCount: binder.cards.length, createdAt: now });
+    manifest.push({ slug, owner: owner.trim(), email: user.email, public: Boolean(isPublic), hasPhoto, cardCount: binder.cards.length, createdAt: now });
     await putFile(MANIFEST, JSON.stringify(manifest, null, 2), manifestFile?.sha ?? null, `Add ${slug} to manifest`);
 
     return {

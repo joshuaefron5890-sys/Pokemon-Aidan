@@ -3,6 +3,7 @@
 // Private binders: requires JWT with matching owner email
 
 const { getFile } = require("./_gh");
+const GITHUB_REPO = "joshuaefron5890-sys/Pokemon-Aidan";
 
 exports.handler = async (event, context) => {
   if (event.httpMethod !== "GET") return { statusCode: 405 };
@@ -30,6 +31,10 @@ exports.handler = async (event, context) => {
       };
     }
 
+    const photoUrl = binder.hasPhoto
+      ? `https://raw.githubusercontent.com/${GITHUB_REPO}/main/binders/photos/${binder.slug}.jpg`
+      : null;
+
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
@@ -39,6 +44,7 @@ exports.handler = async (event, context) => {
         public:    binder.public,
         createdAt: binder.createdAt,
         cards:     binder.cards,
+        photoUrl,
         isOwner,
       }),
     };

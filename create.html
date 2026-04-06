@@ -48,6 +48,24 @@
         </div>
 
         <div class="field">
+          <label>Profile Photo <span class="field-opt">Optional</span></label>
+          <div class="photo-upload-wrap">
+            <div class="photo-placeholder" id="photo-placeholder">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span>Drag & drop or</span>
+              <label class="photo-choose-btn">
+                Choose Photo
+                <input type="file" id="photo-file-input" accept="image/*" />
+              </label>
+            </div>
+            <div class="photo-has-image hidden" id="photo-has-image">
+              <img id="photo-preview" class="photo-preview-img" alt="Profile photo preview" />
+              <button type="button" id="photo-remove" class="photo-remove-btn">✕ Remove</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
           <label>Binder URL</label>
           <div class="slug-row">
             <span class="slug-prefix">/binder/</span>

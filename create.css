@@ -147,6 +147,38 @@ input::placeholder { color: var(--muted); }
 .btn-secondary:hover { border-color: var(--accent2); color: var(--text); }
 
 .field-error { color: var(--red); font-size: .8rem; margin-top: .4rem; }
+.field-opt { font-size: .75rem; font-weight: 400; color: var(--muted); margin-left: .3rem; }
+
+/* ── Photo upload ─────────────────────────────────────────── */
+.photo-upload-wrap {
+  border: 1.5px dashed var(--border); border-radius: 12px;
+  overflow: hidden; transition: border-color .2s;
+}
+.photo-upload-wrap:hover { border-color: var(--accent2); }
+.photo-placeholder {
+  display: flex; flex-direction: column; align-items: center;
+  gap: .55rem; padding: 1.5rem 1rem; color: var(--muted);
+  font-size: .85rem; text-align: center;
+}
+.photo-choose-btn {
+  display: inline-block; padding: .4rem .9rem;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: .82rem;
+  cursor: pointer; transition: border-color .15s;
+}
+.photo-choose-btn:hover { border-color: var(--accent2); }
+.photo-choose-btn input[type="file"] { display: none; }
+.photo-has-image { position: relative; }
+.photo-preview-img {
+  width: 100%; max-height: 220px; object-fit: cover; display: block;
+}
+.photo-remove-btn {
+  position: absolute; top: .5rem; right: .5rem;
+  background: rgba(7,22,36,.8); border: 1px solid var(--border);
+  color: var(--text); font-size: .75rem; border-radius: 6px;
+  padding: .2rem .5rem; cursor: pointer; transition: background .15s;
+}
+.photo-remove-btn:hover { background: rgba(239,68,68,.2); border-color: var(--red); }
 
 /* ── Step 3: AI card chat ────────────────────────────────── */
 
