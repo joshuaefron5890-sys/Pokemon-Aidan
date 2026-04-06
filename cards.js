@@ -656,6 +656,11 @@ const CARD_LIST = [
     setName: "Unified Minds",
   },
   {
+    query: "Machamp vMAX 194/189",
+    cardId: "swsh3-194",
+    setName: "Darkness Ablaze",
+  },
+  {
     query: "Kartana GX SV65/SV94",
     cardId: "sm11pt5-SV65",
     setName: "Hidden Fates",
