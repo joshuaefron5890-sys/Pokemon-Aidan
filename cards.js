@@ -668,6 +668,11 @@ const CARD_LIST = [
     fallbackPrice: 75.00,
   },
   {
+    query: "Venusaur & Celebi GX 001/173",
+    cardId: "sm12a-1",
+    setName: "Tag All Stars",
+  },
+  {
     query: "Machamp vMAX 194/189",
     cardId: "swsh3-194",
     setName: "Darkness Ablaze",
