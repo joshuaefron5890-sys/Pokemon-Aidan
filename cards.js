@@ -606,6 +606,7 @@ const CARD_LIST = [
     query: "Mega Dragonite 271/217",
     cardId: "me2pt5-271",
     setName: "Ascended Heroes",
+    fallbackPrice: 49.70,
   },
   {
     query: "Charmeleon 169/165",
