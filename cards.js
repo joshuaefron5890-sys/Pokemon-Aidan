@@ -623,6 +623,12 @@ const CARD_LIST = [
     grade: 9,
   },
   {
+    query: "Dark Raichu 083/082",
+    cardId: "rocket-83",
+    setName: "Team Rocket",
+    grade: 7,
+  },
+  {
     query: "Blaziken 001",
     cardId: "pop1-1",
     setName: "POP Series 1",
