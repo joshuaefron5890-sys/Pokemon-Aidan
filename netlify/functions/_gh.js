@@ -8,7 +8,8 @@ async function getFile(path) {
   const headers = { Accept: "application/vnd.github.v3+json" };
   if (GITHUB_TOKEN) headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
 
-  const res = await fetch(`${GH_API}/${path}?ref=main`, { headers });
+  // Timestamp busts GitHub CDN cache so we always get the true latest SHA/content
+  const res = await fetch(`${GH_API}/${path}?ref=main&t=${Date.now()}`, { headers });
   if (res.status === 404) return null;
   if (!res.ok) {
     const body = await res.text();
