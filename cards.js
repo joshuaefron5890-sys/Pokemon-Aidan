@@ -143,6 +143,7 @@ const CARD_LIST = [
     cardId: "me2pt5-258",
     setName: "Ascended Heroes",
     tcgUrl: "https://www.tcgplayer.com/product/676070/pokemon-me-ascended-heroes-cheren",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/676070_in_1000x1000.jpg",
     fallbackPrice: 1.00,
   },
   {
