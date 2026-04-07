@@ -743,6 +743,7 @@ const CARD_LIST = [
     cardId: "swsh10-200",
     setName: "Astral Radiance",
     tcgUrl: "https://www.tcgplayer.com/product/272448/pokemon-swsh10-astral-radiance-machamp-vmax-secret?Language=English&page=1",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/272448_in_1000x1000.jpg",
   },
   {
     query: "Garchomp & Giratina GX 247/236",
