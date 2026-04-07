@@ -796,4 +796,64 @@ const CARD_LIST = [
     imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/197827_in_1000x1000.jpg",
     fallbackPrice: 11.40,
   },
+  // ── Batch additions ──────────────────────────────────────
+  {
+    query: "Regieleki VMAX 198/195",
+    cardId: "swsh12-198",
+    setName: "Silver Tempest",
+  },
+  {
+    query: "Venusaur & Snivy GX 1/236",
+    cardId: "sm12-1",
+    setName: "Cosmic Eclipse",
+  },
+  {
+    query: "Kartana GX 117/111",
+    cardId: "sm4-117",
+    setName: "Crimson Invasion",
+  },
+  {
+    query: "Mega Lopunny & Jigglypuff GX 165/236",
+    cardId: "sm12-165",
+    setName: "Cosmic Eclipse",
+  },
+  {
+    query: "Sylveon GX 92/145",
+    cardId: "sm2-92",
+    setName: "Guardians Rising",
+  },
+  {
+    query: "Kangaskhan GX SM188",
+    cardId: "smp-SM188",
+    setName: "SM Black Star Promos",
+  },
+  {
+    query: "Blastoise ex 030/142",
+    cardId: "sv7-30",
+    setName: "Stellar Crown",
+    tcgUrl: "https://www.tcgplayer.com/product/567256/pokemon-sv07-stellar-crown-blastoise-ex?Language=English&page=1",
+  },
+  {
+    query: "Mega Scrafty ex 270/217",
+    cardId: "me2pt5-270",
+    setName: "Ascended Heroes",
+  },
+  {
+    query: "Charizard GX SM211",
+    cardId: "smp-SM211",
+    setName: "SM Black Star Promos",
+  },
+  {
+    query: "Solgaleo GX 143/149",
+    cardId: "sm1-143",
+    setName: "Sun & Moon",
+  },
+  {
+    query: "Incineroar GX 097/181",
+  },
+  {
+    query: "Naganadel & Guzzlord GX 158/236",
+    cardId: "sm12-158",
+    setName: "Cosmic Eclipse",
+  },
 ];
