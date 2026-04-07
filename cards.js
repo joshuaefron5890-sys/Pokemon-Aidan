@@ -588,6 +588,7 @@ const CARD_LIST = [
     cardId: "zsv10pt5-3",
     setName: "Black Bolt",
     tcgUrl: "https://www.tcgplayer.com/product/642452/pokemon-sv-black-bolt-serperior-ex?page=1&Language=English",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/642452_in_1000x1000.jpg",
   },
   {
     query: "Spidops ex 019/198",
