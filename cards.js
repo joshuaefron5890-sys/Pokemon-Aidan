@@ -514,6 +514,7 @@ const CARD_LIST = [
     query: "Raging Bolt ex 123/162",
     cardId: "sv5-123",
     setName: "Temporal Forces",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/542867_in_1000x1000.jpg",
   },
   {
     query: "Iron Thorns ex 077/167",
