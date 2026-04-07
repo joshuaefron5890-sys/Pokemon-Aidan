@@ -311,6 +311,7 @@ const CARD_LIST = [
     query: "Mega Lucario ex 113/217",
     cardId: "me2pt5-113",
     setName: "Ascended Heroes",
+    imageUrl: "https://i.ebayimg.com/images/g/JokAAeSwmhlpgCN3/s-l1600.webp",
     fallbackPrice: 1.65,
   },
   {
