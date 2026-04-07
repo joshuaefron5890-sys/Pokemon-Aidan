@@ -657,6 +657,7 @@ const CARD_LIST = [
     cardId: "rocket-83",
     setName: "Team Rocket",
     tcgUrl: "https://www.tcgplayer.com/product/84647/pokemon-team-rocket-dark-raichu?page=1&Language=English",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/84647_in_1000x1000.jpg",
     price: 99.00,
     grade: 7,
   },
