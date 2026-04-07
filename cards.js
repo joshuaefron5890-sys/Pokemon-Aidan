@@ -163,6 +163,7 @@ const CARD_LIST = [
     cardId: "swsh12pt5gg-GG44",
     setName: "Crown Zenith: Galarian Gallery",
     tcgUrl: "https://www.tcgplayer.com/product/477057/pokemon-crown-zenith-galarian-gallery-mewtwo-vstar",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/477057_in_1000x1000.jpg",
   },
   {
     query: "Wigglytuff 105/094",
