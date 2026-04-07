@@ -53,9 +53,10 @@ function setCached(query, card) {
   saveCache(cache);
 }
 
-// ── Backup store (persistent, no expiry) ──────────────────
-// Saves last known-good API price + image so they survive
-// cache expiry and API failures.
+// ── Megacache / backup store (persistent, no expiry) ──────
+// Saves last known-good price + image so they survive cache
+// expiry and API failures. Also stores web-researched fallback
+// prices for cards the primary API has no pricing data for.
 
 const BACKUP_KEY = "pokemon_portfolio_backup_v1";
 
@@ -68,6 +69,21 @@ function loadBackupStore() {
 
 function saveBackupStore(store) {
   try { localStorage.setItem(BACKUP_KEY, JSON.stringify(store)); } catch {}
+}
+
+// Fetch a fallback price from our serverless function when every other
+// source returns null. Searches pokemontcg.io by name across all printings
+// and returns the median market price as a rough estimate.
+async function fetchFallbackPrice(name) {
+  try {
+    const url = `/.netlify/functions/get-fallback-price?name=${encodeURIComponent(name)}`;
+    const resp = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!resp.ok) return null;
+    const json = await resp.json();
+    return typeof json.price === "number" ? json.price : null;
+  } catch {
+    return null;
+  }
 }
 
 // ── API ────────────────────────────────────────────────────
@@ -486,12 +502,11 @@ async function loadCollection() {
       const backupKey = overrides.cardId || (overrides.setName ? `${query}|${overrides.setName}` : query);
       const backup = backupStore[backupKey] || null;
 
-      // Price: forced override → live API → explicit fallback → last known-good backup
-      // Use overrides.price to pin a price regardless of what the API returns (e.g. graded cards)
-      const price = overrides.price ?? apiPrice ?? overrides.fallbackPrice ?? backup?.price ?? null;
-      const isStaticPrice = overrides.price != null || (apiPrice == null && (overrides.fallbackPrice != null || backup?.price != null));
+      // Price chain: forced override → live API → explicit fallback → megacache
+      // overrides.price pins a value absolutely (e.g. graded cards) and is never overridden.
+      let price = overrides.price ?? apiPrice ?? overrides.fallbackPrice ?? backup?.price ?? null;
 
-      // Save good API data to backup for future cache misses
+      // Save good API data to megacache for future cache misses
       const apiImage = card?.images?.large || card?.images?.small || null;
       if (apiPrice != null || apiImage) {
         newBackupEntries[backupKey] = {
@@ -502,7 +517,28 @@ async function loadCollection() {
         };
       }
 
-      // Image: explicit override → API → last known-good backup
+      // Last resort: if price is still null and no manual override exists,
+      // call the fallback price service (searches pokemontcg.io by name across
+      // all printings and returns median market price). Result is saved to
+      // megacache so subsequent loads skip this step entirely.
+      if (price == null && overrides.price == null) {
+        const [namePart] = parseCardQuery(query);
+        const webPrice = await fetchFallbackPrice(namePart);
+        if (webPrice != null) {
+          price = webPrice;
+          // Persist in megacache so we don't re-fetch next time
+          newBackupEntries[backupKey] = {
+            ...(newBackupEntries[backupKey] || backup || {}),
+            price: webPrice,
+            priceSource: "fallback",
+            ts: Date.now(),
+          };
+        }
+      }
+
+      const isStaticPrice = overrides.price != null || (apiPrice == null && price != null);
+
+      // Image: explicit override → API → megacache
       const needsBackupImage = !overrides.imageUrl && !apiImage;
       const enrichedOverrides = (needsBackupImage && backup?.imageUrl)
         ? { ...overrides, imageUrl: backup.imageUrl }
@@ -514,7 +550,7 @@ async function loadCollection() {
     })
   );
 
-  // Flush any new backup entries in one write
+  // Flush all megacache updates in one write
   if (Object.keys(newBackupEntries).length > 0) {
     saveBackupStore({ ...backupStore, ...newBackupEntries });
   }
