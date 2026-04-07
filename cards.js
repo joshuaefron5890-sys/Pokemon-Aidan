@@ -241,6 +241,7 @@ const CARD_LIST = [
     query: "Mega Mawile ex 162/132",
     cardId: "me1-162",
     setName: "Mega Evolution",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/654501_in_1000x1000.jpg",
   },
   {
     query: "Lillie's Clefairy ex 056/159",
