@@ -213,6 +213,7 @@ const CARD_LIST = [
     query: "Mega Froslass ex 265/217",
     cardId: "me2pt5-265",
     setName: "Ascended Heroes",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/676077_in_1000x1000.jpg",
     fallbackPrice: 17.25,
   },
   {
@@ -702,6 +703,7 @@ const CARD_LIST = [
     cardId: "m2a-230",
     setName: "High Class Pack Mega Dream EX",
     tcgUrl: "https://www.tcgplayer.com/product/665902/pokemon-japan-m2a-high-class-pack-mega-dream-ex-mega-gengar-ex-230-193?page=1&Language=all",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/665902_in_1000x1000.jpg",
     fallbackPrice: 26.23,
   },
   {
@@ -733,6 +735,7 @@ const CARD_LIST = [
     query: "Garchomp & Giratina GX 247/236",
     cardId: "sm11-247",
     setName: "Unified Minds",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/195140_in_1000x1000.jpg",
     fallbackPrice: 75.00,
   },
   {
@@ -745,6 +748,7 @@ const CARD_LIST = [
     cardId: "sm12a-1",
     setName: "Tag All Stars",
     tcgUrl: "https://www.tcgplayer.com/product/572655/pokemon-japan-sm12a-tag-team-gx-tag-all-stars-pheromosa-and-buzzwole-gx?page=1&Language=all",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/572655_in_1000x1000.jpg",
     fallbackPrice: 4.74,
   },
   {
@@ -765,6 +769,7 @@ const CARD_LIST = [
     cardId: "sm11pt5-SV65",
     setName: "Hidden Fates",
     tcgUrl: "https://www.tcgplayer.com/product/197827/pokemon-hidden-fates-shiny-vault-kartana-gx?page=1&Language=English",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/197827_in_1000x1000.jpg",
     fallbackPrice: 11.40,
   },
 ];
