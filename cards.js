@@ -491,6 +491,8 @@ const CARD_LIST = [
     query: "Dudunsparce ex 121/159",
     cardId: "sv9-121",
     setName: "Journey Together",
+    tcgUrl: "https://www.tcgplayer.com/product/623548/pokemon-sv09-journey-together-dudunsparce-ex-121-159?page=1&Language=English",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/623548_in_1000x1000.jpg",
   },
   {
     query: "Flutter Mane 078/162",
@@ -524,6 +526,8 @@ const CARD_LIST = [
     query: "Iron Thorns ex 077/167",
     cardId: "sv6-77",
     setName: "Twilight Masquerade",
+    tcgUrl: "https://www.tcgplayer.com/product/619133/pokemon-prize-pack-series-cards-iron-thorns-ex-077-167?page=1&Language=English",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/619133_in_1000x1000.jpg",
   },
   {
     query: "Dondozo ex 066/182",
