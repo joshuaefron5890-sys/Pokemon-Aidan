@@ -529,6 +529,7 @@ const CARD_LIST = [
     query: "Latios 073/182",
     cardId: "sv10-73",
     setName: "Destined Rivals",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/604413_in_1000x1000.jpg",
   },
   {
     query: "Team Rocket's Zapdos 070/182",
