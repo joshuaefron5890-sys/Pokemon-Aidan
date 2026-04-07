@@ -837,6 +837,7 @@ const CARD_LIST = [
     query: "Mega Scrafty ex 270/217",
     cardId: "me2pt5-270",
     setName: "Ascended Heroes",
+    fallbackPrice: 10.28,
   },
   {
     query: "Charizard GX SM211",
@@ -849,7 +850,10 @@ const CARD_LIST = [
     setName: "Sun & Moon",
   },
   {
-    query: "Incineroar GX 097/181",
+    query: "Incineroar GX 097/196",
+    cardId: "sm9-97",
+    setName: "Team Up",
+    tcgUrl: "https://www.tcgplayer.com/product/183877/pokemon-sm-team-up-incineroar-gx?Language=English",
   },
   {
     query: "Naganadel & Guzzlord GX 158/236",
