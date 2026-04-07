@@ -609,6 +609,7 @@ const CARD_LIST = [
     cardId: "me2pt5-84",
     setName: "Ascended Heroes",
     tcgUrl: "https://www.tcgplayer.com/product/675896/pokemon-me-ascended-heroes-azumarill-ex?page=1&Language=English",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/675896_in_1000x1000.jpg",
     fallbackPrice: 0.80,
   },
   {
