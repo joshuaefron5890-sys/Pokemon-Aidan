@@ -764,6 +764,7 @@ const CARD_LIST = [
     query: "Machamp vMAX 194/189",
     cardId: "swsh3-194",
     setName: "Darkness Ablaze",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/272448_in_1000x1000.jpg",
   },
   {
     query: "Decidueye GX SV47/SV94",
