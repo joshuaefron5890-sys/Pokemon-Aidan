@@ -220,6 +220,8 @@ const CARD_LIST = [
     query: "Mega Charizard X ex 109/094",
     cardId: "me2-109",
     setName: "Phantasmal Flames",
+    tcgUrl: "https://www.tcgplayer.com/product/662183/pokemon-me02-phantasmal-flames-mega-charizard-x-ex-109-094?page=1&Language=English",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/662183_in_1000x1000.jpg",
   },
   {
     query: "Mega Diancie ex 041/094",
@@ -296,6 +298,8 @@ const CARD_LIST = [
     query: "Mega Charizard X ex 013/094",
     cardId: "me2-13",
     setName: "Phantasmal Flames",
+    tcgUrl: "https://www.tcgplayer.com/product/662182/pokemon-me02-phantasmal-flames-mega-charizard-x-ex-013-094?page=1&Language=English",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/662182_in_1000x1000.jpg",
   },
   {
     query: "Zeraora V 166/198",
