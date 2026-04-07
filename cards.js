@@ -655,6 +655,7 @@ const CARD_LIST = [
     query: "Alakazam ex 201/165",
     cardId: "sv3pt5-201",
     setName: "Pokemon 151",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/517047_in_1000x1000.jpg",
     grade: 10,
   },
   {
