@@ -650,7 +650,7 @@ const CARD_LIST = [
     cardId: "swshp-SWSH134",
     setName: "SWSH Black Star Promos",
     tcgUrl: "https://www.ebay.com/itm/297959238726",
-    price: 20.00,
+    price: 13.00,
     grade: 8,
   },
   {
