@@ -498,6 +498,7 @@ const CARD_LIST = [
     query: "Hop's Zacian ex 111/159",
     cardId: "sv9-111",
     setName: "Journey Together",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/648660_in_1000x1000.jpg",
   },
   {
     query: "Veluza ex 043/159",
