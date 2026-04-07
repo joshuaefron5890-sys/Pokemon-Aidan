@@ -210,6 +210,8 @@ const CARD_LIST = [
     query: "Gengar 050/088",
     cardId: "me3-50",
     setName: "Perfect Order",
+    tcgUrl: "https://www.tcgplayer.com/product/684431/pokemon-me03-perfect-order-gengar?page=1&Language=English",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/684431_in_1000x1000.jpg",
     fallbackPrice: 0.99,
   },
   {
