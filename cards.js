@@ -364,6 +364,7 @@ const CARD_LIST = [
     cardId: "sv1-32",
     setName: "Scarlet & Violet",
     tcgUrl: "https://www.tcgplayer.com/product/487872/pokemon-sv01-scarlet-and-violet-base-set-arcanine-ex-032-198?page=1&Language=English",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/487872_in_1000x1000.jpg",
     fallbackPrice: 0.99,
   },
   {
