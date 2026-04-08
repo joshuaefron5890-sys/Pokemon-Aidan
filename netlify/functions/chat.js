@@ -18,22 +18,27 @@ function ghHeaders() {
 }
 
 async function getCardsFile() {
-  // Step 1: hit the Git Refs API to get the true latest commit SHA.
-  // This endpoint is NOT cached by GitHub's CDN, unlike the Contents API.
-  const refsRes = await fetch(`${GH_API}/git/refs/heads/main`, { headers: ghHeaders() });
-  if (!refsRes.ok) throw new Error(`GitHub refs failed (${refsRes.status})`);
+  // Use the singular /git/ref/ endpoint (NOT plural /git/refs/) — plural returns
+  // an array and .object.sha would be undefined, breaking every write.
+  const refsRes = await fetch(`${GH_API}/git/ref/heads/main`, { headers: ghHeaders() });
+  if (!refsRes.ok) {
+    const body = await refsRes.text();
+    throw new Error(`GitHub ref lookup failed (${refsRes.status}): ${body.slice(0, 200)}`);
+  }
   const refsData = await refsRes.json();
   const commitSha = refsData.object?.sha;
-  if (!commitSha) throw new Error("Could not resolve latest commit SHA from refs");
+  if (!commitSha) {
+    throw new Error(`No commit SHA in ref response. Keys: ${Object.keys(refsData).join(", ")}. Value: ${JSON.stringify(refsData).slice(0, 200)}`);
+  }
 
-  // Step 2: fetch the file pinned to the exact commit SHA — bypasses stale caching
+  // Fetch the file pinned to the exact commit SHA — bypasses stale caching
   const fileRes = await fetch(
     `${GH_API}/contents/cards.js?ref=${commitSha}`,
     { headers: ghHeaders() }
   );
   if (!fileRes.ok) {
     const body = await fileRes.text();
-    throw new Error(`GitHub read failed (${fileRes.status}): ${body.slice(0, 200)}`);
+    throw new Error(`GitHub file read failed (${fileRes.status}): ${body.slice(0, 200)}`);
   }
 
   const data = await fileRes.json();
