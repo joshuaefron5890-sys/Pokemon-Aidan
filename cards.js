@@ -965,4 +965,24 @@ const CARD_LIST = [
     cardId: "sv8a-210",
     setName: "Terastal Festival ex",
   },
+  {
+    query: "Togepi & Cleffa & Igglybuff GX 094/173",
+    cardId: "sm12a-94",
+    setName: "Tag All Stars",
+    tcgUrl: "https://www.tcgplayer.com/product/572748/pokemon-japan-sm12a-tag-team-gx-tag-all-stars-togepi-and-cleffa-and-igglybuff-gx-094-173",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/572748_in_1000x1000.jpg",
+    fallbackPrice: 12.00,
+  },
+  {
+    query: "Lunala GX 009/094",
+    setName: "Korean SM",
+    fallbackPrice: 7.00,
+  },
+  {
+    query: "Dwebble 135/086",
+    setName: "Black Bolt",
+    tcgUrl: "https://www.tcgplayer.com/product/636489/pokemon-japan-sv11b-black-bolt-dwebble-135-086",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/636489_in_1000x1000.jpg",
+    fallbackPrice: 11.00,
+  },
 ];
