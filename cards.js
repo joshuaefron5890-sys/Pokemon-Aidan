@@ -887,6 +887,8 @@ const CARD_LIST = [
     query: "N's Zekrom 031",
     cardId: "mep-31",
     setName: "Mega Evolution Promos",
+    tcgUrl: "https://www.tcgplayer.com/product/680480/pokemon-me-mega-evolution-promo-ns-zekrom-031?page=1&Language=English",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/680480_in_1000x1000.jpg",
   },
   {
     query: "Tapu Koko GX 47/145",
@@ -917,5 +919,50 @@ const CARD_LIST = [
     query: "Anthea & Concordia 254/217",
     cardId: "me2pt5-254",
     setName: "Ascended Heroes",
+  },
+  {
+    query: "Slurpuff 236/217",
+    cardId: "me2pt5-236",
+    setName: "Ascended Heroes",
+  },
+  {
+    query: "Regice ex 048/217",
+    cardId: "me2pt5-48",
+    setName: "Ascended Heroes",
+  },
+  {
+    query: "Larry's Skill 139/131",
+    cardId: "sv7pt5-139",
+    setName: "Prismatic Evolutions",
+  },
+  {
+    query: "Judge 222/182",
+    cardId: "sv4-222",
+    setName: "Paradox Rift",
+  },
+  {
+    query: "Grand Tree 136/142",
+    cardId: "sv7-136",
+    setName: "Stellar Crown",
+  },
+  {
+    query: "Ryme 221/197",
+    cardId: "sv3-221",
+    setName: "Obsidian Flames",
+  },
+  {
+    query: "Mega Signal 171/132",
+    cardId: "me1-171",
+    setName: "Mega Evolution",
+  },
+  {
+    query: "Fighting Gong 168/132",
+    cardId: "me1-168",
+    setName: "Mega Evolution",
+  },
+  {
+    query: "Iron Hands ex 210/187",
+    cardId: "sv8a-210",
+    setName: "Terastal Festival ex",
   },
 ];
