@@ -361,15 +361,13 @@ a.binder-card { cursor: pointer; }
   width: 48px; height: 48px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 1.3rem; font-weight: 700; color: #fff;
-  flex-shrink: 0; overflow: hidden;
+  flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(0,0,0,.3);
 }
 
 .binder-card-info { flex: 1; min-width: 0; }
 .binder-card-name { font-size: .95rem; font-weight: 600; }
 .binder-card-meta { font-size: .78rem; color: var(--text-muted); margin-top: .15rem; }
-.binder-card-avatar--photo { padding: 0; }
-.binder-card-avatar--photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .binder-card-badge {
   flex-shrink: 0;
@@ -415,7 +413,7 @@ a.binder-card { cursor: pointer; }
 }
 .avatar.small { width: 24px; height: 24px; font-size: .7rem; }
 
-.message-bubble { padding: .65rem .9rem; border-radius: 14px; font-size: .9rem; line-height: 1.55; }
+.message-bubble { padding: .65rem .9rem; border-radius: 14px; font-size: .9rem; line-height: 1.55; overflow-wrap: break-word; word-break: break-word; }
 .message.user .message-bubble { background: linear-gradient(135deg,#1e4a8a,#163a70); border: 1px solid rgba(96,165,250,.2); border-top-right-radius: 4px; }
 .message.assistant .message-bubble { background: var(--surface); border: 1px solid var(--border); border-top-left-radius: 4px; }
 .message.error .message-bubble { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); color: #fca5a5; }
@@ -518,9 +516,6 @@ a.binder-card { cursor: pointer; }
 .popup-header-left { display: flex; align-items: center; gap: .6rem; }
 .popup-title { font-size: .875rem; font-weight: 600; }
 .popup-subtitle { font-size: .7rem; color: var(--text-muted); }
-.popup-header-actions { display: flex; align-items: center; gap: .2rem; }
-.popup-action-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: .25rem .35rem; border-radius: 6px; transition: background .15s, color .15s; display: flex; align-items: center; }
-.popup-action-btn:hover { background: var(--surface2); color: var(--text); }
 .popup-close { background: none; border: none; color: var(--text-muted); font-size: .85rem; cursor: pointer; padding: .2rem .4rem; border-radius: 6px; transition: background .15s, color .15s; }
 .popup-close:hover { background: var(--surface2); color: var(--text); }
 

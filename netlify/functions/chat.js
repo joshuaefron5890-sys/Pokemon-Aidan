@@ -56,6 +56,7 @@ async function putCardsFile(content, sha, message) {
       message,
       content: Buffer.from(content, "utf8").toString("base64"),
       sha,
+      branch: "main",
     }),
   });
 
@@ -141,7 +142,6 @@ async function tool_get_collection() {
   const diagnostics = {
     githubTokenSet: !!GITHUB_TOKEN,
     githubRepo: GITHUB_REPO,
-    url: GH_FILE_URL,
   };
 
   const { content } = await getCardsFile();
