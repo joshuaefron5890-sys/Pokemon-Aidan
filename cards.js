@@ -890,6 +890,7 @@ const CARD_LIST = [
     setName: "Mega Evolution Promos",
     tcgUrl: "https://www.tcgplayer.com/product/680480/pokemon-me-mega-evolution-promo-ns-zekrom-031?page=1&Language=English",
     imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/680480_in_1000x1000.jpg",
+    fallbackPrice: 8.50,
   },
   {
     query: "Tapu Koko GX 47/145",
@@ -920,6 +921,7 @@ const CARD_LIST = [
     query: "Anthea & Concordia 254/217",
     cardId: "me2pt5-254",
     setName: "Ascended Heroes",
+    fallbackPrice: 1.20,
   },
   {
     query: "Slurpuff 236/217",
