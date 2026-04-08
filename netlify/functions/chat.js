@@ -7,40 +7,46 @@ const GITHUB_TOKEN  = process.env.GITHUB_TOKEN;
 // Hardcoded to avoid env var misconfiguration
 const GITHUB_REPO   = "joshuaefron5890-sys/Pokemon-Aidan";
 const TCG_API       = "https://api.pokemontcg.io/v2";
-const GH_FILE_URL   = `https://api.github.com/repos/${GITHUB_REPO}/contents/cards.js?ref=main`;
+const GH_API        = `https://api.github.com/repos/${GITHUB_REPO}`;
 
 // ── cards.js file helpers ──────────────────────────────────
 
+function ghHeaders() {
+  const h = { Accept: "application/vnd.github.v3+json", "Cache-Control": "no-cache" };
+  if (GITHUB_TOKEN) h.Authorization = `Bearer ${GITHUB_TOKEN}`;
+  return h;
+}
+
 async function getCardsFile() {
-  const headers = {
-    Accept: "application/vnd.github.v3+json",
-    "Cache-Control": "no-cache",
-  };
-  if (GITHUB_TOKEN) headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
+  // Step 1: hit the Git Refs API to get the true latest commit SHA.
+  // This endpoint is NOT cached by GitHub's CDN, unlike the Contents API.
+  const refsRes = await fetch(`${GH_API}/git/refs/heads/main`, { headers: ghHeaders() });
+  if (!refsRes.ok) throw new Error(`GitHub refs failed (${refsRes.status})`);
+  const refsData = await refsRes.json();
+  const commitSha = refsData.object?.sha;
+  if (!commitSha) throw new Error("Could not resolve latest commit SHA from refs");
 
-  // Timestamp + no-cache ensures we always get the true latest SHA, not a CDN-cached version
-  const res = await fetch(`${GH_FILE_URL}&t=${Date.now()}`, { headers });
-
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`GitHub read failed (${res.status}): ${body.slice(0, 200)}`);
+  // Step 2: fetch the file pinned to the exact commit SHA — bypasses stale caching
+  const fileRes = await fetch(
+    `${GH_API}/contents/cards.js?ref=${commitSha}`,
+    { headers: ghHeaders() }
+  );
+  if (!fileRes.ok) {
+    const body = await fileRes.text();
+    throw new Error(`GitHub read failed (${fileRes.status}): ${body.slice(0, 200)}`);
   }
 
-  const data = await res.json();
-  if (!data.content) throw new Error(`GitHub response missing content field. Keys: ${Object.keys(data).join(", ")}`);
+  const data = await fileRes.json();
+  if (!data.content) throw new Error(`GitHub response missing content. Keys: ${Object.keys(data).join(", ")}`);
 
   const content = Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf8");
-  return { content, sha: data.sha };
+  return { content, sha: data.sha }; // data.sha = blob SHA required for PUT
 }
 
 async function putCardsFile(content, sha, message) {
-  const res = await fetch(GH_FILE_URL, {
+  const res = await fetch(`${GH_API}/contents/cards.js`, {
     method: "PUT",
-    headers: {
-      Authorization: `Bearer ${GITHUB_TOKEN}`,
-      Accept: "application/vnd.github.v3+json",
-      "Content-Type": "application/json",
-    },
+    headers: { ...ghHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({
       message,
       content: Buffer.from(content, "utf8").toString("base64"),
