@@ -555,6 +555,7 @@ const CARD_LIST = [
     cardId: "swsh6-57",
     setName: "Chilling Reign",
     tcgUrl: "https://www.tcgplayer.com/product/241716/pokemon-swsh06-chilling-reign-gengar?page=1&Language=English",
+    price: 0.50,
   },
   {
     query: "Pikachu SWSH234",
@@ -990,50 +991,60 @@ const CARD_LIST = [
     query: "Charizard 4/102",
     cardId: "base1-4",
     setName: "Base Set",
+    price: 65.00,
   },
   {
     query: "Blastoise 2/102",
     cardId: "base1-2",
     setName: "Base Set",
+    price: 14.00,
   },
   {
     query: "Mewtwo 10/102",
     cardId: "base1-10",
     setName: "Base Set",
+    price: 10.00,
   },
   {
     query: "Gyarados 6/102",
     cardId: "base1-6",
     setName: "Base Set",
+    price: 7.00,
   },
   {
     query: "Chansey 3/102",
     cardId: "base1-3",
     setName: "Base Set",
+    price: 6.00,
   },
   {
     query: "Clefairy 5/102",
     cardId: "base1-5",
     setName: "Base Set",
+    price: 4.00,
   },
   {
     query: "Ninetales 12/102",
     cardId: "base1-12",
     setName: "Base Set",
+    price: 6.00,
   },
   {
     query: "Machamp 8/102",
     cardId: "base1-8",
     setName: "Base Set",
+    price: 1.00,
   },
   {
     query: "Poliwrath 13/102",
     cardId: "base1-13",
     setName: "Base Set",
+    price: 4.00,
   },
   {
     query: "Ponyta 60/102",
     cardId: "base1-60",
     setName: "Base Set",
+    price: 1.00,
   },
 ];
