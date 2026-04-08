@@ -958,6 +958,7 @@ const CARD_LIST = [
     query: "Mega Signal 171/132",
     cardId: "me1-171",
     setName: "Mega Evolution",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/567397_in_1000x1000.jpg",
   },
   {
     query: "Fighting Gong 168/132",
