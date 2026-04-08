@@ -985,4 +985,55 @@ const CARD_LIST = [
     imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/636489_in_1000x1000.jpg",
     fallbackPrice: 11.00,
   },
+  // ── Base Set ─────────────────────────────────────────────
+  {
+    query: "Charizard 4/102",
+    cardId: "base1-4",
+    setName: "Base Set",
+  },
+  {
+    query: "Blastoise 2/102",
+    cardId: "base1-2",
+    setName: "Base Set",
+  },
+  {
+    query: "Mewtwo 10/102",
+    cardId: "base1-10",
+    setName: "Base Set",
+  },
+  {
+    query: "Gyarados 6/102",
+    cardId: "base1-6",
+    setName: "Base Set",
+  },
+  {
+    query: "Chansey 3/102",
+    cardId: "base1-3",
+    setName: "Base Set",
+  },
+  {
+    query: "Clefairy 5/102",
+    cardId: "base1-5",
+    setName: "Base Set",
+  },
+  {
+    query: "Ninetales 12/102",
+    cardId: "base1-12",
+    setName: "Base Set",
+  },
+  {
+    query: "Machamp 8/102",
+    cardId: "base1-8",
+    setName: "Base Set",
+  },
+  {
+    query: "Poliwrath 13/102",
+    cardId: "base1-13",
+    setName: "Base Set",
+  },
+  {
+    query: "Ponyta 60/102",
+    cardId: "base1-60",
+    setName: "Base Set",
+  },
 ];
