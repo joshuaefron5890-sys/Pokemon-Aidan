@@ -967,6 +967,9 @@ const CARD_LIST = [
     query: "Iron Hands ex 210/187",
     cardId: "sv8a-210",
     setName: "Terastal Festival ex",
+    tcgUrl: "https://www.tcgplayer.com/product/602674/pokemon-japan-sv8a-terastal-fest-ex-iron-hands-ex-210-187?page=1&Language=all",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/602674_in_1000x1000.jpg",
+    fallbackPrice: 4.50,
   },
   {
     query: "Togepi & Cleffa & Igglybuff GX 094/173",
