@@ -1047,4 +1047,18 @@ const CARD_LIST = [
     setName: "Base Set",
     price: 1.00,
   },
+  {
+    query: "Alolan Dugtrio 116/106",
+    setName: "Super Electric Breaker",
+    tcgUrl: "https://www.tcgplayer.com/product/587723/pokemon-japan-sv8-super-electric-breaker-alolan-dugtrio-116-106",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/587723_in_1000x1000.jpg",
+    fallbackPrice: 5.00,
+  },
+  {
+    query: "Ludicolo 081/080",
+    setName: "Inferno X",
+    tcgUrl: "https://www.tcgplayer.com/product/655860/pokemon-japan-m2-inferno-x-ludicolo-081-080",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/655860_in_1000x1000.jpg",
+    fallbackPrice: 10.00,
+  },
 ];
