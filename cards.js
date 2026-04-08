@@ -947,6 +947,7 @@ const CARD_LIST = [
     query: "Grand Tree 136/142",
     cardId: "sv7-136",
     setName: "Stellar Crown",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/610494_in_1000x1000.jpg",
   },
   {
     query: "Ryme 221/197",
