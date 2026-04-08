@@ -413,7 +413,7 @@ a.binder-card { cursor: pointer; }
 }
 .avatar.small { width: 24px; height: 24px; font-size: .7rem; }
 
-.message-bubble { padding: .65rem .9rem; border-radius: 14px; font-size: .9rem; line-height: 1.55; }
+.message-bubble { padding: .65rem .9rem; border-radius: 14px; font-size: .9rem; line-height: 1.55; overflow-wrap: break-word; word-break: break-word; }
 .message.user .message-bubble { background: linear-gradient(135deg,#1e4a8a,#163a70); border: 1px solid rgba(96,165,250,.2); border-top-right-radius: 4px; }
 .message.assistant .message-bubble { background: var(--surface); border: 1px solid var(--border); border-top-left-radius: 4px; }
 .message.error .message-bubble { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); color: #fca5a5; }
