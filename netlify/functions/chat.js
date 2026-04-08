@@ -12,10 +12,13 @@ const GH_FILE_URL   = `https://api.github.com/repos/${GITHUB_REPO}/contents/card
 // ── cards.js file helpers ──────────────────────────────────
 
 async function getCardsFile() {
-  const headers = { Accept: "application/vnd.github.v3+json" };
+  const headers = {
+    Accept: "application/vnd.github.v3+json",
+    "Cache-Control": "no-cache",
+  };
   if (GITHUB_TOKEN) headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
 
-  // Timestamp busts GitHub's CDN cache so we always get the true latest SHA
+  // Timestamp + no-cache ensures we always get the true latest SHA, not a CDN-cached version
   const res = await fetch(`${GH_FILE_URL}&t=${Date.now()}`, { headers });
 
   if (!res.ok) {
@@ -55,15 +58,19 @@ async function putCardsFile(content, sha, message) {
   return res.json();
 }
 
-// Retry a read-modify-write operation up to 3 times on 409 conflicts.
+// Retry a read-modify-write operation up to 5 times on 409 conflicts.
 // Each attempt re-reads the file so the SHA + content are always fresh.
+// Exponential backoff: 500ms, 1s, 2s, 4s between attempts.
 async function withRetry(fn) {
-  for (let attempt = 0; attempt < 3; attempt++) {
+  const MAX = 5;
+  for (let attempt = 0; attempt < MAX; attempt++) {
     try {
       return await fn();
     } catch (err) {
-      if (err.status === 409 && attempt < 2) {
-        await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
+      const isConflict = err.status === 409 ||
+        (err.message && err.message.includes("409"));
+      if (isConflict && attempt < MAX - 1) {
+        await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
         continue;
       }
       throw err;
