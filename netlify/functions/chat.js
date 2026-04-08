@@ -56,6 +56,7 @@ async function putCardsFile(content, sha, message) {
       message,
       content: Buffer.from(content, "utf8").toString("base64"),
       sha,
+      branch: "main",
     }),
   });
 
