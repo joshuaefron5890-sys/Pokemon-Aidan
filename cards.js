@@ -1105,4 +1105,130 @@ const CARD_LIST = [
     imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/602576_in_1000x1000.jpg",
     fallbackPrice: 4.50,
   },
+  {
+    query: "Mega Gengar ex 125/217",
+    cardId: "me2pt5-125",
+    setName: "Ascended Heroes",
+    fallbackPrice: 25.00,
+  },
+  {
+    query: "Machamp GX 64/147",
+    cardId: "sm3-64",
+    setName: "Burning Shadows",
+  },
+  {
+    query: "Lycanroc GX 74/145",
+    cardId: "sm2-74",
+    setName: "Guardians Rising",
+  },
+  {
+    query: "Mega Gardevoir ex 089/217",
+    cardId: "me2pt5-89",
+    setName: "Ascended Heroes",
+    fallbackPrice: 20.00,
+  },
+  {
+    query: "Mega Camerupt ex 022/132",
+    cardId: "me1-22",
+    setName: "Mega Evolution",
+    fallbackPrice: 12.00,
+  },
+  {
+    query: "Ethan's Ho-oh ex 026/217",
+    cardId: "me2pt5-26",
+    setName: "Ascended Heroes",
+    fallbackPrice: 15.00,
+  },
+  {
+    query: "Teal Mask Ogerpon ex 123",
+    cardId: "sv6-123",
+    setName: "Twilight Masquerade",
+  },
+  {
+    query: "Alcremie ex 075/159",
+    cardId: "sv9-75",
+    setName: "Journey Together",
+  },
+  {
+    query: "Gyarados GX SM212",
+    cardId: "smp-SM212",
+    setName: "SM Black Star Promos",
+  },
+  {
+    query: "Salamence ex 177/217",
+    cardId: "me2pt5-177",
+    setName: "Ascended Heroes",
+    fallbackPrice: 15.00,
+  },
+  {
+    query: "Honchkrow V 088/172",
+    cardId: "swsh9-88",
+    setName: "Brilliant Stars",
+  },
+  {
+    query: "Drampa GX 115/145",
+    cardId: "sm2-115",
+    setName: "Guardians Rising",
+  },
+  {
+    query: "Raichu GX 29/73",
+    cardId: "sm35-29",
+    setName: "Shining Legends",
+  },
+  {
+    query: "Raichu GX 20/68",
+    cardId: "hif-20",
+    setName: "Hidden Fates",
+  },
+  {
+    query: "Pinsir GX 6/68",
+    cardId: "hif-6",
+    setName: "Hidden Fates",
+  },
+  {
+    query: "Noivern GX 99/147",
+    cardId: "sm3-99",
+    setName: "Burning Shadows",
+  },
+  {
+    query: "Kartana GX 70/111",
+    cardId: "sm4-70",
+    setName: "Crimson Invasion",
+  },
+  {
+    query: "Necrozma GX SM58",
+    cardId: "smp-SM58",
+    setName: "SM Black Star Promos",
+  },
+  {
+    query: "Wigglytuff GX 42/68",
+    cardId: "hif-42",
+    setName: "Hidden Fates",
+  },
+  {
+    query: "Zangoose ex 167/217",
+    cardId: "me2pt5-167",
+    setName: "Ascended Heroes",
+    fallbackPrice: 10.00,
+  },
+  {
+    query: "Turtonator GX 18/145",
+    cardId: "sm2-18",
+    setName: "Guardians Rising",
+  },
+  {
+    query: "Gumshoos GX 110/149",
+    cardId: "sm1-110",
+    setName: "Sun & Moon",
+  },
+  {
+    query: "Tapu Fini GX 39a",
+    cardId: "sm2-39a",
+    setName: "Guardians Rising",
+  },
+  {
+    query: "Entei GX 10/73",
+    cardId: "sm35-10",
+    setName: "Shining Legends",
+  },
 ];
