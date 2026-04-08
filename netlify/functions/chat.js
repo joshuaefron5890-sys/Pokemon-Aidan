@@ -142,7 +142,6 @@ async function tool_get_collection() {
   const diagnostics = {
     githubTokenSet: !!GITHUB_TOKEN,
     githubRepo: GITHUB_REPO,
-    url: GH_FILE_URL,
   };
 
   const { content } = await getCardsFile();
