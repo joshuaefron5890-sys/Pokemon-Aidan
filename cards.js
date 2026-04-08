@@ -868,4 +868,54 @@ const CARD_LIST = [
     imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/568417_in_1000x1000.jpg",
     fallbackPrice: 5.00,
   },
+  {
+    query: "Greninja GX SM197",
+    cardId: "smp-SM197",
+    setName: "SM Black Star Promos",
+  },
+  {
+    query: "Mew ex 151/165",
+    cardId: "sv3pt5-151",
+    setName: "Pokemon 151",
+  },
+  {
+    query: "Pawmi 226/091",
+    cardId: "sv4pt5-226",
+    setName: "Paldean Fates",
+  },
+  {
+    query: "N's Zekrom 031",
+    cardId: "mep-31",
+    setName: "Mega Evolution Promos",
+  },
+  {
+    query: "Tapu Koko GX 47/145",
+    cardId: "sm2-47",
+    setName: "Guardians Rising",
+  },
+  {
+    query: "Primarina GX 42/149",
+    cardId: "sm1-42",
+    setName: "Sun & Moon",
+  },
+  {
+    query: "Atticus 134/131",
+    cardId: "sv7pt5-134",
+    setName: "Prismatic Evolutions",
+  },
+  {
+    query: "Sacred Charm 122/094",
+    cardId: "me2-122",
+    setName: "Phantasmal Flames",
+  },
+  {
+    query: "Night Stretcher 173/132",
+    cardId: "me1-173",
+    setName: "Mega Evolution",
+  },
+  {
+    query: "Anthea & Concordia 254/217",
+    cardId: "me2pt5-254",
+    setName: "Ascended Heroes",
+  },
 ];
