@@ -860,4 +860,12 @@ const CARD_LIST = [
     cardId: "sm12-158",
     setName: "Cosmic Eclipse",
   },
+  {
+    query: "Cinccino 083/071",
+    cardId: "sv5k-83",
+    setName: "Wild Force",
+    tcgUrl: "https://www.tcgplayer.com/product/568417/pokemon-japan-sv5k-wild-force-cinccino-083-071",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/568417_in_1000x1000.jpg",
+    fallbackPrice: 5.00,
+  },
 ];
