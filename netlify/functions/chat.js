@@ -105,37 +105,62 @@ function formatCard(card) {
 
 // ── Tool implementations ───────────────────────────────────
 
-async function tool_lookup_card({ query, cardId }) {
+function cardSummary(c) {
+  return {
+    id: c.id,
+    name: c.name,
+    number: c.number,
+    set: { id: c.set?.id, name: c.set?.name, series: c.set?.series },
+    rarity: c.rarity,
+    hasImage: !!c.images?.large,
+    tcgUrl: c.tcgplayer?.url,
+    marketPrice:
+      c.tcgplayer?.prices?.holofoil?.market ??
+      c.tcgplayer?.prices?.normal?.market ??
+      c.tcgplayer?.prices?.["1stEditionHolofoil"]?.market ??
+      null,
+  };
+}
+
+async function tool_lookup_card({ query, number, cardId }) {
+  // Direct lookup by API card ID
   if (cardId) {
     const res = await fetch(`${TCG_API}/cards/${encodeURIComponent(cardId)}`);
     if (!res.ok) return { error: `No card found with ID "${cardId}"` };
     const { data: c } = await res.json();
-    return {
-      id: c.id, name: c.name, number: c.number,
-      set: { id: c.set?.id, name: c.set?.name, series: c.set?.series },
-      rarity: c.rarity,
-      hasImage: !!c.images?.large,
-      tcgUrl: c.tcgplayer?.url,
-      marketPrice:
-        c.tcgplayer?.prices?.holofoil?.market ??
-        c.tcgplayer?.prices?.normal?.market ??
-        c.tcgplayer?.prices?.["1stEditionHolofoil"]?.market ??
-        null,
-    };
+    return cardSummary(c);
   }
-  const q = encodeURIComponent(`name:"${query}"`);
-  const res = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
-  const { data } = await res.json();
-  if (!data?.length) return { error: `No cards found for "${query}"` };
-  return data.map(c => ({
-    id: c.id, name: c.name, number: c.number,
-    set: { name: c.set?.name, series: c.set?.series },
-    rarity: c.rarity,
-    tcgUrl: c.tcgplayer?.url,
-    marketPrice:
-      c.tcgplayer?.prices?.holofoil?.market ??
-      c.tcgplayer?.prices?.normal?.market ?? null,
-  }));
+
+  // Strip the "/total" from numbers like "136/142" → "136"
+  const numPart = number ? number.split("/")[0].trim() : null;
+
+  // If a number was given, try exact name+number match first
+  if (numPart) {
+    const q = `name:"${query}" number:"${numPart}"`;
+    const res = await fetch(`${TCG_API}/cards?q=${encodeURIComponent(q)}&pageSize=10&orderBy=-set.releaseDate`);
+    const { data } = await res.json();
+    if (data?.length) {
+      // Exact match — return the best match clearly identified
+      return {
+        exactMatch: true,
+        result: cardSummary(data[0]),
+        allMatches: data.map(cardSummary),
+      };
+    }
+    // Number+name had no hit — fall through to name-only with a note
+  }
+
+  // Name-only search — return multiple options for Claude to present to user
+  const q2 = `name:"${query}"`;
+  const res2 = await fetch(`${TCG_API}/cards?q=${encodeURIComponent(q2)}&pageSize=10&orderBy=-set.releaseDate`);
+  const { data: data2 } = await res2.json();
+  if (!data2?.length) return { error: `No cards found for "${query}"${numPart ? ` (number ${numPart} not found either)` : ""}` };
+
+  return {
+    exactMatch: false,
+    note: numPart ? `No card named "${query}" with number "${numPart}" found. Here are all printings — ask the user which one matches.` : `Multiple printings found — confirm with user if needed.`,
+    options: data2.map(cardSummary),
+  };
 }
 
 async function tool_get_collection() {
@@ -259,12 +284,13 @@ async function executeTool(name, input) {
 const TOOLS = [
   {
     name: "lookup_card",
-    description: "Search the Pokemon TCG API for a card by name or direct ID. Use this to verify card details and get pricing before adding.",
+    description: "Search the Pokemon TCG API for a card. Pass both query (name) and number (card number) when the user provides them — this finds the exact printing. If no exact match, returns all printings so you can ask the user which one they have.",
     input_schema: {
       type: "object",
       properties: {
-        query:  { type: "string", description: 'Card name, e.g. "Charizard ex" or "Pikachu 025/102"' },
-        cardId: { type: "string", description: 'Direct API card ID if known, e.g. "sv3pt5-6", "base1-4", "xyp-XY30"' },
+        query:  { type: "string", description: 'Card name only, e.g. "Charizard ex", "Grand Tree"' },
+        number: { type: "string", description: 'Card number as printed, e.g. "136/142", "006/165", "SM212". Include the /total if present.' },
+        cardId: { type: "string", description: 'Direct API card ID if already known, e.g. "sv3pt5-6", "base1-4", "smp-SM212"' },
       },
     },
   },
@@ -336,13 +362,29 @@ Each card entry has:
 - setName: expansion name, e.g. "151"
 - tcgUrl: TCGPlayer URL (optional)
 - fallbackPrice: manual price shown with ~ prefix when API has no data (optional)
-- imageUrl: local filename for cards the API has no image for (optional)
+- imageUrl: URL or filename for cards the API has no image for (optional)
 - grade: numeric PSA/BGS grade shown as a gold badge (optional)
 
-When adding a card:
-1. Use lookup_card to confirm the ID, set name, pricing, and TCGPlayer URL
-2. Tell the user what you found before committing
-3. Use add_card — changes deploy automatically in ~1 minute
+## Looking up cards
+- Always pass BOTH query (name) and number (e.g. "136/142") to lookup_card when the user provides them.
+- If lookup_card returns exactMatch:true, use that result — tell the user what you found (name, set, number, price) and confirm before writing.
+- If exactMatch:false, present the options clearly ("I found these printings — which one do you have?") and wait for the user to confirm before doing anything.
+- Never guess or assume which printing is correct when multiple exist.
+
+## Adding a card
+1. lookup_card with name + number → confirm exact match with user
+2. Tell the user: name, set, cardId, price found
+3. add_card only after user confirms
+
+## Updating a card
+- ONLY update the specific field(s) the user asked to change.
+- NEVER change cardId, setName, or query unless the user explicitly asks to change them.
+- To update imageUrl: call update_card with just { imageUrl: "..." }. Do not touch anything else.
+- If you're not certain which card in the collection to update, call get_collection first, find the card by name, then update only its requested field.
+
+## When unsure
+- If the card name could match multiple entries, list them and ask the user to confirm which one.
+- If the number doesn't match any API result, say so and ask the user to double-check or provide the TCGPlayer URL.
 
 When a user uploads a card image, identify it from the image and look it up automatically.
 
