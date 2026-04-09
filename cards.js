@@ -947,6 +947,7 @@ const CARD_LIST = [
     query: "Grand Tree 136/142",
     cardId: "sv7-136",
     setName: "Stellar Crown",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/567397_in_1000x1000.jpg",
   },
   {
     query: "Ryme 221/197",
@@ -1215,6 +1216,7 @@ const CARD_LIST = [
     query: "Turtonator GX 18/145",
     cardId: "sm2-18",
     setName: "Guardians Rising",
+    tcgUrl: "https://www.tcgplayer.com/product/219163/pokemon-battle-academy-raichu-gx-20-68-60-pikachu-stamped?page=1&Language=English",
   },
   {
     query: "Gumshoos GX 110/149",
