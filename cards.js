@@ -945,9 +945,9 @@ const CARD_LIST = [
   },
   {
     query: "Grand Tree 136/142",
-    cardId: "sv8pt5-139",
-    setName: "Prismatic Evolutions",
-    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/610494_in_1000x1000.jpg",
+    cardId: "sv7-136",
+    setName: "Stellar Crown",
+    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/567397_in_1000x1000.jpg",
   },
   {
     query: "Ryme 221/197",
@@ -958,7 +958,6 @@ const CARD_LIST = [
     query: "Mega Signal 171/132",
     cardId: "me1-171",
     setName: "Mega Evolution",
-    imageUrl: "https://tcgplayer-cdn.tcgplayer.com/product/567397_in_1000x1000.jpg",
   },
   {
     query: "Fighting Gong 168/132",
