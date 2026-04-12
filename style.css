@@ -847,12 +847,3 @@ footer a {
 .acm-success { text-align: center; padding: .5rem 0; }
 .acm-success-icon { font-size: 2.5rem; margin-bottom: .75rem; }
 .acm-success-msg { color: var(--text-muted); font-size: .9rem; }
-
-/* ── Hide all pricing ───────────────────────────────────── */
-.card-price-badge,
-.card-price,
-.card-price-unknown,
-.card-price-static,
-.skeleton-price,
-.stat-card:has(#total-value),
-footer { display: none !important; }
