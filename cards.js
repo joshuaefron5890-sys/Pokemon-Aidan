@@ -1233,4 +1233,17 @@ const CARD_LIST = [
     cardId: "sm35-10",
     setName: "Shining Legends",
   },
+  {
+    query: "Mamoswine ex 174/159",
+    cardId: "sv9-174",
+    setName: "Journey Together",
+    tcgUrl: "https://www.tcgplayer.com/product/623601/pokemon-sv09-journey-together-mamoswine-ex-174-159",
+    fallbackPrice: 2.25,
+  },
+  {
+    query: "Cinderace V 018/072",
+    cardId: "swsh45-18",
+    setName: "Shining Fates",
+    tcgUrl: "https://www.tcgplayer.com/product/232406/pokemon-shining-fates-cinderace-v",
+  },
 ];
