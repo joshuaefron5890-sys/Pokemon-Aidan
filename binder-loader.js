@@ -10,12 +10,28 @@ async function initBinder() {
 
   const token = window.netlifyIdentity?.currentUser()?.token?.access_token;
 
-  try {
-    const res = await fetch(`/.netlify/functions/get-binder?slug=${encodeURIComponent(slug)}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    const data = await res.json();
+  // Retry up to 3× for 404 — GitHub's API can take a few seconds to propagate
+  // a newly-created binder file after the create-binder function writes it.
+  let res, data;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) {
+      showError(`Setting up your binder… (attempt ${attempt + 1}/3)`);
+      await new Promise(r => setTimeout(r, attempt * 3000));
+    }
+    try {
+      res  = await fetch(`/.netlify/functions/get-binder?slug=${encodeURIComponent(slug)}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      data = await res.json();
+    } catch (err) {
+      console.error("initBinder fetch error:", err);
+      showError("Failed to load binder. Please try again.");
+      return;
+    }
+    if (res.status !== 404) break; // 404 = may not be propagated yet; retry
+  }
 
+  try {
     if (res.status === 403 && data.error === "private") {
       showPrivateLock(data.owner); return;
     }
