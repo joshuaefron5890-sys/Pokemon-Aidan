@@ -15,10 +15,26 @@ document.getElementById("login-btn").addEventListener("click",
 document.getElementById("logout-btn").addEventListener("click",
   () => netlifyIdentity.logout());
 
+function binderUrlForUser(user) {
+  // Explicit override in Netlify Identity user metadata takes priority
+  if (user.user_metadata?.binder_url) return user.user_metadata.binder_url;
+  // Derive from full name: "Aidan Efron" → "/AidanEfron"
+  const name = user.user_metadata?.full_name || "";
+  const slug = name.replace(/\s+/g, "");
+  if (slug) return `/${slug}`;
+  return "/";
+}
+
 function showAdmin(user) {
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("admin-app").classList.remove("hidden");
   document.getElementById("user-email").textContent = user.email;
+
+  const binderUrl = binderUrlForUser(user);
+  document.getElementById("binder-iframe").src = binderUrl;
+  const pubLink = document.getElementById("view-public-link");
+  if (pubLink) pubLink.href = binderUrl;
+
   showView("binder");
 }
 
@@ -32,7 +48,7 @@ function showLogin() {
 const VIEW_LABELS = {
   binder:    "My Binder",
   shared:    "Shared Binders",
-  assistant: "Card Assistant",
+  assistant: "Card Assistant",  // accessed via popup full-screen button
 };
 
 function showView(id) {
@@ -56,8 +72,56 @@ function showView(id) {
 }
 
 document.querySelectorAll(".nav-item[data-view]").forEach(btn => {
-  btn.addEventListener("click", () => showView(btn.dataset.view));
+  btn.addEventListener("click", () => {
+    showView(btn.dataset.view);
+    if (btn.dataset.view === "shared") loadSharedBinders();
+  });
 });
+
+// ── Dynamic binder gallery ──────────────────────────────────
+
+let sharedLoaded = false;
+
+async function loadSharedBinders() {
+  if (sharedLoaded) return;
+  sharedLoaded = true;
+
+  const grid = document.querySelector(".binders-grid");
+  if (!grid) return;
+
+  try {
+    const res  = await fetch("/.netlify/functions/list-binders");
+    const list = await res.json();
+    if (!Array.isArray(list)) return;
+
+    list.forEach(b => {
+      // Skip slugs already shown as static cards
+      if (grid.querySelector(`[href="/binder/${b.slug}"]`)) return;
+
+      const initial = b.owner.charAt(0).toUpperCase();
+      const colors  = ["#6366f1,#8b5cf6", "#f59e0b,#ef4444", "#10b981,#059669", "#3b82f6,#2563eb"];
+      const grad    = colors[b.slug.charCodeAt(0) % colors.length];
+
+      const avatarInner = b.photoUrl
+        ? `<img src="${b.photoUrl}" alt="${initial}" onerror="this.remove()" />`
+        : initial;
+
+      const card = document.createElement("a");
+      card.className = "binder-card";
+      card.href = `/binder/${b.slug}`;
+      card.target = "_blank";
+      card.rel = "noopener";
+      card.innerHTML = `
+        <div class="binder-card-avatar ${b.photoUrl ? "binder-card-avatar--photo" : ""}" style="background:linear-gradient(135deg,${grad})">${avatarInner}</div>
+        <div class="binder-card-info">
+          <div class="binder-card-name">${b.owner}'s Binder</div>
+          <div class="binder-card-meta">${b.cardCount || 0} card${b.cardCount !== 1 ? "s" : ""}</div>
+        </div>
+        <div class="binder-card-badge">View</div>`;
+      grid.appendChild(card);
+    });
+  } catch {}
+}
 
 // Mobile sidebar toggle
 document.getElementById("hamburger")?.addEventListener("click", () =>
@@ -137,9 +201,8 @@ document.getElementById("popup-image-upload").addEventListener("change", e => {
 });
 
 function updateSendBtns() {
-  const hasContent = (chatInput.value.trim() || pendingImage);
-  sendBtn.disabled = !hasContent;
-  popupSendBtn.disabled = !hasContent;
+  sendBtn.disabled      = !(chatInput.value.trim()   || pendingImage);
+  popupSendBtn.disabled = !(popupInput.value.trim()  || pendingImage);
 }
 
 function autoResize(el) {
@@ -162,6 +225,12 @@ bubble.addEventListener("click", () => {
 popupClose.addEventListener("click", () => {
   popup.classList.remove("open");
   bubble.classList.remove("active");
+});
+
+document.getElementById("popup-fullscreen").addEventListener("click", () => {
+  popup.classList.remove("open");
+  bubble.classList.remove("active");
+  showView("assistant");
 });
 
 // ── Core send function ──────────────────────────────────────
@@ -194,7 +263,8 @@ async function sendMessage(isPopup) {
   const typing2 = appendTyping(true);
 
   try {
-    const token = netlifyIdentity.currentUser()?.token?.access_token;
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
     const res = await fetch("/.netlify/functions/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
