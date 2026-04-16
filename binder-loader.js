@@ -197,7 +197,14 @@ function appendBinderTyping(msgs) {
 
 function boot() {
   if (window.netlifyIdentity) {
-    netlifyIdentity.on("init", () => initBinder());
+    let started = false;
+    netlifyIdentity.on("init", () => {
+      if (started) return;
+      started = true;
+      initBinder();
+    });
+    // Public binders don't need auth — don't let a slow identity widget block the page
+    setTimeout(() => { if (!started) { started = true; initBinder(); } }, 2000);
   } else {
     initBinder();
   }
