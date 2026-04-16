@@ -15,14 +15,21 @@ document.getElementById("login-btn").addEventListener("click",
 document.getElementById("logout-btn").addEventListener("click",
   () => netlifyIdentity.logout());
 
+// Map known admin emails to their binder URLs.
+// Add entries here as new admins are created.
+const ADMIN_BINDER_MAP = {
+  "joshuaefron5890@gmail.com": "/AidanEfron",
+};
+
 function binderUrlForUser(user) {
-  // Explicit override in Netlify Identity user metadata takes priority
+  if (!user) return "/";
+  // 1. Explicit binder_url in Netlify Identity user metadata
   if (user.user_metadata?.binder_url) return user.user_metadata.binder_url;
-  // Derive from full name: "Aidan Efron" → "/AidanEfron"
-  const name = user.user_metadata?.full_name || "";
-  const slug = name.replace(/\s+/g, "");
-  if (slug) return `/${slug}`;
-  return "/";
+  // 2. Known email mapping
+  if (ADMIN_BINDER_MAP[user.email]) return ADMIN_BINDER_MAP[user.email];
+  // 3. Derive from full name: "Aidan Efron" → "/AidanEfron"
+  const slug = (user.user_metadata?.full_name || "").replace(/\s+/g, "");
+  return slug ? `/${slug}` : "/";
 }
 
 function showAdmin(user) {
