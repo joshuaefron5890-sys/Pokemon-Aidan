@@ -26,6 +26,17 @@ async function initBinder() {
     const titleEl = document.getElementById("page-title");
     if (titleEl) titleEl.textContent = `${data.owner}'s Pokémon Collection`;
 
+    // Show profile photo if available
+    if (data.photoUrl) {
+      const wrap = document.getElementById("header-photo-wrap");
+      const img  = document.getElementById("header-photo");
+      if (wrap && img) {
+        img.src = data.photoUrl;
+        img.alt = data.owner;
+        wrap.classList.remove("hidden");
+      }
+    }
+
     // Set CARD_LIST for app.js
     window.CARD_LIST = (data.cards || []).map(c => ({
       query:         c.query,

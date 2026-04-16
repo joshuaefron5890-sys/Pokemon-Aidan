@@ -8,7 +8,8 @@ async function getFile(path) {
   const headers = { Accept: "application/vnd.github.v3+json" };
   if (GITHUB_TOKEN) headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
 
-  const res = await fetch(`${GH_API}/${path}?ref=main`, { headers });
+  // Timestamp busts GitHub CDN cache so we always get the true latest SHA/content
+  const res = await fetch(`${GH_API}/${path}?ref=main&t=${Date.now()}`, { headers });
   if (res.status === 404) return null;
   if (!res.ok) {
     const body = await res.text();
@@ -44,4 +45,26 @@ async function putFile(path, content, sha, message) {
   return res.json();
 }
 
-module.exports = { getFile, putFile };
+// Store a binary file (e.g. an image) — base64Data is already base64 encoded
+async function putBinaryFile(path, base64Data, sha, message) {
+  const body = { message, content: base64Data, branch: "main" };
+  if (sha) body.sha = sha;
+
+  const res = await fetch(`${GH_API}/${path}`, {
+    method:  "PUT",
+    headers: {
+      Authorization:  `Bearer ${GITHUB_TOKEN}`,
+      Accept:         "application/vnd.github.v3+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(`GitHub write "${path}" failed: ${JSON.stringify(err)}`);
+  }
+  return res.json();
+}
+
+module.exports = { getFile, putFile, putBinaryFile };

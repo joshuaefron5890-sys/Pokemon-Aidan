@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pokémon Binder</title>
-  <link rel="stylesheet" href="/style.css?v=49" />
+  <link rel="stylesheet" href="/style.css?v=51" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
 
   <!-- Netlify Identity for private binder auth + owner tools -->
@@ -30,6 +30,9 @@
   <!-- ── Header ── -->
   <header>
     <div class="header-inner">
+      <div class="header-photo-wrap hidden" id="header-photo-wrap">
+        <img id="header-photo" class="header-photo" alt="" />
+      </div>
       <h1 id="page-title">Loading…</h1>
     </div>
   </header>
@@ -145,7 +148,7 @@
   </div>
 
   <script src="/binder-loader.js"></script>
-  <script src="/app.js?v=45"></script>
+  <script src="/app.js?v=48"></script>
   <script src="/background.js?v=44"></script>
 </body>
 </html>
