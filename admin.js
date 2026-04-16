@@ -15,10 +15,26 @@ document.getElementById("login-btn").addEventListener("click",
 document.getElementById("logout-btn").addEventListener("click",
   () => netlifyIdentity.logout());
 
+function binderUrlForUser(user) {
+  // Explicit override in Netlify Identity user metadata takes priority
+  if (user.user_metadata?.binder_url) return user.user_metadata.binder_url;
+  // Derive from full name: "Aidan Efron" → "/AidanEfron"
+  const name = user.user_metadata?.full_name || "";
+  const slug = name.replace(/\s+/g, "");
+  if (slug) return `/${slug}`;
+  return "/";
+}
+
 function showAdmin(user) {
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("admin-app").classList.remove("hidden");
   document.getElementById("user-email").textContent = user.email;
+
+  const binderUrl = binderUrlForUser(user);
+  document.getElementById("binder-iframe").src = binderUrl;
+  const pubLink = document.getElementById("view-public-link");
+  if (pubLink) pubLink.href = binderUrl;
+
   showView("binder");
 }
 
