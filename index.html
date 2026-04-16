@@ -3,127 +3,142 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aidan's Pokémon Card Collection</title>
-  <link rel="stylesheet" href="style.css?v=51" />
-
-  <!-- Favicon: Pokéball emoji -->
+  <title>Digital Pokémon Binder</title>
+  <link rel="stylesheet" href="style.css?v=49" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+  <style>
+    .landing-hero {
+      text-align: center;
+      padding: 4rem 1.5rem 2.5rem;
+    }
+    .landing-hero h1 {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: .75rem;
+    }
+    .landing-hero p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 460px;
+      margin: 0 auto 2.5rem;
+    }
+    .binder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
+      gap: 1.25rem;
+      justify-content: center;
+      padding: 0 1.5rem 3rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .binder-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .75rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: transform .15s, box-shadow .15s, border-color .15s;
+    }
+    .binder-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(0,0,0,.4);
+      border-color: var(--accent);
+    }
+    .binder-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border);
+    }
+    .binder-avatar-placeholder {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+    .binder-name {
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+    .binder-label {
+      font-size: .8rem;
+      color: var(--text-muted);
+    }
+    .landing-cta {
+      text-align: center;
+      padding-bottom: 4rem;
+    }
+    .landing-cta a {
+      display: inline-block;
+      background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+      color: #fff;
+      font-weight: 600;
+      font-size: .95rem;
+      padding: .7rem 1.75rem;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: opacity .15s, transform .1s;
+    }
+    .landing-cta a:hover { opacity: .9; transform: translateY(-1px); }
+    .section-label {
+      text-align: center;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+  </style>
 </head>
 <body>
   <canvas id="bg-canvas" aria-hidden="true"></canvas>
 
-  <!-- ── Header ── -->
-  <header>
-    <div class="header-inner">
-      <div class="header-photo-wrap">
-        <img src="Aidan.jpg" alt="Aidan" class="header-photo" />
-      </div>
-      <h1>Aidan's Pokémon Collection</h1>
-    </div>
-  </header>
-
-  <!-- ── Stats Bar ── -->
-  <div class="stats-bar">
-    <div class="stat-card">
-      <div class="stat-label">Total Value</div>
-      <div class="stat-value" id="total-value">…</div>
-    </div>
-    <div class="stat-card stat-count">
-      <div class="stat-label">Cards</div>
-      <div class="stat-value" id="card-count">…</div>
-    </div>
+  <div class="landing-hero">
+    <h1>Digital Pokémon Binder</h1>
+    <p>Browse card collections or create your own digital binder.</p>
   </div>
 
-  <!-- ── Toolbar (search + filters) ── -->
-  <div class="toolbar" id="filter-bar">
-    <div class="search-bar-inner">
-      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input
-        id="search-input"
-        type="text"
-        placeholder="Search by name, set, or number…"
-        autocomplete="off"
-        spellcheck="false"
-      />
-      <kbd class="search-shortcut" id="search-shortcut">/</kbd>
-      <button id="search-clear" class="search-clear" aria-label="Clear search">✕</button>
-    </div>
-    <div class="filter-group">
-      <div class="filter-dropdown" id="series-dropdown">
-        <button class="filter-btn" id="series-btn" aria-haspopup="listbox" aria-expanded="false">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18M7 12h10M11 18h2"/>
-          </svg>
-          <span id="series-label">All Series</span>
-          <svg class="filter-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </button>
-        <div class="filter-panel" id="series-panel" role="listbox">
-          <div class="filter-panel-search">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input id="series-search" type="text" placeholder="Search series…" autocomplete="off" />
-          </div>
-          <ul id="series-options"></ul>
-        </div>
-      </div>
-    </div>
-    <div class="filter-group">
-      <div class="filter-dropdown" id="grade-dropdown">
-        <button class="filter-btn" id="grade-btn" aria-haspopup="listbox" aria-expanded="false">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-          </svg>
-          <span id="grade-label">All Cards</span>
-          <svg class="filter-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </button>
-        <div class="filter-panel" id="grade-panel" role="listbox">
-          <ul id="grade-options"></ul>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div id="search-status" class="search-status"></div>
-
-  <!-- ── Loading status ── -->
-  <div class="loading-bar">
-    <span id="loading-status">Loading collection…</span>
+  <p class="section-label">Collections</p>
+  <div class="binder-grid">
+    <a href="/AidanEfron" class="binder-card">
+      <img src="Aidan.jpg" alt="Aidan" class="binder-avatar" onerror="this.style.display='none'" />
+      <div class="binder-name">Aidan's Binder</div>
+      <div class="binder-label">View collection →</div>
+    </a>
+    <a href="/binder/callie" class="binder-card">
+      <div class="binder-avatar-placeholder">🌸</div>
+      <div class="binder-name">Callie's Binder</div>
+      <div class="binder-label">View collection →</div>
+    </a>
   </div>
 
-  <!-- ── Card Grid ── -->
-  <main class="grid-container">
-    <div id="card-grid">
-      <div id="load-sentinel" class="load-sentinel">Loading more…</div>
-    </div>
-  </main>
+  <div class="landing-cta">
+    <a href="/create">+ Create your own binder</a>
+  </div>
 
-  <!-- ── Footer ── -->
-  <footer>
-    Prices sourced from <a href="https://www.tcgplayer.com/" target="_blank" rel="noopener">TCGPlayer</a>
-    via the <a href="https://pokemontcg.io/" target="_blank" rel="noopener">Pokémon TCG API</a>.
-    Click any card to view on TCGPlayer.
-  </footer>
-
-  <script src="cards.js?v=46"></script>
-  <script src="app.js?v=48"></script>
   <script src="background.js?v=44"></script>
-
-  <!-- Netlify Identity: processes confirmation/recovery tokens in the URL hash
-       and redirects to /admin after login -->
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
         if (!user) {
           window.netlifyIdentity.on("login", () => {
-            // If user was mid-wizard (e.g. returning after email confirmation),
-            // send them back to /create to finish setting up their binder.
             const wizardState = localStorage.getItem("wizard_state_v1");
             if (wizardState) {
               try {

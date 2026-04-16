@@ -5,8 +5,11 @@
 [build.environment]
   NODE_VERSION = "18"
 
-[functions."chat"]
-  timeout = 26
+# Aidan's personal binder at /AidanEfron
+[[redirects]]
+  from   = "/AidanEfron"
+  to     = "/AidanEfron.html"
+  status = 200
 
 # Route /binder/* to binder.html (SPA-style, 200 = rewrite not redirect)
 [[redirects]]
