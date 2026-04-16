@@ -234,7 +234,7 @@ popupClose.addEventListener("click", () => {
   bubble.classList.remove("active");
 });
 
-document.getElementById("popup-fullscreen").addEventListener("click", () => {
+document.getElementById("popup-fullscreen")?.addEventListener("click", () => {
   popup.classList.remove("open");
   bubble.classList.remove("active");
   showView("assistant");
