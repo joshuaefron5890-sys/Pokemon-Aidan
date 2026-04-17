@@ -32,6 +32,10 @@ function binderUrlForUser(user) {
   return slug ? `/${slug}` : "/";
 }
 
+function isAidan(user) {
+  return user?.email === "joshuaefron5890@gmail.com";
+}
+
 function showAdmin(user) {
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("admin-app").classList.remove("hidden");
@@ -41,6 +45,14 @@ function showAdmin(user) {
   document.getElementById("binder-iframe").src = binderUrl;
   const pubLink = document.getElementById("view-public-link");
   if (pubLink) pubLink.href = binderUrl;
+
+  // Card Assistant and Add Card button are only for Aidan (manages cards.js).
+  // Other users manage their own binders via the Update Binder button on their /binder/ page.
+  const aidan = isAidan(user);
+  document.querySelector(".nav-item[data-view='assistant']")?.closest(".nav-section")
+    ?.classList.toggle("hidden", !aidan);
+  document.getElementById("add-card-btn")?.classList.toggle("hidden", !aidan);
+  document.getElementById("chat-bubble")?.classList.toggle("hidden", !aidan);
 
   showView("binder");
 }

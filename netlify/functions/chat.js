@@ -467,6 +467,16 @@ exports.handler = async (event, context) => {
     };
   }
 
+  // Only Aidan can manage cards.js via this function.
+  // All other users manage their own binders through binder-chat.js.
+  if (user.email !== "joshuaefron5890@gmail.com") {
+    return {
+      statusCode: 403,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "Forbidden — this assistant manages Aidan's collection only. Use the Update Binder button on your own binder page to manage your cards." }),
+    };
+  }
+
   try {
     const { messages } = JSON.parse(event.body);
     if (!Array.isArray(messages) || !messages.length) {
