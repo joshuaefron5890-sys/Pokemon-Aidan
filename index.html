@@ -115,15 +115,11 @@
   </div>
 
   <p class="section-label">Collections</p>
-  <div class="binder-grid">
+  <div class="binder-grid" id="binder-grid">
+    <!-- Aidan's static binder is always shown -->
     <a href="/AidanEfron" class="binder-card">
       <img src="Aidan.jpg" alt="Aidan" class="binder-avatar" onerror="this.style.display='none'" />
       <div class="binder-name">Aidan's Binder</div>
-      <div class="binder-label">View collection →</div>
-    </a>
-    <a href="/binder/callie" class="binder-card">
-      <div class="binder-avatar-placeholder">🌸</div>
-      <div class="binder-name">Callie's Binder</div>
       <div class="binder-label">View collection →</div>
     </a>
   </div>
@@ -151,6 +147,29 @@
         }
       });
     }
+
+    // Dynamically load all public binders from the manifest
+    (async () => {
+      try {
+        const res  = await fetch("/.netlify/functions/list-binders");
+        const list = await res.json();
+        if (!Array.isArray(list) || !list.length) return;
+        const grid = document.getElementById("binder-grid");
+        list.forEach(b => {
+          const avatar = b.photoUrl
+            ? `<img src="${b.photoUrl}" alt="${b.owner}" class="binder-avatar" onerror="this.replaceWith(placeholder())" />`
+            : `<div class="binder-avatar-placeholder">📒</div>`;
+          const card = document.createElement("a");
+          card.className = "binder-card";
+          card.href = `/binder/${b.slug}`;
+          card.innerHTML = `
+            ${avatar}
+            <div class="binder-name">${b.owner}'s Binder</div>
+            <div class="binder-label">View collection →</div>`;
+          grid.appendChild(card);
+        });
+      } catch {}
+    })();
   </script>
 </body>
 </html>
