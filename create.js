@@ -10,7 +10,6 @@ let wizardData = {
   token:     null,   // JWT after signup/login
   cards:     [],     // confirmed cards from step 3
 };
-let wizardHistory = [];  // AI chat history
 
 // Restore partial state from localStorage (survives email confirmation redirect)
 try {
@@ -409,11 +408,13 @@ document.getElementById("login-instead").addEventListener("click", () => {
   netlifyIdentity.open("login");
 });
 
-// ── Step 3: AI card wizard ─────────────────────────────────
+// ── Step 3: Card search ─────────────────────────────────────
 
-const wizardInput  = document.getElementById("wizard-input");
-const wizardSend   = document.getElementById("wizard-send");
-const wizardMsgs   = document.getElementById("wizard-msgs");
+const searchInput  = document.getElementById("card-search-input");
+const searchBtn    = document.getElementById("card-search-btn");
+const searchStatus = document.getElementById("card-search-status");
+const resultsEl    = document.getElementById("card-results");
+const resultsGrid  = document.getElementById("results-grid");
 const trayList     = document.getElementById("tray-list");
 const trayCount    = document.getElementById("tray-count");
 const trayEmpty    = document.getElementById("tray-empty");
@@ -424,11 +425,7 @@ const step3Label   = document.getElementById("step3-label");
 function updateTray() {
   const cards = wizardData.cards;
   trayCount.textContent = `(${cards.length})`;
-  step3NextBtn.disabled = false; // can proceed with 0 cards too
-
-  // Remove old chips (keep tray-empty)
   trayList.querySelectorAll(".tray-chip").forEach(c => c.remove());
-
   if (cards.length === 0) {
     trayEmpty.classList.remove("hidden");
   } else {
@@ -447,92 +444,95 @@ function updateTray() {
   }
 }
 
-// Restore confirmed cards if any
-if (wizardData.cards.length) updateTray();
+updateTray();
 
-wizardInput.addEventListener("input", () => {
-  wizardSend.disabled = !wizardInput.value.trim();
-  wizardInput.style.height = "auto";
-  wizardInput.style.height = Math.min(wizardInput.scrollHeight, 100) + "px";
-});
-
-wizardInput.addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!wizardSend.disabled) sendWizardMsg(); }
-});
-
-wizardSend.addEventListener("click", sendWizardMsg);
-
-function appendCC(role, text) {
-  const wrap = document.createElement("div");
-  wrap.className = `cc-msg ${role}`;
-  if (role === "assistant") wrap.innerHTML = `<div class="cc-av">🤖</div>`;
-  const bbl = document.createElement("div");
-  bbl.className = "cc-bubble";
-  const clean = text.replace(/<card-confirmed>[\s\S]*?<\/card-confirmed>/g, "").trim();
-  bbl.innerHTML = clean
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\n/g, "<br>");
-  wrap.appendChild(bbl);
-  wizardMsgs.appendChild(wrap);
-  wizardMsgs.scrollTop = wizardMsgs.scrollHeight;
-  return wrap;
+function parseSearchQuery(q) {
+  const match = q.trim().match(/^(.+?)\s+([A-Z]*\d+(?:\/\d+)?)$/);
+  if (match) return { name: match[1].trim(), number: match[2].split("/")[0] };
+  return { name: q.trim(), number: null };
 }
 
-function appendTypingCC() {
-  const wrap = document.createElement("div");
-  wrap.className = "cc-msg assistant";
-  wrap.innerHTML = `<div class="cc-av">🤖</div><div class="cc-bubble"><div class="cc-typing"><span></span><span></span><span></span></div></div>`;
-  wizardMsgs.appendChild(wrap);
-  wizardMsgs.scrollTop = wizardMsgs.scrollHeight;
-  return wrap;
+function getMarketPrice(card) {
+  const prices = card.tcgplayer?.prices;
+  if (!prices) return null;
+  for (const type of ["holofoil", "reverseHolofoil", "normal", "1stEditionHolofoil"]) {
+    if (prices[type]?.market != null) return prices[type].market;
+  }
+  return null;
 }
 
-async function sendWizardMsg() {
-  const text = wizardInput.value.trim();
-  if (!text) return;
+function cardImgUrl(cardId) {
+  const lastDash = cardId.lastIndexOf("-");
+  return `https://images.pokemontcg.io/${cardId.slice(0, lastDash)}/${cardId.slice(lastDash + 1)}.png`;
+}
 
-  appendCC("user", text);
-  wizardHistory.push({ role: "user", content: text });
-  wizardInput.value = "";
-  wizardInput.style.height = "auto";
-  wizardSend.disabled = true;
+async function doSearch() {
+  const q = searchInput.value.trim();
+  if (!q) return;
 
-  const typing = appendTypingCC();
+  searchBtn.disabled = true;
+  searchBtn.textContent = "Searching…";
+  searchStatus.textContent = "";
+  resultsEl.classList.add("hidden");
+  resultsGrid.innerHTML = "";
 
   try {
-    const res = await fetch("/.netlify/functions/create-wizard", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: wizardHistory }),
-    });
-    const data = await res.json();
-    typing.remove();
+    const { name, number } = parseSearchQuery(q);
+    let apiQ = `name:"${name}"`;
+    if (number) apiQ += ` number:"${number}"`;
+    const res  = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(apiQ)}&pageSize=9&orderBy=-set.releaseDate`);
+    const json = await res.json();
+    const cards = json.data || [];
 
-    if (!res.ok) throw new Error(data.error || "Something went wrong");
-
-    wizardHistory.push({ role: "assistant", content: data.reply });
-    appendCC("assistant", data.reply);
-
-    // Parse any confirmed cards out of the response
-    const matches = [...data.reply.matchAll(/<card-confirmed>([\s\S]*?)<\/card-confirmed>/g)];
-    matches.forEach(m => {
-      try {
-        const card = JSON.parse(m[1]);
-        if (card.cardId && !wizardData.cards.some(c => c.cardId === card.cardId)) {
-          wizardData.cards.push(card);
-          saveState();
-          updateTray();
-        }
-      } catch {}
-    });
-  } catch (err) {
-    typing.remove();
-    appendCC("assistant", `⚠️ ${err.message}`);
+    if (!cards.length) {
+      searchStatus.textContent = "No cards found. Try a different name or number.";
+    } else {
+      cards.forEach(card => {
+        const price = getMarketPrice(card);
+        const btn = document.createElement("button");
+        btn.className = "result-item";
+        btn.innerHTML = `
+          <img src="${cardImgUrl(card.id)}" alt="${card.name}" loading="lazy" onerror="this.style.opacity='.25'" />
+          <div class="result-name">${card.name}</div>
+          <div class="result-set">${card.set?.name || ""}</div>
+          ${price ? `<div class="result-price">$${price.toFixed(2)}</div>` : ""}`;
+        btn.addEventListener("click", () => addCard(card));
+        resultsGrid.appendChild(btn);
+      });
+      resultsEl.classList.remove("hidden");
+    }
+  } catch {
+    searchStatus.textContent = "Search failed. Please try again.";
   }
+
+  searchBtn.disabled = false;
+  searchBtn.textContent = "Search";
 }
 
-// "Create My Binder" — calls create-binder function
+function addCard(card) {
+  if (wizardData.cards.some(c => c.cardId === card.id)) {
+    searchStatus.textContent = "That card is already in your binder.";
+    return;
+  }
+  const price = getMarketPrice(card);
+  wizardData.cards.push({
+    query:         `${card.name} ${card.number}`,
+    cardId:        card.id,
+    setName:       card.set?.name || "",
+    tcgUrl:        card.tcgplayer?.url || "",
+    fallbackPrice: price || undefined,
+  });
+  saveState();
+  updateTray();
+  resultsEl.classList.add("hidden");
+  resultsGrid.innerHTML = "";
+  searchInput.value = "";
+  searchStatus.textContent = `✓ Added ${card.name} (${card.set?.name || ""})`;
+}
+
+searchInput.addEventListener("keydown", e => { if (e.key === "Enter") doSearch(); });
+searchBtn.addEventListener("click", doSearch);
+
 step3NextBtn.addEventListener("click", createBinder);
 document.getElementById("skip-cards").addEventListener("click", createBinder);
 
