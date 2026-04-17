@@ -1246,4 +1246,10 @@ const CARD_LIST = [
     setName: "Shining Fates",
     tcgUrl: "https://www.tcgplayer.com/product/232406/pokemon-shining-fates-cinderace-v",
   },
+  {
+    query: "Charizard-EX 12/108",
+    cardId: "xy12-12",
+    setName: "Evolutions",
+    tcgUrl: "https://www.tcgplayer.com/product/124024/pokemon-xy-evolutions-charizard-ex",
+  },
 ];
