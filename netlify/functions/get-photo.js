@@ -1,7 +1,9 @@
-// Serve profile photos stored in Netlify Blobs
+// Serve profile photos — Netlify Blobs first, GitHub raw fallback for unmigrated slugs
 // GET /.netlify/functions/get-photo?slug=<binder-slug>
 
 const { getPhoto } = require("./_blobs");
+
+const GITHUB_REPO = "joshuaefron5890-sys/Pokemon-Aidan";
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "GET") return { statusCode: 405 };
@@ -11,16 +13,27 @@ exports.handler = async (event) => {
 
   try {
     const buf = await getPhoto(slug);
-    if (!buf) return { statusCode: 404, body: "Photo not found" };
 
+    if (buf) {
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=86400" },
+        isBase64Encoded: true,
+        body: Buffer.from(buf).toString("base64"),
+      };
+    }
+
+    // Fall back to GitHub repo photo (pre-Blobs migration)
+    const ghUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/binders/photos/${slug}.jpg`;
+    const res = await fetch(ghUrl);
+    if (!res.ok) return { statusCode: 404, body: "Photo not found" };
+
+    const arrayBuf = await res.arrayBuffer();
     return {
       statusCode: 200,
-      headers: {
-        "Content-Type": "image/jpeg",
-        "Cache-Control": "public, max-age=86400",
-      },
+      headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=3600" },
       isBase64Encoded: true,
-      body: Buffer.from(buf).toString("base64"),
+      body: Buffer.from(arrayBuf).toString("base64"),
     };
   } catch (err) {
     console.error("get-photo error:", err);
