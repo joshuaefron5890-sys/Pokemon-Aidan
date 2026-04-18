@@ -257,6 +257,43 @@ document.getElementById("popup-fullscreen")?.addEventListener("click", () => {
   showView("assistant");
 });
 
+// ── Profile photo update ────────────────────────────────────
+
+document.getElementById("update-photo-input").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById("update-photo-status");
+  statusEl.textContent = "Uploading…";
+
+  try {
+    const reader = new FileReader();
+    const base64 = await new Promise((res, rej) => {
+      reader.onload = ev => res(ev.target.result.split(",")[1]);
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    });
+
+    const slug = window.BINDER_SLUG;
+    if (!slug) throw new Error("No binder slug — Aidan's photo is managed separately.");
+
+    const token = await window.netlifyIdentity?.currentUser()?.jwt();
+    const resp = await fetch("/.netlify/functions/update-photo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ slug, photo: base64 }),
+    });
+    if (!resp.ok) { const d = await resp.json(); throw new Error(d.error || "Upload failed"); }
+
+    statusEl.textContent = "✓ Photo updated!";
+    setTimeout(() => { statusEl.textContent = ""; }, 3000);
+    document.getElementById("binder-iframe").src += ""; // reload iframe
+  } catch (err) {
+    document.getElementById("update-photo-status").textContent = err.message;
+  }
+
+  e.target.value = "";
+});
+
 // ── Core send function ──────────────────────────────────────
 
 async function sendMessage(isPopup) {

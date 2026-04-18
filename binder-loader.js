@@ -64,8 +64,9 @@ async function initBinder() {
       grade:         c.grade,
     }));
 
-    // Show owner tools if this is their binder
-    if (data.isOwner) initOwnerBubble(slug, data.owner);
+    // Show owner chat bubble only when inside the admin iframe, not on public views
+    const inAdminFrame = window.self !== window.top;
+    if (data.isOwner && inAdminFrame) initOwnerBubble(slug, data.owner);
 
     // Kick off the card grid
     loadCollection();

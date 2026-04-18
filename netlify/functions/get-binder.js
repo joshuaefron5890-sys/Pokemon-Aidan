@@ -1,10 +1,26 @@
 // Fetch binder data by slug
 // Public binders: no auth needed
 // Private binders: requires JWT with matching owner email
+// Falls back to GitHub if not yet migrated to Blobs
 
-const { getBinder } = require("./_blobs");
+const { getBinder, putBinder } = require("./_blobs");
+const { getFile } = require("./_gh");
 
 const NO_CACHE = { "Cache-Control": "no-store, no-cache, must-revalidate", "Content-Type": "application/json" };
+
+async function loadBinder(slug) {
+  // Try Blobs first
+  let binder = await getBinder(slug);
+  if (binder) return binder;
+
+  // Fall back to GitHub (pre-migration data), then auto-migrate
+  const file = await getFile(`binders/${slug}.json`);
+  if (!file) return null;
+  binder = JSON.parse(file.content);
+  // Migrate to Blobs silently so next read is fast
+  putBinder(slug, binder).catch(() => {});
+  return binder;
+}
 
 exports.handler = async (event, context) => {
   if (event.httpMethod !== "GET") return { statusCode: 405 };
@@ -15,7 +31,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const binder = await getBinder(slug);
+    const binder = await loadBinder(slug);
     if (!binder) {
       return { statusCode: 404, headers: NO_CACHE, body: JSON.stringify({ error: "Binder not found" }) };
     }
