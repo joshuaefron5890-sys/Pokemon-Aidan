@@ -271,7 +271,7 @@ function createCardElement(query, card, price, overrides = {}, isStaticPrice = f
     <a href="${tcgUrl}" target="_blank" rel="noopener" class="card-link">
       <div class="card-image-wrap">
         ${imgSrc
-          ? `<img src="${imgSrc}" alt="${cardName}" class="card-img" loading="lazy" />`
+          ? `<img src="${imgSrc}" alt="${cardName}" class="card-img" loading="lazy" data-pin-nopin="true" />`
           : `<div class="card-img-placeholder"><span>${cardName}</span></div>`
         }
         ${grade ? `<div class="card-grade-badge">Grade ${grade}</div>` : ""}
