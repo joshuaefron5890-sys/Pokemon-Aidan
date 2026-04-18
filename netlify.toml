@@ -5,6 +5,9 @@
 [build.environment]
   NODE_VERSION = "18"
 
+[functions]
+  external_node_modules = ["@netlify/blobs"]
+
 # Aidan's personal binder at /AidanEfron
 [[redirects]]
   from   = "/AidanEfron"
