@@ -248,10 +248,116 @@ async function removeFavorite(card, el) {
 
 // ── Trade Drawer ─────────────────────────────────────────────
 
-let tradeDrawerCard = null;
+let tradeDrawerCard  = null;
+let myCards          = [];       // user's binder cards (loaded once per drawer open)
+let selectedOffers   = new Map(); // key: cardId||query → card object
 
-function openTradeDrawer(card) {
+// ── Load the current user's binder cards ──────────────────────
+
+async function loadMyCards() {
+  // Try iframe CARD_LIST first (fast path when My Binder view was visited)
+  const iframeWin = document.getElementById("binder-iframe")?.contentWindow;
+  if (iframeWin?.CARD_LIST?.length) return iframeWin.CARD_LIST.map(normalizeCard);
+
+  const slug = window.BINDER_SLUG;
+  if (!slug) return [];
+  try {
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
+    const res = await fetch(`/.netlify/functions/get-binder?slug=${encodeURIComponent(slug)}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.cards || []).map(normalizeCard);
+  } catch { return []; }
+}
+
+function normalizeCard(entry) {
+  if (typeof entry === "string") return { query: entry, cardId: "", imageUrl: "" };
+  return { query: entry.query || "", cardId: entry.cardId || "", imageUrl: entry.imageUrl || "" };
+}
+
+function cardThumb(card) {
+  if (card.imageUrl) return card.imageUrl;
+  if (card.cardId) {
+    const i = card.cardId.lastIndexOf("-");
+    if (i >= 0) return `https://images.pokemontcg.io/${card.cardId.slice(0, i)}/${card.cardId.slice(i + 1)}.png`;
+  }
+  return "";
+}
+
+// ── Card picker ───────────────────────────────────────────────
+
+function filterCardResults() {
+  const q       = document.getElementById("trade-card-search").value.trim().toLowerCase();
+  const results = document.getElementById("trade-card-results");
+  if (!q) { results.innerHTML = ""; results.classList.add("hidden"); return; }
+
+  const matches = myCards.filter(c => c.query.toLowerCase().includes(q)).slice(0, 8);
+
+  if (!matches.length) {
+    results.innerHTML = `<div class="trade-no-results">No cards in your binder match "${document.getElementById("trade-card-search").value.trim()}"</div>`;
+    results.classList.remove("hidden");
+    return;
+  }
+
+  results.innerHTML = "";
+  matches.forEach(card => {
+    const key        = card.cardId || card.query;
+    const isSelected = selectedOffers.has(key);
+    const img        = cardThumb(card);
+
+    const item = document.createElement("div");
+    item.className = `trade-result-item${isSelected ? " selected" : ""}`;
+    item.innerHTML = `
+      ${img ? `<img src="${img}" alt="" class="trade-result-img" loading="lazy" />` : `<div class="trade-result-img-placeholder"></div>`}
+      <span class="trade-result-name">${card.query}</span>
+      ${isSelected ? `<svg class="trade-result-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>` : ""}`;
+
+    item.addEventListener("click", () => {
+      if (isSelected) removeOfferedCard(key);
+      else { selectOfferedCard(card); document.getElementById("trade-card-search").value = ""; results.classList.add("hidden"); }
+      filterCardResults();
+    });
+    results.appendChild(item);
+  });
+  results.classList.remove("hidden");
+}
+
+function selectOfferedCard(card) {
+  selectedOffers.set(card.cardId || card.query, card);
+  renderOfferedChips();
+}
+
+function removeOfferedCard(key) {
+  selectedOffers.delete(key);
+  renderOfferedChips();
+  filterCardResults();
+}
+
+function renderOfferedChips() {
+  const chips = document.getElementById("trade-offered-chips");
+  chips.innerHTML = "";
+  selectedOffers.forEach((card, key) => {
+    const chip = document.createElement("div");
+    chip.className = "trade-offered-chip";
+    const img = cardThumb(card);
+    chip.innerHTML = `
+      ${img ? `<img src="${img}" alt="" class="trade-chip-img" />` : ""}
+      <span class="trade-chip-name">${card.query}</span>
+      <button class="trade-chip-remove" aria-label="Remove">✕</button>`;
+    chip.querySelector(".trade-chip-remove").addEventListener("click", () => removeOfferedCard(key));
+    chips.appendChild(chip);
+  });
+}
+
+// ── Drawer open / close ───────────────────────────────────────
+
+async function openTradeDrawer(card) {
   tradeDrawerCard = card;
+  selectedOffers.clear();
+  renderOfferedChips();
 
   // Populate "you want" preview
   const wantedEl = document.getElementById("trade-wanted-card");
@@ -267,17 +373,18 @@ function openTradeDrawer(card) {
       <div class="trade-wanted-binder">From: ${card.binderOwner || card.binderSlug}'s Binder</div>
     </div>`;
 
-  // Reset offered cards list to one empty row
-  const list = document.getElementById("trade-offered-list");
-  list.innerHTML = "";
-  addOfferedCardRow();
-
+  document.getElementById("trade-card-search").value = "";
+  document.getElementById("trade-card-results").innerHTML = "";
+  document.getElementById("trade-card-results").classList.add("hidden");
   document.getElementById("trade-message").value = "";
   document.getElementById("trade-error").classList.add("hidden");
-
   document.getElementById("trade-drawer-backdrop").classList.remove("hidden");
   document.getElementById("trade-drawer").classList.remove("hidden");
-  list.querySelector("input")?.focus();
+
+  // Load user's binder cards
+  myCards = await loadMyCards();
+  document.getElementById("trade-no-cards-msg").classList.toggle("hidden", myCards.length > 0);
+  document.getElementById("trade-card-search").focus();
 }
 
 function closeTradeDrawer() {
@@ -286,32 +393,19 @@ function closeTradeDrawer() {
   tradeDrawerCard = null;
 }
 
-function addOfferedCardRow(value = "") {
-  const list = document.getElementById("trade-offered-list");
-  const row = document.createElement("div");
-  row.className = "trade-offered-row";
-  row.innerHTML = `
-    <input type="text" class="trade-offered-input" placeholder="e.g. Charizard Base Set 4/102" value="${value}" />
-    <button class="trade-offered-remove" aria-label="Remove">✕</button>`;
-  row.querySelector(".trade-offered-remove").addEventListener("click", () => {
-    if (list.querySelectorAll(".trade-offered-row").length > 1) row.remove();
-    else row.querySelector("input").value = "";
-  });
-  list.appendChild(row);
-  row.querySelector("input")?.focus();
-}
-
-document.getElementById("trade-add-card-btn").addEventListener("click", () => addOfferedCardRow());
+document.getElementById("trade-card-search").addEventListener("input", filterCardResults);
+document.getElementById("trade-card-search").addEventListener("keydown", e => {
+  if (e.key === "Escape") { document.getElementById("trade-card-results").classList.add("hidden"); }
+});
 document.getElementById("trade-drawer-close").addEventListener("click", closeTradeDrawer);
 document.getElementById("trade-drawer-backdrop").addEventListener("click", closeTradeDrawer);
 
 document.getElementById("trade-submit-btn").addEventListener("click", async () => {
-  const offeredCards = [...document.querySelectorAll(".trade-offered-input")]
-    .map(i => i.value.trim()).filter(Boolean);
+  const offeredCards = [...selectedOffers.values()].map(c => c.query);
 
   const errEl = document.getElementById("trade-error");
   if (!offeredCards.length) {
-    errEl.textContent = "Add at least one card you're offering.";
+    errEl.textContent = "Select at least one card from your collection to offer.";
     errEl.classList.remove("hidden");
     return;
   }
