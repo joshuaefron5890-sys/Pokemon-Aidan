@@ -126,17 +126,16 @@ async function loadSharedBinders() {
       const colors  = ["#6366f1,#8b5cf6", "#f59e0b,#ef4444", "#10b981,#059669", "#3b82f6,#2563eb"];
       const grad    = colors[b.slug.charCodeAt(0) % colors.length];
 
-      const avatarInner = b.photoUrl
-        ? `<img src="${b.photoUrl}" alt="${initial}" onerror="this.remove()" />`
-        : initial;
-
       const card = document.createElement("a");
       card.className = "binder-card";
       card.href = `/binder/${b.slug}`;
       card.target = "_blank";
       card.rel = "noopener";
       card.innerHTML = `
-        <div class="binder-card-avatar ${b.photoUrl ? "binder-card-avatar--photo" : ""}" style="background:linear-gradient(135deg,${grad})">${avatarInner}</div>
+        <div class="binder-card-avatar binder-card-avatar--photo" style="background:linear-gradient(135deg,${grad})">
+          <img src="/.netlify/functions/get-photo?slug=${b.slug}" alt="${initial}"
+            onerror="this.parentElement.classList.remove('binder-card-avatar--photo');this.parentElement.textContent='${initial}';this.remove()" />
+        </div>
         <div class="binder-card-info">
           <div class="binder-card-name">${b.owner}'s Binder</div>
           <div class="binder-card-meta">${b.cardCount || 0} card${b.cardCount !== 1 ? "s" : ""}</div>

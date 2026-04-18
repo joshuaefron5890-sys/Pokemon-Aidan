@@ -158,7 +158,9 @@
             </a>
 
 <a class="binder-card" href="/emma" target="_blank" rel="noopener">
-              <div class="binder-card-avatar" style="background: linear-gradient(135deg,#f472b6,#ec4899)">E</div>
+              <div class="binder-card-avatar binder-card-avatar--photo" style="background: linear-gradient(135deg,#f472b6,#ec4899)">
+                <img src="/.netlify/functions/get-photo?slug=emma" alt="E" onerror="this.parentElement.classList.remove('binder-card-avatar--photo');this.parentElement.textContent='E';this.remove()" />
+              </div>
               <div class="binder-card-info">
                 <div class="binder-card-name">Emma's Binder</div>
                 <div class="binder-card-meta">Public collection</div>
@@ -353,7 +355,7 @@
     </div>
   </div>
 
-  <script src="admin.js?v=5"></script>
+  <script src="admin.js?v=6"></script>
   <script src="add-card-modal.js"></script>
 </body>
 </html>
