@@ -1,5 +1,5 @@
 // Add Card Modal — lives in admin.html, shown in the My Binder view
-// Uses /.netlify/functions/chat endpoint for card lookup + add
+// Routes to /.netlify/functions/chat (Aidan) or binder-chat (all other owners)
 
 /* global netlifyIdentity */
 
@@ -9,6 +9,29 @@
   const closeBtn = document.getElementById("acm-close");
 
   if (!modal || !openBtn) return;
+
+  // ── Chat routing ──────────────────────────────────────────
+  // Aidan → /chat; everyone else → /binder-chat with their slug
+
+  async function callChat(messages) {
+    const user = window.netlifyIdentity?.currentUser();
+    if (!user) throw new Error("Please log in first.");
+    const token = await user.jwt();
+    if (window.IS_AIDAN_ADMIN) {
+      return safeJson(await fetch("/.netlify/functions/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ messages }),
+      }));
+    }
+    const slug = window.BINDER_SLUG;
+    if (!slug) throw new Error("Binder not found. Please refresh and try again.");
+    return safeJson(await fetch("/.netlify/functions/binder-chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ slug, messages }),
+    }));
+  }
 
   // ── Safe JSON fetch ───────────────────────────────────────
   // Handles HTML error pages (timeouts, 502s) gracefully
@@ -153,32 +176,15 @@
     lookupLabel.textContent = "Searching…";
 
     try {
-      const user = window.netlifyIdentity?.currentUser();
-      if (!user) throw new Error("Please log in first.");
-      const token = await user.jwt();
+      // Step 1: look up the card
+      const data = await callChat([userMessage]);
 
-      // Use the admin chat function with a single lookup request
-      const data = await safeJson(await fetch("/.netlify/functions/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ messages: [userMessage] }),
-      }));
-
-      // Re-ask specifically for JSON to extract card details reliably
-      const extracted = await safeJson(await fetch("/.netlify/functions/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          messages: [
-            userMessage,
-            { role: "assistant", content: data.reply },
-            {
-              role: "user",
-              content: 'Now give me just this JSON (no other text): {"cardId":"...","query":"...","setName":"...","marketPrice":0.00,"tcgUrl":"...","imageUrl":""}',
-            },
-          ],
-        }),
-      }));
+      // Step 2: re-ask for structured JSON
+      const extracted = await callChat([
+        userMessage,
+        { role: "assistant", content: data.reply },
+        { role: "user", content: 'Now give me just this JSON (no other text): {"cardId":"...","query":"...","setName":"...","marketPrice":0.00,"tcgUrl":"...","imageUrl":""}' },
+      ]);
 
       // Find JSON in the response
       const jsonMatch = extracted.reply.match(/\{[\s\S]*"cardId"[\s\S]*\}/);
@@ -236,16 +242,8 @@
     confirmLabel.textContent = "Adding…";
 
     try {
-      const token = await window.netlifyIdentity?.currentUser()?.jwt();
-
-      // Ask the chat agent to add the card
       const addMsg = `Add this card to the collection: cardId="${foundCard.cardId}", query="${foundCard.query}", setName="${foundCard.setName}"${foundCard.marketPrice ? `, fallbackPrice=${foundCard.marketPrice}` : ""}${foundCard.tcgUrl ? `, tcgUrl="${foundCard.tcgUrl}"` : ""}`;
-
-      const data = await safeJson(await fetch("/.netlify/functions/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ messages: [{ role: "user", content: addMsg }] }),
-      }));
+      const data = await callChat([{ role: "user", content: addMsg }]);
 
       document.getElementById("acm-success-msg").textContent =
         `"${foundCard.query}" added! The page will update in ~1 minute.`;

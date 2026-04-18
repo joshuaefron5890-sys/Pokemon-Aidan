@@ -46,13 +46,18 @@ function showAdmin(user) {
   const pubLink = document.getElementById("view-public-link");
   if (pubLink) pubLink.href = binderUrl;
 
-  // Card Assistant and Add Card button are only for Aidan (manages cards.js).
-  // Other users manage their own binders via the Update Binder button on their /binder/ page.
+  // Card Assistant (chat-bubble) is only for Aidan.
+  // Add Card button is for all binder owners — modal routes to the right endpoint.
   const aidan = isAidan(user);
   document.querySelector(".nav-item[data-view='assistant']")?.closest(".nav-section")
     ?.classList.toggle("hidden", !aidan);
-  document.getElementById("add-card-btn")?.classList.toggle("hidden", !aidan);
   document.getElementById("chat-bubble")?.classList.toggle("hidden", !aidan);
+
+  // Expose routing info for add-card-modal.js
+  window.IS_AIDAN_ADMIN = aidan;
+  window.BINDER_SLUG = (!aidan && binderUrl.startsWith("/binder/"))
+    ? binderUrl.replace("/binder/", "")
+    : null;
 
   showView("binder");
 }
