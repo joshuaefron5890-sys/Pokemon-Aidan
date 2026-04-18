@@ -445,6 +445,27 @@ header h1 {
 .card-item.graded:hover {
   box-shadow: 0 0 0 2px #fbbf24, 0 16px 40px rgba(245,158,11,.55);
 }
+.card-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(220,38,38,.85);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .15s, background .15s;
+  z-index: 10;
+}
+.card-item:hover .card-delete-btn { opacity: 1; }
+.card-delete-btn:hover { background: rgba(185,28,28,1); }
+
 .card-grade-badge {
   position: absolute;
   top: 8px;

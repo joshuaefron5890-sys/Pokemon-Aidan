@@ -229,6 +229,25 @@ function getRarityClass(card) {
 
 // ── Card rendering ─────────────────────────────────────────
 
+async function deleteCard(cardId, query, element) {
+  if (!confirm("Remove this card from the binder?")) return;
+  const slug = window.BINDER_SLUG;
+  const token = await window.netlifyIdentity?.currentUser()?.jwt();
+  try {
+    const res = await fetch("/.netlify/functions/remove-card", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ slug, cardId: cardId || undefined, query: cardId ? undefined : query }),
+    });
+    if (!res.ok) { const d = await res.json(); alert(d.error || "Failed to remove card"); return; }
+    element.remove();
+    const countEl = document.getElementById("card-count");
+    if (countEl) countEl.textContent = Math.max(0, parseInt(countEl.textContent || "0") - 1);
+  } catch (err) {
+    alert("Failed to remove card: " + err.message);
+  }
+}
+
 function createCardElement(query, card, price, overrides = {}, isStaticPrice = false) {
   const wrapper = document.createElement("div");
   const grade = overrides.grade ?? null;
@@ -268,6 +287,16 @@ function createCardElement(query, card, price, overrides = {}, isStaticPrice = f
       </div>
     </a>
   `;
+
+  if (window.self !== window.top && window.BINDER_SLUG) {
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "card-delete-btn";
+    deleteBtn.title = "Remove from binder";
+    deleteBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+    deleteBtn.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); deleteCard(overrides.cardId, query, wrapper); });
+    wrapper.appendChild(deleteBtn);
+  }
+
   return wrapper;
 }
 

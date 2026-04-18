@@ -22,13 +22,17 @@ exports.handler = async (event, context) => {
     const { slug, photo } = JSON.parse(event.body);
     if (!slug || !photo) return { statusCode: 400, body: JSON.stringify({ error: "Missing slug or photo" }) };
 
-    const binder = await loadBinder(slug);
-    if (!binder) return { statusCode: 404, body: JSON.stringify({ error: "Binder not found" }) };
-    if (binder.email !== user.email) return { statusCode: 403, body: JSON.stringify({ error: "Forbidden" }) };
-
-    await putPhoto(slug, photo);
-    binder.hasPhoto = true;
-    await putBinder(slug, binder);
+    if (slug === "aidan") {
+      // Site owner photo — stored in Blobs directly, no binder record needed
+      await putPhoto("aidan", photo);
+    } else {
+      const binder = await loadBinder(slug);
+      if (!binder) return { statusCode: 404, body: JSON.stringify({ error: "Binder not found" }) };
+      if (binder.email !== user.email) return { statusCode: 403, body: JSON.stringify({ error: "Forbidden" }) };
+      await putPhoto(slug, photo);
+      binder.hasPhoto = true;
+      await putBinder(slug, binder);
+    }
 
     return {
       statusCode: 200,

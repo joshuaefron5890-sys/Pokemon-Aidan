@@ -55,8 +55,8 @@ function showAdmin(user) {
 
   // Expose routing info for add-card-modal.js
   window.IS_AIDAN_ADMIN = aidan;
-  window.BINDER_SLUG = (!aidan && binderUrl.startsWith("/binder/"))
-    ? binderUrl.replace("/binder/", "")
+  window.BINDER_SLUG = aidan ? "aidan"
+    : binderUrl.startsWith("/binder/") ? binderUrl.replace("/binder/", "")
     : null;
 
   showView("binder");

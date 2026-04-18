@@ -7,6 +7,7 @@ async function initBinder() {
   // Extract slug from path: /binder/slug or /binder/slug/
   const slug = location.pathname.replace(/^\/binder\//, "").replace(/\/$/, "").split("/")[0];
   if (!slug) { showError("No binder specified."); return; }
+  window.BINDER_SLUG = slug;
 
   const token = window.netlifyIdentity?.currentUser()?.token?.access_token;
 
