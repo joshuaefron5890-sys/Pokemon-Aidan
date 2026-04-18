@@ -1,0 +1,17 @@
+{
+  "slug": "callie-efron",
+  "owner": "Callie Efron",
+  "email": "callie.m.frisch@gmail.com",
+  "public": true,
+  "hasPhoto": false,
+  "createdAt": "2026-04-18T02:32:41.510Z",
+  "cards": [
+    {
+      "query": "Dawn 118",
+      "cardId": "me2-118",
+      "setName": "Phantasmal Flames",
+      "tcgUrl": "https://prices.pokemontcg.io/tcgplayer/me2-118",
+      "fallbackPrice": 8.53
+    }
+  ]
+}
