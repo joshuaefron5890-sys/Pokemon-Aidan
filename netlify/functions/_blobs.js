@@ -17,6 +17,7 @@ function store(name) {
 const binderStore    = () => store("binders");
 const photoStore     = () => store("photos");
 const favoritesStore = () => store("favorites");
+const tradesStore    = () => store("trades");
 
 async function getBinder(slug) {
   return binderStore().get(slug, { type: "json" });
@@ -55,4 +56,17 @@ async function putFavorites(userId, data) {
   await favoritesStore().set(userId, JSON.stringify(data));
 }
 
-module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto, getFavorites, putFavorites };
+async function getSentTrades(userId) {
+  return (await tradesStore().get(`sent-${userId}`, { type: "json" })) ?? [];
+}
+async function putSentTrades(userId, trades) {
+  await tradesStore().set(`sent-${userId}`, JSON.stringify(trades));
+}
+async function getReceivedTrades(binderSlug) {
+  return (await tradesStore().get(`received-${binderSlug}`, { type: "json" })) ?? [];
+}
+async function putReceivedTrades(binderSlug, trades) {
+  await tradesStore().set(`received-${binderSlug}`, JSON.stringify(trades));
+}
+
+module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto, getFavorites, putFavorites, getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades };

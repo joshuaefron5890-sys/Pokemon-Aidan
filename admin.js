@@ -73,7 +73,8 @@ const VIEW_LABELS = {
   binder:    "My Binder",
   shared:    "Shared Binders",
   favorites: "My Favorites",
-  assistant: "Card Assistant",  // accessed via popup full-screen button
+  trades:    "Trade Proposals",
+  assistant: "Card Assistant",
 };
 
 function showView(id) {
@@ -101,6 +102,7 @@ document.querySelectorAll(".nav-item[data-view]").forEach(btn => {
     showView(btn.dataset.view);
     if (btn.dataset.view === "shared")    loadSharedBinders();
     if (btn.dataset.view === "favorites") loadFavorites();
+    if (btn.dataset.view === "trades")    loadTradeProposals();
   });
 });
 
@@ -201,8 +203,15 @@ async function loadFavorites() {
           <div class="fav-item-name">${card.name || card.query}</div>
           <div class="fav-item-binder">From: <a href="${binderPageUrl(card.binderSlug)}" target="_blank" rel="noopener">${card.binderOwner || card.binderSlug}'s Binder</a></div>
         </div>
-        <button class="fav-remove-btn" title="Remove from favorites">✕</button>`;
+        <div class="fav-item-actions">
+          <button class="fav-trade-btn" title="Propose a trade">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            Propose Trade
+          </button>
+          <button class="fav-remove-btn" title="Remove from favorites">✕</button>
+        </div>`;
 
+      el.querySelector(".fav-trade-btn").addEventListener("click", () => openTradeDrawer(card));
       el.querySelector(".fav-remove-btn").addEventListener("click", () => removeFavorite(card, el));
       grid.appendChild(el);
     });
@@ -232,6 +241,252 @@ async function removeFavorite(card, el) {
           <p style="font-size:.85rem;color:var(--text-muted)">Visit a binder while logged in and tap the heart on any card.</p>
         </div>`;
     }
+  } catch {
+    el.style.opacity = "1";
+  }
+}
+
+// ── Trade Drawer ─────────────────────────────────────────────
+
+let tradeDrawerCard = null;
+
+function openTradeDrawer(card) {
+  tradeDrawerCard = card;
+
+  // Populate "you want" preview
+  const wantedEl = document.getElementById("trade-wanted-card");
+  const imgSrc = card.imageUrl || (() => {
+    if (!card.cardId) return "";
+    const i = card.cardId.lastIndexOf("-");
+    return i < 0 ? "" : `https://images.pokemontcg.io/${card.cardId.slice(0, i)}/${card.cardId.slice(i + 1)}.png`;
+  })();
+  wantedEl.innerHTML = `
+    ${imgSrc ? `<img src="${imgSrc}" alt="${card.name || card.query}" class="trade-wanted-img" />` : ""}
+    <div class="trade-wanted-info">
+      <div class="trade-wanted-name">${card.name || card.query}</div>
+      <div class="trade-wanted-binder">From: ${card.binderOwner || card.binderSlug}'s Binder</div>
+    </div>`;
+
+  // Reset offered cards list to one empty row
+  const list = document.getElementById("trade-offered-list");
+  list.innerHTML = "";
+  addOfferedCardRow();
+
+  document.getElementById("trade-message").value = "";
+  document.getElementById("trade-error").classList.add("hidden");
+
+  document.getElementById("trade-drawer-backdrop").classList.remove("hidden");
+  document.getElementById("trade-drawer").classList.remove("hidden");
+  list.querySelector("input")?.focus();
+}
+
+function closeTradeDrawer() {
+  document.getElementById("trade-drawer-backdrop").classList.add("hidden");
+  document.getElementById("trade-drawer").classList.add("hidden");
+  tradeDrawerCard = null;
+}
+
+function addOfferedCardRow(value = "") {
+  const list = document.getElementById("trade-offered-list");
+  const row = document.createElement("div");
+  row.className = "trade-offered-row";
+  row.innerHTML = `
+    <input type="text" class="trade-offered-input" placeholder="e.g. Charizard Base Set 4/102" value="${value}" />
+    <button class="trade-offered-remove" aria-label="Remove">✕</button>`;
+  row.querySelector(".trade-offered-remove").addEventListener("click", () => {
+    if (list.querySelectorAll(".trade-offered-row").length > 1) row.remove();
+    else row.querySelector("input").value = "";
+  });
+  list.appendChild(row);
+  row.querySelector("input")?.focus();
+}
+
+document.getElementById("trade-add-card-btn").addEventListener("click", () => addOfferedCardRow());
+document.getElementById("trade-drawer-close").addEventListener("click", closeTradeDrawer);
+document.getElementById("trade-drawer-backdrop").addEventListener("click", closeTradeDrawer);
+
+document.getElementById("trade-submit-btn").addEventListener("click", async () => {
+  const offeredCards = [...document.querySelectorAll(".trade-offered-input")]
+    .map(i => i.value.trim()).filter(Boolean);
+
+  const errEl = document.getElementById("trade-error");
+  if (!offeredCards.length) {
+    errEl.textContent = "Add at least one card you're offering.";
+    errEl.classList.remove("hidden");
+    return;
+  }
+  errEl.classList.add("hidden");
+
+  const btn = document.getElementById("trade-submit-btn");
+  btn.disabled = true;
+  btn.textContent = "Sending…";
+
+  try {
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
+    const res = await fetch("/.netlify/functions/create-trade", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        wantedCard:   tradeDrawerCard,
+        offeredCards,
+        message: document.getElementById("trade-message").value.trim(),
+      }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || `HTTP ${res.status}`);
+    closeTradeDrawer();
+    showView("trades");
+    loadTradeProposals();
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Send Trade Proposal";
+  }
+});
+
+// ── Trade Proposals View ──────────────────────────────────────
+
+function tradeStatusBadge(status) {
+  const map = {
+    pending:   ["#f59e0b", "Pending"],
+    accepted:  ["#10b981", "Accepted"],
+    rejected:  ["#ef4444", "Rejected"],
+    withdrawn: ["#6b7280", "Withdrawn"],
+  };
+  const [color, label] = map[status] || ["#6b7280", status];
+  return `<span class="trade-status-badge" style="background:${color}22;color:${color};border-color:${color}44">${label}</span>`;
+}
+
+function fmtDate(iso) {
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+async function loadTradeProposals() {
+  const container = document.getElementById("trades-content");
+  container.innerHTML = `<p style="padding:1.5rem;color:var(--text-muted)">Loading…</p>`;
+
+  try {
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
+    const slug  = window.BINDER_SLUG || "";
+    const res   = await fetch(`/.netlify/functions/get-trades?slug=${encodeURIComponent(slug)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { sent, received } = await res.json();
+
+    if (!sent.length && !received.length) {
+      container.innerHTML = `
+        <div class="favorites-empty">
+          <div class="favorites-empty-icon" style="font-size:2rem">⇄</div>
+          <div class="favorites-empty-title">No trade proposals yet</div>
+          <p style="font-size:.85rem;color:var(--text-muted)">Favorite a card and click "Propose Trade" to get started.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = "";
+
+    if (received.length) {
+      container.insertAdjacentHTML("beforeend", `<div class="trades-section-label">Received</div>`);
+      received.forEach(trade => {
+        const el = buildTradeCard(trade, "received");
+        container.appendChild(el);
+      });
+    }
+
+    if (sent.length) {
+      container.insertAdjacentHTML("beforeend", `<div class="trades-section-label" style="margin-top:1.5rem">Sent by You</div>`);
+      sent.forEach(trade => {
+        const el = buildTradeCard(trade, "sent");
+        container.appendChild(el);
+      });
+    }
+  } catch (err) {
+    container.innerHTML = `<p style="padding:1.5rem;color:var(--text-muted)">Failed to load: ${err.message}</p>`;
+  }
+}
+
+function buildTradeCard(trade, direction) {
+  const card = trade.wantedCard;
+  const imgSrc = card.imageUrl || (() => {
+    if (!card.cardId) return "";
+    const i = card.cardId.lastIndexOf("-");
+    return i < 0 ? "" : `https://images.pokemontcg.io/${card.cardId.slice(0, i)}/${card.cardId.slice(i + 1)}.png`;
+  })();
+
+  const el = document.createElement("div");
+  el.className = "trade-card-item";
+  el.dataset.tradeId = trade.id;
+
+  const heading = direction === "received"
+    ? `<strong>${trade.initiatorName}</strong> wants your card:`
+    : `You want:`;
+
+  el.innerHTML = `
+    <div class="trade-card-top">
+      <div class="trade-card-preview">
+        ${imgSrc ? `<img src="${imgSrc}" alt="${card.name || card.query}" class="trade-card-img" />` : ""}
+        <div class="trade-card-info">
+          <div class="trade-card-heading">${heading}</div>
+          <div class="trade-card-name">${card.name || card.query}</div>
+          <div class="trade-card-binder">From: ${card.binderOwner || card.binderSlug}'s Binder</div>
+        </div>
+      </div>
+      <div class="trade-card-meta">
+        ${tradeStatusBadge(trade.status)}
+        <span class="trade-card-date">${fmtDate(trade.createdAt)}</span>
+      </div>
+    </div>
+    <div class="trade-card-offers">
+      <span class="trade-offers-label">${direction === "received" ? "They offer:" : "You offered:"}</span>
+      ${trade.offeredCards.map(c => `<span class="trade-offer-pill">${c}</span>`).join("")}
+    </div>
+    ${trade.message ? `<div class="trade-card-message">"${trade.message}"</div>` : ""}
+    <div class="trade-card-actions"></div>`;
+
+  const actionsEl = el.querySelector(".trade-card-actions");
+
+  if (trade.status === "pending") {
+    if (direction === "sent") {
+      const wdBtn = document.createElement("button");
+      wdBtn.className = "trade-action-btn trade-action-withdraw";
+      wdBtn.textContent = "Withdraw";
+      wdBtn.addEventListener("click", () => doTradeAction(trade.id, "withdraw", null, el));
+      actionsEl.appendChild(wdBtn);
+    } else {
+      const acceptBtn = document.createElement("button");
+      acceptBtn.className = "trade-action-btn trade-action-accept";
+      acceptBtn.textContent = "Accept";
+      acceptBtn.addEventListener("click", () => doTradeAction(trade.id, "accept", window.BINDER_SLUG, el));
+
+      const rejectBtn = document.createElement("button");
+      rejectBtn.className = "trade-action-btn trade-action-reject";
+      rejectBtn.textContent = "Reject";
+      rejectBtn.addEventListener("click", () => doTradeAction(trade.id, "reject", window.BINDER_SLUG, el));
+
+      actionsEl.appendChild(acceptBtn);
+      actionsEl.appendChild(rejectBtn);
+    }
+  }
+
+  return el;
+}
+
+async function doTradeAction(tradeId, action, binderSlug, el) {
+  el.style.opacity = ".5";
+  try {
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
+    const res = await fetch("/.netlify/functions/update-trade", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ tradeId, action, binderSlug }),
+    });
+    if (!res.ok) throw new Error("Failed");
+    loadTradeProposals();
   } catch {
     el.style.opacity = "1";
   }

@@ -82,7 +82,18 @@
           </button>
         </div>
 
-        <!-- Section 4: Card Assistant -->
+        <!-- Section 4: Trade Proposals -->
+        <div class="nav-section">
+          <button class="nav-item" data-view="trades">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+              <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+            </svg>
+            Trade Proposals
+          </button>
+        </div>
+
+        <!-- Section 5: Card Assistant -->
         <div class="nav-section">
           <button class="nav-item" data-view="assistant">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -190,6 +201,19 @@
             <p>Cards you've saved from other binders</p>
           </div>
           <div id="favorites-grid" class="favorites-grid">
+            <!-- Populated by admin.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- View: Trade Proposals -->
+      <div class="view hidden" id="view-trades">
+        <div class="shared-view">
+          <div class="shared-header">
+            <h2>Trade Proposals</h2>
+            <p>Trades you've initiated and proposals you've received</p>
+          </div>
+          <div id="trades-content">
             <!-- Populated by admin.js -->
           </div>
         </div>
@@ -378,7 +402,37 @@
     </div>
   </div>
 
-  <script src="admin.js?v=8"></script>
+  <!-- ── Trade Proposal Drawer ── -->
+  <div id="trade-drawer-backdrop" class="trade-drawer-backdrop hidden"></div>
+  <div id="trade-drawer" class="trade-drawer hidden" role="dialog" aria-modal="true" aria-label="Propose a trade">
+    <div class="trade-drawer-header">
+      <h3>Propose a Trade</h3>
+      <button id="trade-drawer-close" class="acm-close" aria-label="Close">✕</button>
+    </div>
+    <div class="trade-drawer-body">
+
+      <div class="trade-section">
+        <div class="trade-section-label">You want:</div>
+        <div id="trade-wanted-card" class="trade-wanted-preview"></div>
+      </div>
+
+      <div class="trade-section">
+        <div class="trade-section-label">You're offering:</div>
+        <div id="trade-offered-list" class="trade-offered-list"></div>
+        <button id="trade-add-card-btn" class="trade-add-card-btn">+ Add a card</button>
+      </div>
+
+      <div class="trade-section">
+        <div class="trade-section-label">Note (optional):</div>
+        <textarea id="trade-message" class="trade-message-input" placeholder="Add a message to the binder owner…" rows="3"></textarea>
+      </div>
+
+      <p id="trade-error" class="trade-error hidden"></p>
+      <button id="trade-submit-btn" class="acm-primary-btn" style="width:100%">Send Trade Proposal</button>
+    </div>
+  </div>
+
+  <script src="admin.js?v=9"></script>
   <script src="add-card-modal.js"></script>
 </body>
 </html>
