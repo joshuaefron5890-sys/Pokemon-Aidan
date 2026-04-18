@@ -325,6 +325,11 @@ document.getElementById("step1-next").addEventListener("click", () => {
   if (!owner) { errEl.textContent = "Please enter your name."; return; }
   if (!slugValid(slug)) { errEl.textContent = "Please enter a valid binder URL."; return; }
 
+  // Auto-apply crop if user clicked Continue without pressing "Use Photo"
+  if (!cropArea.classList.contains("hidden") && cropImg) {
+    document.getElementById("crop-apply").click();
+  }
+
   wizardData.owner    = owner;
   wizardData.slug     = slug;
   wizardData.isPublic = document.querySelector("[name=visibility]:checked")?.value !== "private";
