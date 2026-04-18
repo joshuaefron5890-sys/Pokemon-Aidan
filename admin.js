@@ -138,7 +138,7 @@ async function loadSharedBinders() {
         </div>
         <div class="binder-card-info">
           <div class="binder-card-name">${b.owner}'s Binder</div>
-          <div class="binder-card-meta">${b.cardCount || 0} card${b.cardCount !== 1 ? "s" : ""}</div>
+          <div class="binder-card-meta">Public collection</div>
         </div>
         <div class="binder-card-badge">View</div>`;
       grid.appendChild(card);
