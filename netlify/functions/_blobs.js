@@ -1,10 +1,21 @@
-// Netlify Blobs helper — replaces _gh.js for binder data storage
-// No SHA-based concurrency needed; Blobs handles consistency natively
+// Netlify Blobs helper
+// Requires NETLIFY_SITE_ID and NETLIFY_TOKEN set in the Netlify dashboard
+// under Site configuration → Environment variables
 
 const { getStore } = require("@netlify/blobs");
 
-const binderStore = () => getStore("binders");
-const photoStore  = () => getStore("photos");
+function store(name) {
+  const siteID = process.env.NETLIFY_SITE_ID;
+  const token  = process.env.NETLIFY_TOKEN;
+  if (siteID && token) {
+    return getStore({ name, siteID, token });
+  }
+  // Fall back to automatic context detection (works when NETLIFY_BLOBS_CONTEXT is injected)
+  return getStore(name);
+}
+
+const binderStore = () => store("binders");
+const photoStore  = () => store("photos");
 
 async function getBinder(slug) {
   return binderStore().get(slug, { type: "json" });
