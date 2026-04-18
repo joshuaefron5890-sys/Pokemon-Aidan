@@ -3,6 +3,7 @@
 // Requires Netlify Identity auth
 
 const { getManifest, putManifest, putBinder, putPhoto } = require("./_blobs");
+const { getFile } = require("./_gh");
 
 function slugValid(slug) {
   return typeof slug === "string" && /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(slug);
@@ -30,12 +31,20 @@ exports.handler = async (event, context) => {
       return { statusCode: 400, body: JSON.stringify({ error: "Owner name is required." }) };
     }
 
-    const manifest = await getManifest();
+    // Load Blobs manifest (new binders) + GitHub manifest (legacy) for duplicate checks
+    const blobsManifest = await getManifest();
+    let ghManifest = [];
+    try {
+      const file = await getFile("binders/manifest.json");
+      if (file) ghManifest = JSON.parse(file.content);
+    } catch { /* GitHub manifest optional */ }
 
-    if (manifest.some(b => b.slug === slug)) {
+    const allBinders = [...blobsManifest, ...ghManifest];
+
+    if (allBinders.some(b => b.slug === slug)) {
       return { statusCode: 409, body: JSON.stringify({ error: `The URL "/binder/${slug}" is already taken. Try a different name.` }) };
     }
-    if (manifest.some(b => b.email === user.email)) {
+    if (allBinders.some(b => b.email === user.email)) {
       return { statusCode: 409, body: JSON.stringify({ error: "You already have a binder. Visit /admin to manage it." }) };
     }
 
@@ -58,8 +67,8 @@ exports.handler = async (event, context) => {
 
     await putBinder(slug, binder);
 
-    manifest.push({ slug, owner: owner.trim(), email: user.email, public: Boolean(isPublic), hasPhoto, cardCount: binder.cards.length, createdAt: now });
-    await putManifest(manifest);
+    blobsManifest.push({ slug, owner: owner.trim(), email: user.email, public: Boolean(isPublic), hasPhoto, cardCount: binder.cards.length, createdAt: now });
+    await putManifest(blobsManifest);
 
     return {
       statusCode: 200,
