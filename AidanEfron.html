@@ -12,6 +12,10 @@
 <body>
   <canvas id="bg-canvas" aria-hidden="true"></canvas>
 
+  <nav class="binder-nav">
+    <button class="binder-nav-btn" id="login-btn">Log In</button>
+  </nav>
+
   <!-- ── Header ── -->
   <header>
     <div class="header-inner">
@@ -120,10 +124,13 @@
   <script>
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
-        if (!user) {
+        const btn = document.getElementById("login-btn");
+        if (user) {
+          btn.textContent = "My Account";
+          btn.addEventListener("click", () => { document.location.href = "/admin"; });
+        } else {
+          btn.addEventListener("click", () => { window.netlifyIdentity.open("login"); });
           window.netlifyIdentity.on("login", () => {
-            // If user was mid-wizard (e.g. returning after email confirmation),
-            // send them back to /create to finish setting up their binder.
             const wizardState = localStorage.getItem("wizard_state_v1");
             if (wizardState) {
               try {

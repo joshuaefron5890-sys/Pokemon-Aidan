@@ -971,3 +971,25 @@ footer a {
 .skeleton-price,
 .stat-card:has(#total-value),
 footer { display: none !important; }
+
+
+/* ── Public binder nav (Log In / My Account) ────────────── */
+.binder-nav {
+  display: flex;
+  justify-content: flex-end;
+  padding: .75rem 1.5rem;
+}
+.binder-nav-btn {
+  background: none;
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: .85rem;
+  font-weight: 600;
+  padding: .45rem 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color .15s, color .15s;
+}
+.binder-nav-btn:hover { border-color: var(--accent2); color: var(--text); }

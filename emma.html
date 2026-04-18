@@ -10,6 +10,10 @@
 <body>
   <canvas id="bg-canvas" aria-hidden="true"></canvas>
 
+  <nav class="binder-nav">
+    <button class="binder-nav-btn" id="login-btn">Log In</button>
+  </nav>
+
   <!-- ── Header ── -->
   <header>
     <div class="header-inner">
@@ -111,5 +115,20 @@
   <script src="emma-cards.js"></script>
   <script src="app.js?v=44"></script>
   <script src="background.js?v=44"></script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.on("init", user => {
+        const btn = document.getElementById("login-btn");
+        if (user) {
+          btn.textContent = "My Account";
+          btn.addEventListener("click", () => { document.location.href = "/admin"; });
+        } else {
+          btn.addEventListener("click", () => { window.netlifyIdentity.open("login"); });
+          window.netlifyIdentity.on("login", () => { document.location.href = "/admin"; });
+        }
+      });
+    }
+  </script>
 </body>
 </html>
