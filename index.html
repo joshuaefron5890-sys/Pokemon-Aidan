@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Digital Pokémon Binder</title>
-  <link rel="stylesheet" href="style.css?v=49" />
+  <link rel="stylesheet" href="style.css?v=55" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
   <style>
     .landing-nav {
@@ -141,15 +141,15 @@
   <div class="binder-grid" id="binder-grid">
     <!-- Aidan's static binder is always shown -->
     <a href="/AidanEfron" class="binder-card">
-      <img src="Aidan.jpg" alt="Aidan" class="binder-avatar" onerror="this.style.display='none'" />
+      <img src="/.netlify/functions/get-photo?slug=aidan" alt="Aidan" class="binder-avatar"
+        onerror="this.src='/Aidan.jpg';this.onerror=null" />
       <div class="binder-name">Aidan's Binder</div>
       <div class="binder-label">View collection →</div>
     </a>
   </div>
 
-  <div class="landing-cta">
-    <a href="/create">+ Create your own binder</a>
-  </div>
+  <!-- Create CTA hidden while limiting to one binder per user -->
+  <!-- <div class="landing-cta"><a href="/create">+ Create your own binder</a></div> -->
 
   <script src="background.js?v=44"></script>
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
@@ -188,14 +188,12 @@
         if (!Array.isArray(list) || !list.length) return;
         const grid = document.getElementById("binder-grid");
         list.forEach(b => {
-          const avatar = b.photoUrl
-            ? `<img src="${b.photoUrl}" alt="${b.owner}" class="binder-avatar" onerror="this.replaceWith(placeholder())" />`
-            : `<div class="binder-avatar-placeholder">📒</div>`;
           const card = document.createElement("a");
           card.className = "binder-card";
           card.href = `/binder/${b.slug}`;
           card.innerHTML = `
-            ${avatar}
+            <img src="/.netlify/functions/get-photo?slug=${b.slug}" alt="${b.owner}" class="binder-avatar"
+              onerror="this.outerHTML='<div class=\\'binder-avatar-placeholder\\'>📒</div>'" />
             <div class="binder-name">${b.owner}'s Binder</div>
             <div class="binder-label">View collection →</div>`;
           grid.appendChild(card);
