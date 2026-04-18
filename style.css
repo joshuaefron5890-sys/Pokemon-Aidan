@@ -977,7 +977,15 @@ footer { display: none !important; }
 .binder-nav {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   padding: .75rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(10,10,20,.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,.06);
 }
 .binder-nav-btn {
   background: none;
