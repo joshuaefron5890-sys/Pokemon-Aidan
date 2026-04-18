@@ -117,6 +117,13 @@
           </svg>
           View Public Version
         </a>
+        <button class="nav-item profile-nav-btn" data-view="profile">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          Update Profile
+        </button>
+
         <div class="sidebar-user">
           <div class="sidebar-user-icon">👤</div>
           <div class="sidebar-user-info">
@@ -148,12 +155,6 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
             Add New Card
           </button>
-          <label id="update-photo-btn" class="add-card-trigger-btn" style="cursor:pointer">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            Update Photo
-            <input type="file" id="update-photo-input" accept="image/*" style="display:none" />
-          </label>
-          <span id="update-photo-status" style="font-size:.8rem;color:var(--text-muted)"></span>
         </div>
         <iframe src="" title="My Binder" id="binder-iframe"></iframe>
       </div>
@@ -203,6 +204,54 @@
           <div id="favorites-grid" class="favorites-grid">
             <!-- Populated by admin.js -->
           </div>
+        </div>
+      </div>
+
+      <!-- View: My Profile -->
+      <div class="view hidden" id="view-profile">
+        <div class="profile-view-wrap">
+
+          <!-- Section 1: Profile Picture -->
+          <div class="profile-section-card">
+            <h3 class="profile-section-title">Profile Picture</h3>
+            <div class="profile-photo-row">
+              <div class="profile-photo-preview" id="profile-photo-preview">
+                <img id="profile-current-photo" class="profile-photo-img" alt="Profile photo"
+                  onerror="this.style.display='none';document.getElementById('profile-photo-placeholder').style.display='flex'" />
+                <div id="profile-photo-placeholder" class="profile-photo-placeholder">👤</div>
+              </div>
+              <div class="profile-photo-btns">
+                <label class="add-card-trigger-btn" style="cursor:pointer">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  Change Photo
+                  <input type="file" id="profile-photo-input" accept="image/*" style="display:none" />
+                </label>
+                <button id="profile-remove-photo-btn" class="profile-remove-btn">Remove Photo</button>
+              </div>
+            </div>
+            <p id="profile-photo-status" class="profile-status"></p>
+          </div>
+
+          <!-- Section 2: My Location -->
+          <div class="profile-section-card">
+            <h3 class="profile-section-title">My Location</h3>
+            <p class="profile-section-desc">Add your zip code so collectors can see how far you are when browsing trade proposals.</p>
+            <div class="profile-location-row">
+              <input id="profile-zip-input" type="text" inputmode="numeric" maxlength="5"
+                class="profile-zip-input" placeholder="Enter zip code" autocomplete="postal-code" />
+              <div id="profile-city-preview" class="profile-city-preview hidden">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span id="profile-city-name"></span>
+              </div>
+            </div>
+            <div id="profile-saved-location" class="profile-saved-location hidden">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Currently saved: <strong id="profile-saved-city"></strong>
+            </div>
+            <button id="profile-save-location-btn" class="add-card-trigger-btn" disabled>Save Location</button>
+            <p id="profile-location-status" class="profile-status"></p>
+          </div>
+
         </div>
       </div>
 
@@ -437,7 +486,7 @@
     </div>
   </div>
 
-  <script src="admin.js?v=9"></script>
+  <script src="admin.js?v=10"></script>
   <script src="add-card-modal.js"></script>
 </body>
 </html>

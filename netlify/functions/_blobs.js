@@ -69,4 +69,18 @@ async function putReceivedTrades(binderSlug, trades) {
   await tradesStore().set(`received-${binderSlug}`, JSON.stringify(trades));
 }
 
-module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto, getFavorites, putFavorites, getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades };
+const profileStore   = () => store("profiles");
+
+async function getProfileData(userId) {
+  return (await profileStore().get(userId, { type: "json" })) ?? {};
+}
+
+async function putProfileData(userId, data) {
+  await profileStore().set(userId, JSON.stringify(data));
+}
+
+async function deletePhoto(slug) {
+  await photoStore().delete(slug);
+}
+
+module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto, deletePhoto, getFavorites, putFavorites, getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades, getProfileData, putProfileData };

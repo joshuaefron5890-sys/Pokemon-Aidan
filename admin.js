@@ -74,6 +74,7 @@ const VIEW_LABELS = {
   shared:    "Shared Binders",
   favorites: "My Favorites",
   trades:    "Trade Proposals",
+  profile:   "My Profile",
   assistant: "Card Assistant",
 };
 
@@ -103,6 +104,7 @@ document.querySelectorAll(".nav-item[data-view]").forEach(btn => {
     if (btn.dataset.view === "shared")    loadSharedBinders();
     if (btn.dataset.view === "favorites") loadFavorites();
     if (btn.dataset.view === "trades")    loadTradeProposals();
+    if (btn.dataset.view === "profile")   loadProfileView();
   });
 });
 
@@ -709,12 +711,56 @@ document.getElementById("popup-fullscreen")?.addEventListener("click", () => {
   showView("assistant");
 });
 
-// ── Profile photo update ────────────────────────────────────
+// ── My Profile view ─────────────────────────────────────────
 
-document.getElementById("update-photo-input").addEventListener("change", async e => {
+let pendingLocation = null;
+
+async function loadProfileView() {
+  const slug = window.BINDER_SLUG;
+
+  // Profile photo
+  const img         = document.getElementById("profile-current-photo");
+  const placeholder = document.getElementById("profile-photo-placeholder");
+  img.style.display = "";
+  placeholder.style.display = "none";
+  if (slug) img.src = `/.netlify/functions/get-photo?slug=${slug}&_t=${Date.now()}`;
+
+  document.getElementById("profile-photo-status").textContent = "";
+  document.getElementById("profile-location-status").textContent = "";
+
+  // Load saved location
+  try {
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
+    const res   = await fetch("/.netlify/functions/get-profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.location) {
+        const { zip, city, state } = data.location;
+        document.getElementById("profile-zip-input").value = zip || "";
+        document.getElementById("profile-saved-city").textContent = `${city}, ${state}`;
+        document.getElementById("profile-saved-location").classList.remove("hidden");
+        if (zip) {
+          document.getElementById("profile-city-name").textContent = `${city}, ${state}`;
+          document.getElementById("profile-city-preview").classList.remove("hidden");
+          pendingLocation = { zip, city, state };
+          document.getElementById("profile-save-location-btn").disabled = false;
+        }
+      } else {
+        document.getElementById("profile-saved-location").classList.add("hidden");
+      }
+    }
+  } catch {}
+}
+
+// ── Photo change ──────────────────────────────────────────────
+
+document.getElementById("profile-photo-input").addEventListener("change", async e => {
   const file = e.target.files[0];
   if (!file) return;
-  const statusEl = document.getElementById("update-photo-status");
+  const statusEl = document.getElementById("profile-photo-status");
   statusEl.textContent = "Uploading…";
 
   try {
@@ -725,11 +771,10 @@ document.getElementById("update-photo-input").addEventListener("change", async e
       reader.readAsDataURL(file);
     });
 
-    const slug = window.BINDER_SLUG;
-    if (!slug) throw new Error("No binder slug — Aidan's photo is managed separately.");
-
-    const token = await window.netlifyIdentity?.currentUser()?.jwt();
-    const resp = await fetch("/.netlify/functions/update-photo", {
+    const slug  = window.BINDER_SLUG;
+    if (!slug) throw new Error("No binder slug found.");
+    const token = await netlifyIdentity.currentUser()?.jwt();
+    const resp  = await fetch("/.netlify/functions/update-photo", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ slug, photo: base64 }),
@@ -738,15 +783,115 @@ document.getElementById("update-photo-input").addEventListener("change", async e
 
     statusEl.textContent = "✓ Photo updated!";
     setTimeout(() => { statusEl.textContent = ""; }, 3000);
+
+    const img = document.getElementById("profile-current-photo");
+    img.src = `/.netlify/functions/get-photo?slug=${slug}&_t=${Date.now()}`;
+    img.style.display = "";
+    document.getElementById("profile-photo-placeholder").style.display = "none";
+
     const iframe = document.getElementById("binder-iframe");
     const base = iframe.src.split("?")[0];
     iframe.src = `${base}?_t=${Date.now()}`;
-    sharedLoaded = false; // force gallery to re-fetch on next visit
+    sharedLoaded = false;
   } catch (err) {
-    document.getElementById("update-photo-status").textContent = err.message;
+    statusEl.textContent = err.message;
   }
-
   e.target.value = "";
+});
+
+// ── Photo remove ──────────────────────────────────────────────
+
+document.getElementById("profile-remove-photo-btn").addEventListener("click", async () => {
+  if (!confirm("Remove your profile photo?")) return;
+  const statusEl = document.getElementById("profile-photo-status");
+  statusEl.textContent = "Removing…";
+  try {
+    const slug  = window.BINDER_SLUG;
+    const token = await netlifyIdentity.currentUser()?.jwt();
+    const resp  = await fetch("/.netlify/functions/remove-photo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ slug }),
+    });
+    if (!resp.ok) throw new Error((await resp.json()).error || "Failed");
+
+    statusEl.textContent = "✓ Photo removed.";
+    setTimeout(() => { statusEl.textContent = ""; }, 3000);
+
+    const img = document.getElementById("profile-current-photo");
+    img.style.display = "none";
+    document.getElementById("profile-photo-placeholder").style.display = "flex";
+
+    sharedLoaded = false;
+  } catch (err) {
+    statusEl.textContent = err.message;
+  }
+});
+
+// ── Zip code lookup ───────────────────────────────────────────
+
+let zipTimer = null;
+
+document.getElementById("profile-zip-input").addEventListener("input", e => {
+  const zip = e.target.value.trim();
+  clearTimeout(zipTimer);
+  pendingLocation = null;
+  document.getElementById("profile-save-location-btn").disabled = true;
+  document.getElementById("profile-city-preview").classList.add("hidden");
+
+  if (zip.length === 5 && /^\d{5}$/.test(zip)) {
+    zipTimer = setTimeout(() => lookupZip(zip), 400);
+  }
+});
+
+async function lookupZip(zip) {
+  const previewEl  = document.getElementById("profile-city-preview");
+  const cityNameEl = document.getElementById("profile-city-name");
+  try {
+    const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+    if (!res.ok) {
+      cityNameEl.textContent = "Zip code not found";
+      previewEl.classList.remove("hidden");
+      return;
+    }
+    const data  = await res.json();
+    const place = data.places?.[0];
+    if (place) {
+      const city  = place["place name"];
+      const state = place["state abbreviation"];
+      cityNameEl.textContent = `${city}, ${state}`;
+      previewEl.classList.remove("hidden");
+      pendingLocation = { zip, city, state };
+      document.getElementById("profile-save-location-btn").disabled = false;
+    }
+  } catch {
+    cityNameEl.textContent = "Could not look up zip code";
+    previewEl.classList.remove("hidden");
+  }
+}
+
+// ── Save location ─────────────────────────────────────────────
+
+document.getElementById("profile-save-location-btn").addEventListener("click", async () => {
+  if (!pendingLocation) return;
+  const statusEl = document.getElementById("profile-location-status");
+  statusEl.textContent = "Saving…";
+  try {
+    const token = await netlifyIdentity.currentUser()?.jwt();
+    const resp  = await fetch("/.netlify/functions/update-profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ location: pendingLocation }),
+    });
+    if (!resp.ok) throw new Error("Failed to save");
+
+    statusEl.textContent = "✓ Location saved!";
+    setTimeout(() => { statusEl.textContent = ""; }, 3000);
+    document.getElementById("profile-saved-city").textContent = `${pendingLocation.city}, ${pendingLocation.state}`;
+    document.getElementById("profile-saved-location").classList.remove("hidden");
+  } catch (err) {
+    statusEl.textContent = err.message;
+  }
 });
 
 // ── Core send function ──────────────────────────────────────
