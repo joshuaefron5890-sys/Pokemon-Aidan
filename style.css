@@ -29,7 +29,7 @@
   pointer-events: none;
 }
 
-body > *:not(#bg-canvas) {
+body > *:not(#bg-canvas):not(#owner-bubble):not(#owner-popup):not(#private-lock) {
   position: relative;
 }
 
