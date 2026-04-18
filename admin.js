@@ -566,6 +566,14 @@ function buildTradeCard(trade, direction) {
     }
   }
 
+  if (trade.status === "withdrawn" && direction === "sent") {
+    const rmBtn = document.createElement("button");
+    rmBtn.className = "trade-action-btn trade-action-withdraw";
+    rmBtn.textContent = "Remove";
+    rmBtn.addEventListener("click", () => doTradeAction(trade.id, "delete", null, el));
+    actionsEl.appendChild(rmBtn);
+  }
+
   return el;
 }
 
@@ -580,7 +588,11 @@ async function doTradeAction(tradeId, action, binderSlug, el) {
       body: JSON.stringify({ tradeId, action, binderSlug }),
     });
     if (!res.ok) throw new Error("Failed");
-    loadTradeProposals();
+    if (action === "delete") {
+      el.remove();
+    } else {
+      loadTradeProposals();
+    }
   } catch {
     el.style.opacity = "1";
   }
