@@ -286,7 +286,10 @@ document.getElementById("update-photo-input").addEventListener("change", async e
 
     statusEl.textContent = "✓ Photo updated!";
     setTimeout(() => { statusEl.textContent = ""; }, 3000);
-    document.getElementById("binder-iframe").src += ""; // reload iframe
+    const iframe = document.getElementById("binder-iframe");
+    const base = iframe.src.split("?")[0];
+    iframe.src = `${base}?_t=${Date.now()}`;
+    sharedLoaded = false; // force gallery to re-fetch on next visit
   } catch (err) {
     document.getElementById("update-photo-status").textContent = err.message;
   }

@@ -17,7 +17,7 @@ exports.handler = async (event) => {
     if (buf) {
       return {
         statusCode: 200,
-        headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=86400" },
+        headers: { "Content-Type": "image/jpeg", "Cache-Control": "no-cache" },
         isBase64Encoded: true,
         body: Buffer.from(buf).toString("base64"),
       };
