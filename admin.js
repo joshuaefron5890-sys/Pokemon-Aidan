@@ -469,7 +469,8 @@ async function loadTradeProposals() {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const { sent, received } = await res.json();
+    const { sent, received: allReceived } = await res.json();
+    const received = allReceived.filter(t => t.status !== "withdrawn");
 
     if (!sent.length && !received.length) {
       container.innerHTML = `
