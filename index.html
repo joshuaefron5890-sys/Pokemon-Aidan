@@ -139,11 +139,17 @@
 
   <p class="section-label">Collections</p>
   <div class="binder-grid" id="binder-grid">
-    <!-- Aidan's static binder is always shown -->
+    <!-- Static binders always shown -->
     <a href="/AidanEfron" class="binder-card">
       <img src="/.netlify/functions/get-photo?slug=aidan" alt="Aidan" class="binder-avatar"
         onerror="this.src='/Aidan.jpg';this.onerror=null" />
       <div class="binder-name">Aidan's Binder</div>
+      <div class="binder-label">View collection →</div>
+    </a>
+    <a href="/emma" class="binder-card">
+      <img src="/Furball.jpg" alt="Emma" class="binder-avatar"
+        onerror="this.outerHTML='<div class=\'binder-avatar-placeholder\'>📒</div>'" />
+      <div class="binder-name">Emma's Binder</div>
       <div class="binder-label">View collection →</div>
     </a>
   </div>
