@@ -998,9 +998,9 @@ footer { display: none !important; }
 .card-fav-btn {
   position: absolute;
   top: .45rem;
-  left: .45rem;
-  width: 28px;
-  height: 28px;
+  right: .45rem;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   border: none;
   background: rgba(15,15,25,.72);
