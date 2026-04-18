@@ -363,7 +363,9 @@ a.binder-card { cursor: pointer; }
   font-size: 1.3rem; font-weight: 700; color: #fff;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(0,0,0,.3);
+  overflow: hidden;
 }
+.binder-card-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .binder-card-info { flex: 1; min-width: 0; }
 .binder-card-name { font-size: .95rem; font-weight: 600; }
