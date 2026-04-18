@@ -373,7 +373,7 @@ step2Btn.addEventListener("click", async () => {
     const res = await fetch("/.netlify/identity/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, data: { full_name: wizardData.owner } }),
     });
     const data = await res.json();
 
@@ -560,6 +560,16 @@ async function createBinder() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+
+    // Write binder_url + full_name into Netlify Identity user metadata so the
+    // admin panel can load this user's binder without a hardcoded email map.
+    try {
+      await fetch("/.netlify/identity/user", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ data: { full_name: wizardData.owner, binder_url: `/binder/${data.slug}` } }),
+      });
+    } catch {} // non-fatal — binder already created, metadata is a nice-to-have
 
     // Clear saved state
     localStorage.removeItem(STATE_KEY);
