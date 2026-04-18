@@ -1,23 +1,19 @@
 // List all public binders — used for the Shared Binders gallery
 // No auth required
 
-const { getFile } = require("./_gh");
-const GITHUB_REPO = "joshuaefron5890-sys/Pokemon-Aidan";
+const { getManifest } = require("./_blobs");
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "GET") return { statusCode: 405 };
 
   try {
-    const file = await getFile("binders/manifest.json");
-    const manifest = file ? JSON.parse(file.content) : [];
+    const manifest = await getManifest();
 
     const publicBinders = manifest
       .filter(b => b.public)
       .map(({ slug, owner, cardCount, createdAt, hasPhoto }) => ({
         slug, owner, cardCount, createdAt,
-        photoUrl: hasPhoto
-          ? `https://raw.githubusercontent.com/${GITHUB_REPO}/main/binders/photos/${slug}.jpg`
-          : null,
+        photoUrl: hasPhoto ? `/.netlify/functions/get-photo?slug=${slug}` : null,
       }));
 
     return {

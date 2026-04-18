@@ -2,30 +2,27 @@
 // Auth required — user must own the binder
 // POST { slug, messages }
 
-const { getFile, putFile } = require("./_gh");
+const { getBinder, putBinder, getManifest, putManifest } = require("./_blobs");
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const TCG_API       = "https://api.pokemontcg.io/v2";
 
-// ── Binder file helpers ────────────────────────────────────
+// ── Binder helpers ─────────────────────────────────────────
 
 async function readBinder(slug) {
-  const file = await getFile(`binders/${slug}.json`);
-  if (!file) throw new Error(`Binder "${slug}" not found.`);
-  return { binder: JSON.parse(file.content), sha: file.sha };
+  const binder = await getBinder(slug);
+  if (!binder) throw new Error(`Binder "${slug}" not found.`);
+  return binder;
 }
 
-async function writeBinder(slug, binder, sha, message) {
-  await putFile(`binders/${slug}.json`, JSON.stringify(binder, null, 2), sha, message);
+async function writeBinder(slug, binder) {
+  await putBinder(slug, binder);
   // Non-fatal: update card count in manifest
   try {
-    const mf = await getFile("binders/manifest.json");
-    if (mf) {
-      const manifest = JSON.parse(mf.content);
-      const entry = manifest.find(b => b.slug === slug);
-      if (entry) {
-        entry.cardCount = binder.cards.length;
-        await putFile("binders/manifest.json", JSON.stringify(manifest, null, 2), mf.sha, `Update card count for ${slug}`);
-      }
+    const manifest = await getManifest();
+    const entry = manifest.find(b => b.slug === slug);
+    if (entry) {
+      entry.cardCount = binder.cards.length;
+      await putManifest(manifest);
     }
   } catch { /* ignore */ }
 }
@@ -62,7 +59,7 @@ async function tool_lookup_card({ query, cardId }) {
 }
 
 async function tool_get_collection(slug) {
-  const { binder } = await readBinder(slug);
+  const binder = await readBinder(slug);
   if (!binder.cards.length) return { count: 0, cards: [] };
   return {
     count: binder.cards.length,
@@ -71,30 +68,30 @@ async function tool_get_collection(slug) {
 }
 
 async function tool_add_card(slug, card) {
-  const { binder, sha } = await readBinder(slug);
+  const binder = await readBinder(slug);
   if (binder.cards.some(c => c.cardId === card.cardId)) {
     return { error: `"${card.cardId}" is already in the binder.` };
   }
   binder.cards.push(card);
-  await writeBinder(slug, binder, sha, `Add ${card.query}`);
+  await writeBinder(slug, binder);
   return { success: true, message: `Added "${card.query}". The binder will update in ~1 minute.` };
 }
 
 async function tool_update_card(slug, { cardId, updates }) {
-  const { binder, sha } = await readBinder(slug);
+  const binder = await readBinder(slug);
   const card = binder.cards.find(c => c.cardId === cardId);
   if (!card) return { error: `Card "${cardId}" not found.` };
   Object.assign(card, updates);
-  await writeBinder(slug, binder, sha, `Update ${cardId}`);
+  await writeBinder(slug, binder);
   return { success: true, message: `Updated "${cardId}" (${Object.keys(updates).join(", ")}).` };
 }
 
 async function tool_remove_card(slug, { cardId }) {
-  const { binder, sha } = await readBinder(slug);
+  const binder = await readBinder(slug);
   const before = binder.cards.length;
   binder.cards = binder.cards.filter(c => c.cardId !== cardId);
   if (binder.cards.length === before) return { error: `Card "${cardId}" not found.` };
-  await writeBinder(slug, binder, sha, `Remove ${cardId}`);
+  await writeBinder(slug, binder);
   return { success: true, message: `Removed "${cardId}".` };
 }
 
@@ -182,7 +179,7 @@ When listing cards from get_collection, append a machine-readable block at the v
 <cards>[{"query":"Card Name 001/102","cardId":"base1-1"}]</cards>
 Include up to 30 cards. Never explain this block.
 
-Be concise. Changes deploy automatically in ~1 minute.`;
+Be concise. Changes take effect immediately.`;
 
   for (let i = 0; i < 12; i++) {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -236,11 +233,10 @@ exports.handler = async (event, context) => {
 
   try {
     const { slug, messages } = JSON.parse(event.body);
-    if (!slug)                                  return { statusCode: 400, body: JSON.stringify({ error: "Missing slug" }) };
+    if (!slug)                                       return { statusCode: 400, body: JSON.stringify({ error: "Missing slug" }) };
     if (!Array.isArray(messages) || !messages.length) return { statusCode: 400, body: JSON.stringify({ error: "No messages" }) };
 
-    // Verify ownership
-    const { binder } = await readBinder(slug);
+    const binder = await readBinder(slug);
     if (binder.email !== user.email) {
       return { statusCode: 403, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: "Forbidden" }) };
     }

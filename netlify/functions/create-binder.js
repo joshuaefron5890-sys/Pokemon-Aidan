@@ -1,9 +1,8 @@
 // Create a new binder for an authenticated user
-// POST { slug, owner, isPublic, cards }
+// POST { slug, owner, isPublic, cards, photo? }
 // Requires Netlify Identity auth
 
-const { getFile, putFile, putBinaryFile } = require("./_gh");
-const MANIFEST = "binders/manifest.json";
+const { getManifest, putManifest, putBinder, putPhoto } = require("./_blobs");
 
 function slugValid(slug) {
   return typeof slug === "string" && /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(slug);
@@ -31,11 +30,8 @@ exports.handler = async (event, context) => {
       return { statusCode: 400, body: JSON.stringify({ error: "Owner name is required." }) };
     }
 
-    // Read manifest (create empty if missing)
-    const manifestFile = await getFile(MANIFEST);
-    const manifest = manifestFile ? JSON.parse(manifestFile.content) : [];
+    const manifest = await getManifest();
 
-    // Check uniqueness
     if (manifest.some(b => b.slug === slug)) {
       return { statusCode: 409, body: JSON.stringify({ error: `The URL "/binder/${slug}" is already taken. Try a different name.` }) };
     }
@@ -43,8 +39,13 @@ exports.handler = async (event, context) => {
       return { statusCode: 409, body: JSON.stringify({ error: "You already have a binder. Visit /admin to manage it." }) };
     }
 
-    const now = new Date().toISOString();
+    const now      = new Date().toISOString();
     const hasPhoto = typeof photo === "string" && photo.length > 0;
+
+    if (hasPhoto) {
+      await putPhoto(slug, photo);
+    }
+
     const binder = {
       slug,
       owner:     owner.trim(),
@@ -55,17 +56,10 @@ exports.handler = async (event, context) => {
       cards:     Array.isArray(cards) ? cards : [],
     };
 
-    // Store profile photo as a separate binary file
-    if (hasPhoto) {
-      await putBinaryFile(`binders/photos/${slug}.jpg`, photo, null, `Upload photo for ${owner.trim()}`);
-    }
+    await putBinder(slug, binder);
 
-    // Write binder JSON
-    await putFile(`binders/${slug}.json`, JSON.stringify(binder, null, 2), null, `Create binder for ${owner.trim()}`);
-
-    // Update manifest
     manifest.push({ slug, owner: owner.trim(), email: user.email, public: Boolean(isPublic), hasPhoto, cardCount: binder.cards.length, createdAt: now });
-    await putFile(MANIFEST, JSON.stringify(manifest, null, 2), manifestFile?.sha ?? null, `Add ${slug} to manifest`);
+    await putManifest(manifest);
 
     return {
       statusCode: 200,

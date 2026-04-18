@@ -9,6 +9,7 @@ let wizardData = {
   isPublic:  true,
   token:     null,   // JWT after signup/login
   cards:     [],     // confirmed cards from step 3
+  photo:     null,   // base64 JPEG after crop (persisted so page reloads don't lose it)
 };
 
 // Restore partial state from localStorage (survives email confirmation redirect)
@@ -246,6 +247,8 @@ document.getElementById("crop-apply").addEventListener("click", () => {
 
   const dataUrl = out.toDataURL("image/jpeg", 0.85);
   pendingPhoto  = dataUrl.split(",")[1];
+  wizardData.photo = pendingPhoto;
+  saveState();
   photoPreview.src = dataUrl;
 
   cropArea.classList.add("hidden");
@@ -260,6 +263,8 @@ document.getElementById("crop-cancel").addEventListener("click", () => {
 
 document.getElementById("photo-remove").addEventListener("click", () => {
   pendingPhoto = null;
+  wizardData.photo = null;
+  saveState();
   photoFileInput.value = "";
   photoHasImage.classList.add("hidden");
   photoPlaceholder.classList.remove("hidden");
@@ -330,6 +335,12 @@ document.getElementById("step1-next").addEventListener("click", () => {
 // Restore step 1 fields if returning
 if (wizardData.owner) ownerInput.value = wizardData.owner;
 if (wizardData.slug)  { slugInput.value = wizardData.slug; slugInput.dataset.manualEdit = "1"; validateSlug(); }
+if (wizardData.photo) {
+  pendingPhoto = wizardData.photo;
+  photoPreview.src = `data:image/jpeg;base64,${pendingPhoto}`;
+  photoPlaceholder.classList.add("hidden");
+  photoHasImage.classList.remove("hidden");
+}
 
 // ── Step 2: Account creation ───────────────────────────────
 
@@ -555,7 +566,7 @@ async function createBinder() {
         owner:    wizardData.owner,
         isPublic: wizardData.isPublic,
         cards:    wizardData.cards,
-        photo:    pendingPhoto || null,
+        photo:    pendingPhoto || wizardData.photo || null,
       }),
     });
     const data = await res.json();
