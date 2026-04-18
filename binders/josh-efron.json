@@ -1,0 +1,23 @@
+{
+  "slug": "josh-efron",
+  "owner": "Josh Efron",
+  "email": "joshuaefron@yahoo.com",
+  "public": true,
+  "hasPhoto": false,
+  "createdAt": "2026-04-18T16:10:59.601Z",
+  "cards": [
+    {
+      "query": "Mega Scrafty ex 270",
+      "cardId": "me2pt5-270",
+      "setName": "Ascended Heroes",
+      "tcgUrl": "https://prices.pokemontcg.io/tcgplayer/me2pt5-270"
+    },
+    {
+      "query": "Mega Sharpedo ex 113",
+      "cardId": "me2-113",
+      "setName": "Phantasmal Flames",
+      "tcgUrl": "https://prices.pokemontcg.io/tcgplayer/me2-113",
+      "fallbackPrice": 2.55
+    }
+  ]
+}
