@@ -14,8 +14,9 @@ function store(name) {
   return getStore(name);
 }
 
-const binderStore = () => store("binders");
-const photoStore  = () => store("photos");
+const binderStore    = () => store("binders");
+const photoStore     = () => store("photos");
+const favoritesStore = () => store("favorites");
 
 async function getBinder(slug) {
   return binderStore().get(slug, { type: "json" });
@@ -46,4 +47,12 @@ async function getPhoto(slug) {
   return photoStore().get(slug, { type: "arrayBuffer" });
 }
 
-module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto };
+async function getFavorites(userId) {
+  return (await favoritesStore().get(userId, { type: "json" })) ?? { cards: [] };
+}
+
+async function putFavorites(userId, data) {
+  await favoritesStore().set(userId, JSON.stringify(data));
+}
+
+module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto, getFavorites, putFavorites };

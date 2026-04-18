@@ -61,6 +61,12 @@ async function initBinder() {
     const inAdminFrame = window.self !== window.top;
     if (data.isOwner && inAdminFrame) initOwnerBubble(slug, data.owner);
 
+    // Enable favorites for logged-in non-owners viewing on the public page
+    const currentUser = window.netlifyIdentity?.currentUser();
+    if (currentUser && !data.isOwner && !inAdminFrame) {
+      window.initFavorites?.(currentUser, slug, data.owner);
+    }
+
     // Kick off the card grid
     loadCollection();
   } catch (err) {

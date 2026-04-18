@@ -115,19 +115,20 @@
   </footer>
 
   <script src="cards.js?v=44"></script>
-  <script src="app.js?v=50"></script>
+  <script src="app.js?v=51"></script>
   <script src="background.js?v=44"></script>
+  <script src="favorites.js?v=1"></script>
 
-  <!-- Netlify Identity: processes confirmation/recovery tokens in the URL hash
-       and redirects to /admin after login -->
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
         const btn = document.getElementById("login-btn");
+        const isOwner = user?.email === "joshuaefron5890@gmail.com";
         if (user) {
           btn.textContent = "My Account";
           btn.addEventListener("click", () => { document.location.href = "/admin"; });
+          if (!isOwner) window.initFavorites?.(user, "aidan", "Aidan");
         } else {
           btn.addEventListener("click", () => { window.netlifyIdentity.open("login"); });
           window.netlifyIdentity.on("login", () => {

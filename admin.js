@@ -72,6 +72,7 @@ function showLogin() {
 const VIEW_LABELS = {
   binder:    "My Binder",
   shared:    "Shared Binders",
+  favorites: "My Favorites",
   assistant: "Card Assistant",  // accessed via popup full-screen button
 };
 
@@ -98,7 +99,8 @@ function showView(id) {
 document.querySelectorAll(".nav-item[data-view]").forEach(btn => {
   btn.addEventListener("click", () => {
     showView(btn.dataset.view);
-    if (btn.dataset.view === "shared") loadSharedBinders();
+    if (btn.dataset.view === "shared")    loadSharedBinders();
+    if (btn.dataset.view === "favorites") loadFavorites();
   });
 });
 
@@ -144,6 +146,95 @@ async function loadSharedBinders() {
       grid.appendChild(card);
     });
   } catch {}
+}
+
+// ── My Favorites ────────────────────────────────────────────
+
+function binderPageUrl(slug) {
+  if (slug === "aidan") return "/AidanEfron";
+  if (slug === "emma")  return "/emma";
+  return `/binder/${slug}`;
+}
+
+async function loadFavorites() {
+  const grid = document.getElementById("favorites-grid");
+  if (!grid) return;
+  grid.innerHTML = `<p style="padding:1.5rem;color:var(--text-muted)">Loading…</p>`;
+
+  try {
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
+    const res   = await fetch("/.netlify/functions/get-favorites", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data  = await res.json();
+    const cards = data.cards || [];
+
+    if (!cards.length) {
+      grid.innerHTML = `
+        <div class="favorites-empty">
+          <div class="favorites-empty-icon">♡</div>
+          <div class="favorites-empty-title">No favorites yet</div>
+          <p style="font-size:.85rem;color:var(--text-muted)">Visit a binder while logged in and tap the heart on any card.</p>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = "";
+    cards.forEach(card => {
+      const imgSrc = card.imageUrl || (() => {
+        if (!card.cardId) return "";
+        const i = card.cardId.lastIndexOf("-");
+        return i < 0 ? "" : `https://images.pokemontcg.io/${card.cardId.slice(0, i)}/${card.cardId.slice(i + 1)}.png`;
+      })();
+
+      const el = document.createElement("div");
+      el.className = "fav-item";
+      el.innerHTML = `
+        ${imgSrc
+          ? `<img class="fav-item-img" src="${imgSrc}" alt="${card.name || card.query}" loading="lazy"
+              onerror="this.outerHTML='<div class=\\'fav-item-img-placeholder\\'>${card.name || card.query}</div>'" />`
+          : `<div class="fav-item-img-placeholder">${card.name || card.query}</div>`}
+        <div class="fav-item-info">
+          <div class="fav-item-name">${card.name || card.query}</div>
+          <div class="fav-item-binder">From: <a href="${binderPageUrl(card.binderSlug)}" target="_blank" rel="noopener">${card.binderOwner || card.binderSlug}'s Binder</a></div>
+        </div>
+        <button class="fav-remove-btn" title="Remove from favorites">✕</button>`;
+
+      el.querySelector(".fav-remove-btn").addEventListener("click", () => removeFavorite(card, el));
+      grid.appendChild(el);
+    });
+  } catch (err) {
+    grid.innerHTML = `<p style="padding:1.5rem;color:var(--text-muted)">Failed to load favorites: ${err.message}</p>`;
+  }
+}
+
+async function removeFavorite(card, el) {
+  el.style.opacity = ".4";
+  try {
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
+    const res   = await fetch("/.netlify/functions/update-favorites", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: "remove", card }),
+    });
+    if (!res.ok) throw new Error("Failed");
+    el.remove();
+    const grid = document.getElementById("favorites-grid");
+    if (grid && !grid.querySelector(".fav-item")) {
+      grid.innerHTML = `
+        <div class="favorites-empty">
+          <div class="favorites-empty-icon">♡</div>
+          <div class="favorites-empty-title">No favorites yet</div>
+          <p style="font-size:.85rem;color:var(--text-muted)">Visit a binder while logged in and tap the heart on any card.</p>
+        </div>`;
+    }
+  } catch {
+    el.style.opacity = "1";
+  }
 }
 
 // Mobile sidebar toggle

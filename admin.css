@@ -541,3 +541,82 @@ a.binder-card { cursor: pointer; }
   .chat-bubble { padding: .75rem; border-radius: 50%; }
   .card-thumb { width: 58px; height: 80px; }
 }
+
+/* ── My Favorites view ─────────────────────────────────────── */
+.favorites-grid {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  padding: 1rem 1.5rem 2rem;
+}
+.fav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: .6rem .85rem;
+  transition: border-color .15s;
+}
+.fav-item:hover { border-color: rgba(99,102,241,.4); }
+.fav-item-img {
+  width: 42px;
+  height: 58px;
+  object-fit: contain;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: var(--surface2);
+}
+.fav-item-img-placeholder {
+  width: 42px;
+  height: 58px;
+  border-radius: 4px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .6rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: .2rem;
+  flex-shrink: 0;
+}
+.fav-item-info { flex: 1; min-width: 0; }
+.fav-item-name {
+  font-weight: 600;
+  font-size: .88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fav-item-binder {
+  font-size: .75rem;
+  color: var(--text-muted);
+  margin-top: .15rem;
+}
+.fav-item-binder a { color: var(--accent2); text-decoration: none; }
+.fav-item-binder a:hover { text-decoration: underline; }
+.fav-remove-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: .75rem;
+  flex-shrink: 0;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.fav-remove-btn:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,.08); }
+.favorites-empty {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--text-muted);
+}
+.favorites-empty-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+.favorites-empty-title { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: .4rem; }

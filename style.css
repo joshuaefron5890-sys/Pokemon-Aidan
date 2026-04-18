@@ -993,3 +993,47 @@ footer { display: none !important; }
   transition: border-color .15s, color .15s;
 }
 .binder-nav-btn:hover { border-color: var(--accent2); color: var(--text); }
+
+/* ── Favorites heart button ─────────────────────────────── */
+.card-fav-btn {
+  position: absolute;
+  top: .45rem;
+  left: .45rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(15,15,25,.72);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(.85);
+  transition: opacity .15s, transform .15s, background .15s, color .15s;
+  z-index: 10;
+}
+.card-item:hover .card-fav-btn { opacity: 1; transform: scale(1); }
+.card-fav-btn.faved { opacity: 1; color: #f43f5e; background: rgba(244,63,94,.18); }
+.card-fav-btn:hover { background: rgba(244,63,94,.32) !important; color: #f43f5e !important; }
+@keyframes fav-pop { 0%,100% { transform: scale(1); } 50% { transform: scale(1.4); } }
+.card-fav-btn.fav-pulse { animation: fav-pop .35s ease; }
+
+/* ── Favorites counter badge (public binder nav) ────────── */
+.fav-counter-wrap {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: .8rem;
+  font-weight: 600;
+  color: #f43f5e;
+  background: rgba(244,63,94,.1);
+  border: 1px solid rgba(244,63,94,.28);
+  border-radius: 20px;
+  padding: .3rem .8rem;
+  margin-right: .5rem;
+  transition: opacity .2s;
+}
+.fav-counter-wrap.hidden { display: none !important; }
