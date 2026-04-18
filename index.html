@@ -7,6 +7,25 @@
   <link rel="stylesheet" href="style.css?v=49" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
   <style>
+    .landing-nav {
+      display: flex;
+      justify-content: flex-end;
+      padding: 1rem 1.5rem;
+    }
+    .login-btn {
+      background: none;
+      border: 1.5px solid var(--border);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: .85rem;
+      font-weight: 600;
+      padding: .45rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color .15s, color .15s;
+    }
+    .login-btn:hover { border-color: var(--accent2); color: var(--text); }
     .landing-hero {
       text-align: center;
       padding: 4rem 1.5rem 2.5rem;
@@ -109,6 +128,10 @@
 <body>
   <canvas id="bg-canvas" aria-hidden="true"></canvas>
 
+  <nav class="landing-nav">
+    <button class="login-btn" id="login-btn">Log In</button>
+  </nav>
+
   <div class="landing-hero">
     <h1>Digital Pokémon Binder</h1>
     <p>Browse card collections or create your own digital binder.</p>
@@ -133,7 +156,16 @@
   <script>
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
-        if (!user) {
+        if (user) {
+          // Already logged in — button goes straight to admin
+          document.getElementById("login-btn").textContent = "My Binder";
+          document.getElementById("login-btn").addEventListener("click", () => {
+            document.location.href = "/admin";
+          });
+        } else {
+          document.getElementById("login-btn").addEventListener("click", () => {
+            window.netlifyIdentity.open("login");
+          });
           window.netlifyIdentity.on("login", () => {
             const wizardState = localStorage.getItem("wizard_state_v1");
             if (wizardState) {
