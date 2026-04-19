@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" />
-  <link rel="stylesheet" href="admin.css?v=8" />
+  <link rel="stylesheet" href="admin.css?v=9" />
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
@@ -153,7 +153,7 @@
         <div class="binder-toolbar">
           <button id="add-card-btn" class="add-card-trigger-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-            Add New Card
+            Add New Cards
           </button>
         </div>
         <iframe src="" title="My Binder" id="binder-iframe"></iframe>
@@ -392,17 +392,17 @@
     </div>
   </div>
 
-  <!-- ── Add Card Modal ── -->
-  <div id="add-card-modal" class="acm-backdrop hidden" role="dialog" aria-modal="true" aria-label="Add new card">
+  <!-- ── Add Cards Modal ── -->
+  <div id="add-card-modal" class="acm-backdrop hidden" role="dialog" aria-modal="true" aria-label="Add new cards">
     <div class="acm-sheet">
       <div class="acm-header">
-        <h3 class="acm-title">Add a Card</h3>
+        <h3 class="acm-title">Add Cards</h3>
         <button id="acm-close" class="acm-close" aria-label="Close">✕</button>
       </div>
 
-      <!-- Step A: Input method -->
+      <!-- Step A: Find a card -->
       <div id="acm-step-input" class="acm-body">
-        <p class="acm-sub">How do you want to find this card?</p>
+        <p class="acm-sub">How do you want to find a card?</p>
         <div class="acm-tabs">
           <button class="acm-tab active" data-tab="name">Card Name</button>
           <button class="acm-tab" data-tab="link">TCG Link</button>
@@ -444,6 +444,20 @@
           <span id="acm-lookup-label">Find Card</span>
           <div class="acm-spinner hidden" id="acm-spinner"></div>
         </button>
+
+        <!-- Queue: shown once at least one card has been queued -->
+        <div id="acm-queue-panel" class="acm-queue-panel hidden">
+          <div class="acm-queue-header">
+            <span class="acm-queue-label">Queue (<span id="acm-queue-count">0</span>)</span>
+            <button id="acm-queue-clear-btn" class="acm-queue-clear-btn">Clear all</button>
+          </div>
+          <div id="acm-queue-list" class="acm-queue-list"></div>
+          <button id="acm-add-all-btn" class="acm-primary-btn" style="width:100%;margin-top:.75rem">
+            <span id="acm-add-all-label">Add to Collection</span>
+            <div class="acm-spinner hidden" id="acm-add-all-spinner"></div>
+          </button>
+          <div id="acm-add-all-error" class="acm-error"></div>
+        </div>
       </div>
 
       <!-- Step B: Confirm card -->
@@ -459,10 +473,7 @@
           </div>
         </div>
         <div id="acm-confirm-error" class="acm-error"></div>
-        <button id="acm-confirm-btn" class="acm-primary-btn">
-          <span id="acm-confirm-label">Add to Collection</span>
-          <div class="acm-spinner hidden" id="acm-confirm-spinner"></div>
-        </button>
+        <button id="acm-confirm-btn" class="acm-primary-btn">Add to Queue</button>
         <button id="acm-back-btn" class="acm-secondary-btn">← Try again</button>
       </div>
 
@@ -470,7 +481,7 @@
       <div id="acm-step-done" class="acm-body hidden">
         <div class="acm-success">
           <div class="acm-success-icon">✅</div>
-          <p class="acm-success-msg" id="acm-success-msg">Card added! The page will update in ~1 minute.</p>
+          <p class="acm-success-msg" id="acm-success-msg"></p>
           <button id="acm-done-btn" class="acm-primary-btn" style="margin-top:1rem">Done</button>
         </div>
       </div>
@@ -540,7 +551,7 @@
     </div>
   </div>
 
-  <script src="admin.js?v=12"></script>
+  <script src="admin.js?v=13"></script>
   <script src="add-card-modal.js"></script>
 </body>
 </html>

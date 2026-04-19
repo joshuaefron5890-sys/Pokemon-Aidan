@@ -1,17 +1,16 @@
-// Add Card Modal — lives in admin.html, shown in the My Binder view
+// Add Cards Modal — lives in admin.html, shown in the My Binder view
 // Routes to /.netlify/functions/chat (Aidan) or binder-chat (all other owners)
 
 /* global netlifyIdentity */
 
 (function () {
-  const modal  = document.getElementById("add-card-modal");
+  const modal   = document.getElementById("add-card-modal");
   const openBtn = document.getElementById("add-card-btn");
   const closeBtn = document.getElementById("acm-close");
 
   if (!modal || !openBtn) return;
 
   // ── Chat routing ──────────────────────────────────────────
-  // Aidan → /chat; everyone else → /binder-chat with their slug
 
   async function callChat(messages) {
     const user = window.netlifyIdentity?.currentUser();
@@ -33,9 +32,6 @@
     }));
   }
 
-  // ── Safe JSON fetch ───────────────────────────────────────
-  // Handles HTML error pages (timeouts, 502s) gracefully
-
   async function safeJson(res) {
     const ct = res.headers.get("content-type") || "";
     if (!ct.includes("application/json")) {
@@ -56,6 +52,8 @@
   document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
 
   function openModal() {
+    cardQueue = [];
+    renderQueue();
     resetToStep("input");
     modal.classList.remove("hidden");
     document.body.style.overflow = "hidden";
@@ -82,13 +80,13 @@
 
   // ── Photo upload & drag-drop ──────────────────────────────
 
-  let pendingPhoto = null; // { data: base64, mediaType }
+  let pendingPhoto = null;
 
-  const dropzone   = document.getElementById("acm-dropzone");
-  const photoInput = document.getElementById("acm-photo-input");
-  const preview    = document.getElementById("acm-photo-preview");
+  const dropzone    = document.getElementById("acm-dropzone");
+  const photoInput  = document.getElementById("acm-photo-input");
+  const preview     = document.getElementById("acm-photo-preview");
   const previewWrap = document.getElementById("acm-photo-preview-wrap");
-  const photoClear = document.getElementById("acm-photo-clear");
+  const photoClear  = document.getElementById("acm-photo-clear");
 
   photoInput.addEventListener("change", e => {
     const file = e.target.files[0];
@@ -129,18 +127,76 @@
     document.getElementById("acm-step-done").classList.toggle("hidden", step !== "done");
     document.getElementById("acm-input-error").textContent = "";
     document.getElementById("acm-confirm-error").textContent = "";
+    if (step === "input") {
+      // Clear the search fields so the user can enter a new card
+      document.getElementById("acm-card-name").value = "";
+      document.getElementById("acm-tcg-link").value = "";
+      pendingPhoto = null;
+      previewWrap.classList.add("hidden");
+      photoInput.value = "";
+    }
   }
+
+  // ── Card queue ────────────────────────────────────────────
+
+  let cardQueue = []; // [{ cardId, query, setName, marketPrice, tcgUrl, imageUrl }]
+
+  function renderQueue() {
+    const panel     = document.getElementById("acm-queue-panel");
+    const list      = document.getElementById("acm-queue-list");
+    const countEl   = document.getElementById("acm-queue-count");
+    const labelEl   = document.getElementById("acm-add-all-label");
+
+    if (!cardQueue.length) {
+      panel.classList.add("hidden");
+      return;
+    }
+
+    panel.classList.remove("hidden");
+    countEl.textContent = cardQueue.length;
+    labelEl.textContent = `Add ${cardQueue.length} Card${cardQueue.length !== 1 ? "s" : ""} to Collection`;
+
+    list.innerHTML = "";
+    cardQueue.forEach((card, i) => {
+      const lastDash = card.cardId.lastIndexOf("-");
+      const setId    = card.cardId.slice(0, lastDash);
+      const num      = card.cardId.slice(lastDash + 1);
+      const imgUrl   = `https://images.pokemontcg.io/${setId}/${num}.png`;
+
+      const row = document.createElement("div");
+      row.className = "acm-queue-row";
+      row.innerHTML = `
+        <img class="acm-queue-img" src="${imgUrl}" alt="${card.query}"
+             onerror="this.style.display='none'" />
+        <div class="acm-queue-info">
+          <div class="acm-queue-name">${card.query}</div>
+          <div class="acm-queue-set">${card.setName || ""}</div>
+        </div>
+        <button class="acm-queue-remove" title="Remove" data-index="${i}">✕</button>`;
+      row.querySelector(".acm-queue-remove").addEventListener("click", () => {
+        cardQueue.splice(i, 1);
+        renderQueue();
+      });
+      list.appendChild(row);
+    });
+
+    document.getElementById("acm-add-all-error").textContent = "";
+  }
+
+  document.getElementById("acm-queue-clear-btn").addEventListener("click", () => {
+    cardQueue = [];
+    renderQueue();
+  });
 
   // ── Step A: Look up card ──────────────────────────────────
 
-  let foundCard = null; // { cardId, query, setName, marketPrice, tcgUrl, imageUrl }
+  let foundCard = null;
 
   const lookupBtn     = document.getElementById("acm-lookup-btn");
   const lookupLabel   = document.getElementById("acm-lookup-label");
   const lookupSpinner = document.getElementById("acm-spinner");
 
   lookupBtn.addEventListener("click", doLookup);
-
   document.getElementById("acm-card-name").addEventListener("keydown", e => {
     if (e.key === "Enter") doLookup();
   });
@@ -158,8 +214,6 @@
     } else if (activeTab === "link") {
       const link = document.getElementById("acm-tcg-link").value.trim();
       if (!link || !link.includes("tcgplayer.com")) { errEl.textContent = "Please paste a valid TCGPlayer URL."; return; }
-      // Extract card name from URL slug: /product/12345/pokemon-sv-black-bolt-serperior-ex
-      // → remove "pokemon-" brand prefix, convert hyphens to spaces → "sv black bolt serperior ex"
       let cardQuery = link;
       try {
         const slug = new URL(link).pathname.split("/").filter(Boolean).pop();
@@ -167,7 +221,6 @@
       } catch {}
       userMessage = { role: "user", content: `Look up this Pokémon card and tell me the cardId, setName, and market price: ${cardQuery}` };
     } else {
-      // Photo tab
       if (!pendingPhoto) { errEl.textContent = "Please select or drop a card photo first."; return; }
       userMessage = {
         role: "user",
@@ -183,17 +236,13 @@
     lookupLabel.textContent = "Searching…";
 
     try {
-      // Step 1: look up the card
       const data = await callChat([userMessage]);
-
-      // Step 2: re-ask for structured JSON
       const extracted = await callChat([
         userMessage,
         { role: "assistant", content: data.reply },
         { role: "user", content: 'Now give me just this JSON (no other text): {"cardId":"...","query":"...","setName":"...","marketPrice":0.00,"tcgUrl":"...","imageUrl":""}' },
       ]);
 
-      // Find JSON in the response
       const jsonMatch = extracted.reply.match(/\{[\s\S]*"cardId"[\s\S]*\}/);
       if (!jsonMatch) throw new Error("Could not parse card information. Please try again.");
 
@@ -209,14 +258,13 @@
     }
   }
 
-  // ── Step B: Confirm ───────────────────────────────────────
+  // ── Step B: Confirm → queue ───────────────────────────────
 
   function showConfirmStep(card) {
     lookupBtn.disabled = false;
     lookupSpinner.classList.add("hidden");
     lookupLabel.textContent = "Find Card";
 
-    // Build image URL from cardId
     const lastDash = card.cardId.lastIndexOf("-");
     const setId    = card.cardId.slice(0, lastDash);
     const num      = card.cardId.slice(lastDash + 1);
@@ -237,30 +285,56 @@
 
   document.getElementById("acm-back-btn").addEventListener("click", () => resetToStep("input"));
 
-  const confirmBtn     = document.getElementById("acm-confirm-btn");
-  const confirmLabel   = document.getElementById("acm-confirm-label");
-  const confirmSpinner = document.getElementById("acm-confirm-spinner");
+  // "Add to Queue" — store card and go back to input
+  document.getElementById("acm-confirm-btn").addEventListener("click", () => {
+    if (!foundCard) return;
+    cardQueue.push(foundCard);
+    foundCard = null;
+    renderQueue();
+    resetToStep("input");
+  });
 
-  confirmBtn.addEventListener("click", async () => {
-    const errEl = document.getElementById("acm-confirm-error");
+  // ── Submit all queued cards ───────────────────────────────
+
+  const addAllBtn     = document.getElementById("acm-add-all-btn");
+  const addAllLabel   = document.getElementById("acm-add-all-label");
+  const addAllSpinner = document.getElementById("acm-add-all-spinner");
+
+  addAllBtn.addEventListener("click", async () => {
+    const errEl = document.getElementById("acm-add-all-error");
     errEl.textContent = "";
-    confirmBtn.disabled = true;
-    confirmSpinner.classList.remove("hidden");
-    confirmLabel.textContent = "Adding…";
+    if (!cardQueue.length) return;
+
+    addAllBtn.disabled = true;
+    addAllSpinner.classList.remove("hidden");
+    addAllLabel.textContent = "Adding…";
 
     try {
-      const addMsg = `Add this card to the collection: cardId="${foundCard.cardId}", query="${foundCard.query}", setName="${foundCard.setName}"${foundCard.marketPrice ? `, fallbackPrice=${foundCard.marketPrice}` : ""}${foundCard.tcgUrl ? `, tcgUrl="${foundCard.tcgUrl}"` : ""}`;
-      const data = await callChat([{ role: "user", content: addMsg }]);
+      // Build one message listing all cards so the AI can add them in a single pass
+      const cardLines = cardQueue.map((c, i) =>
+        `${i + 1}. cardId="${c.cardId}", query="${c.query}", setName="${c.setName || ""}"` +
+        `${c.marketPrice ? `, fallbackPrice=${c.marketPrice}` : ""}` +
+        `${c.tcgUrl ? `, tcgUrl="${c.tcgUrl}"` : ""}`
+      ).join("\n");
 
+      await callChat([{
+        role: "user",
+        content: `Add these ${cardQueue.length} card${cardQueue.length !== 1 ? "s" : ""} to the collection:\n${cardLines}`,
+      }]);
+
+      const names = cardQueue.map(c => c.query).join(", ");
       document.getElementById("acm-success-msg").textContent =
-        `"${foundCard.query}" added! The page will update in ~1 minute.`;
+        cardQueue.length === 1
+          ? `"${cardQueue[0].query}" added! The page will update in ~1 minute.`
+          : `${cardQueue.length} cards added (${names}). The page will update in ~1 minute.`;
 
+      cardQueue = [];
       resetToStep("done");
     } catch (err) {
       errEl.textContent = err.message;
-      confirmBtn.disabled = false;
-      confirmSpinner.classList.add("hidden");
-      confirmLabel.textContent = "Add to Collection";
+      addAllBtn.disabled = false;
+      addAllSpinner.classList.add("hidden");
+      addAllLabel.textContent = `Add ${cardQueue.length} Card${cardQueue.length !== 1 ? "s" : ""} to Collection`;
     }
   });
 

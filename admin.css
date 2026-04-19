@@ -345,6 +345,93 @@ a { color: inherit; text-decoration: none; }
 .acm-success-icon { font-size: 2.5rem; margin-bottom: .75rem; }
 .acm-success-msg { color: var(--text-muted); font-size: .9rem; }
 
+/* ── Add Cards queue panel ─────────────────────────────────── */
+.acm-queue-panel {
+  margin-top: 1.25rem;
+  background: var(--bg);
+  border: 1px solid rgba(0,217,255,.2);
+  border-radius: 12px;
+  padding: .85rem;
+}
+.acm-queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .65rem;
+}
+.acm-queue-label {
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--accent);
+}
+.acm-queue-clear-btn {
+  background: none;
+  border: none;
+  font-size: .72rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  transition: color .15s;
+}
+.acm-queue-clear-btn:hover { color: #ef4444; }
+.acm-queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.acm-queue-row {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .4rem .55rem;
+}
+.acm-queue-img {
+  width: 30px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 3px;
+  flex-shrink: 0;
+  background: var(--surface2);
+}
+.acm-queue-info { flex: 1; min-width: 0; }
+.acm-queue-name {
+  font-size: .8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.acm-queue-set {
+  font-size: .68rem;
+  color: var(--text-muted);
+  margin-top: .05rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.acm-queue-remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: .75rem;
+  cursor: pointer;
+  padding: .2rem .35rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: color .15s, background .15s;
+}
+.acm-queue-remove:hover { color: #ef4444; background: rgba(239,68,68,.08); }
+
 /* ── Shared Binders gallery ────────────────────────────────── */
 
 .shared-view {
