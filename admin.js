@@ -171,6 +171,28 @@ async function loadFavorites() {
   const grid = document.getElementById("favorites-grid");
   if (!grid) return;
   grid.innerHTML = `<p style="padding:1.5rem;color:var(--text-muted)">Loading…</p>`;
+  exitFavSelectMode();
+
+  const selectBtn = document.getElementById("fav-select-btn");
+  if (selectBtn) {
+    selectBtn.style.display = "none";
+    selectBtn.onclick = () => favSelectMode ? exitFavSelectMode() : enterFavSelectMode();
+  }
+
+  const bulkCancelBtn = document.getElementById("fav-bulk-cancel-btn");
+  const bulkTradeBtn  = document.getElementById("fav-bulk-trade-btn");
+  const bulkOfferBtn  = document.getElementById("fav-bulk-offer-btn");
+  if (bulkCancelBtn) bulkCancelBtn.onclick = exitFavSelectMode;
+  if (bulkTradeBtn) bulkTradeBtn.onclick = () => {
+    if (!selectedFavs.size) return;
+    exitFavSelectMode();
+    openTradeDrawer([...selectedFavs.values()]);
+  };
+  if (bulkOfferBtn) bulkOfferBtn.onclick = () => {
+    if (!selectedFavs.size) return;
+    exitFavSelectMode();
+    openOfferModal([...selectedFavs.values()]);
+  };
 
   try {
     const user  = netlifyIdentity.currentUser();
@@ -193,8 +215,11 @@ async function loadFavorites() {
       return;
     }
 
+    if (selectBtn) selectBtn.style.display = "";
+
     grid.innerHTML = "";
     cards.forEach(card => {
+      const key = card.cardId || card.query;
       const imgSrc = card.imageUrl || (() => {
         if (!card.cardId) return "";
         const i = card.cardId.lastIndexOf("-");
@@ -204,6 +229,7 @@ async function loadFavorites() {
       const el = document.createElement("div");
       el.className = "fav-item";
       el.innerHTML = `
+        <div class="fav-select-overlay" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
         ${imgSrc
           ? `<img class="fav-item-img" src="${imgSrc}" alt="${card.name || card.query}" loading="lazy"
               onerror="this.outerHTML='<div class=\\'fav-item-img-placeholder\\'>${card.name || card.query}</div>'" />`
@@ -224,8 +250,22 @@ async function loadFavorites() {
           <button class="fav-remove-btn" title="Remove from favorites">✕</button>
         </div>`;
 
-      el.querySelector(".fav-trade-btn").addEventListener("click", () => openTradeDrawer(card));
-      el.querySelector(".fav-offer-btn").addEventListener("click", () => openOfferModal(card));
+      // In select mode, clicking the card toggles selection; otherwise use action buttons
+      el.addEventListener("click", e => {
+        if (!favSelectMode) return;
+        if (e.target.closest(".fav-item-actions")) return;
+        if (selectedFavs.has(key)) {
+          selectedFavs.delete(key);
+          el.classList.remove("fav-selected");
+        } else {
+          selectedFavs.set(key, card);
+          el.classList.add("fav-selected");
+        }
+        renderFavBulkBar();
+      });
+
+      el.querySelector(".fav-trade-btn").addEventListener("click", () => openTradeDrawer([card]));
+      el.querySelector(".fav-offer-btn").addEventListener("click", () => openOfferModal([card]));
       el.querySelector(".fav-remove-btn").addEventListener("click", () => removeFavorite(card, el));
       grid.appendChild(el);
     });
@@ -260,9 +300,48 @@ async function removeFavorite(card, el) {
   }
 }
 
+// Group an array of cards by their binderSlug
+function groupByBinder(cards) {
+  return cards.reduce((groups, card) => {
+    const slug = card.binderSlug;
+    (groups[slug] = groups[slug] || []).push(card);
+    return groups;
+  }, {});
+}
+
+// ── Favorites multi-select ────────────────────────────────────
+
+let favSelectMode = false;
+const selectedFavs = new Map(); // key: cardId||query → card object
+
+function enterFavSelectMode() {
+  favSelectMode = true;
+  document.getElementById("fav-select-btn").textContent = "Done";
+  document.getElementById("favorites-grid").classList.add("fav-select-active");
+  renderFavBulkBar();
+}
+
+function exitFavSelectMode() {
+  favSelectMode = false;
+  selectedFavs.clear();
+  document.getElementById("fav-select-btn").textContent = "Select";
+  document.getElementById("favorites-grid").classList.remove("fav-select-active");
+  document.querySelectorAll(".fav-item.fav-selected").forEach(el => el.classList.remove("fav-selected"));
+  renderFavBulkBar();
+}
+
+function renderFavBulkBar() {
+  const bar = document.getElementById("fav-bulk-bar");
+  if (!bar) return;
+  const n = selectedFavs.size;
+  if (!favSelectMode || n === 0) { bar.classList.add("hidden"); return; }
+  bar.classList.remove("hidden");
+  document.getElementById("fav-bulk-count").textContent = `${n} card${n !== 1 ? "s" : ""} selected`;
+}
+
 // ── Trade Drawer ─────────────────────────────────────────────
 
-let tradeDrawerCard  = null;
+let tradeDrawerCards = [];       // array of wanted cards (1 for single, N for bulk)
 let myCards          = [];       // user's binder cards (loaded once per drawer open)
 let selectedOffers   = new Map(); // key: cardId||query → card object
 
@@ -368,30 +447,47 @@ function renderOfferedChips() {
 
 // ── Drawer open / close ───────────────────────────────────────
 
-async function openTradeDrawer(card) {
-  tradeDrawerCard = card;
+async function openTradeDrawer(cards) {
+  tradeDrawerCards = Array.isArray(cards) ? cards : [cards];
   selectedOffers.clear();
   renderOfferedChips();
 
-  // Populate "you want" preview
+  // Populate "you want" preview — show all selected cards
   const wantedEl = document.getElementById("trade-wanted-card");
-  const imgSrc = card.imageUrl || (() => {
-    if (!card.cardId) return "";
-    const i = card.cardId.lastIndexOf("-");
-    return i < 0 ? "" : `https://images.pokemontcg.io/${card.cardId.slice(0, i)}/${card.cardId.slice(i + 1)}.png`;
-  })();
-  wantedEl.innerHTML = `
-    ${imgSrc ? `<img src="${imgSrc}" alt="${card.name || card.query}" class="trade-wanted-img" />` : ""}
-    <div class="trade-wanted-info">
-      <div class="trade-wanted-name">${card.name || card.query}</div>
-      <div class="trade-wanted-binder">From: ${card.binderOwner || card.binderSlug}'s Binder</div>
-    </div>`;
+  const binderGroups = groupByBinder(tradeDrawerCards);
+  const binderCount = Object.keys(binderGroups).length;
+
+  wantedEl.innerHTML = tradeDrawerCards.map(card => {
+    const imgSrc = card.imageUrl || (() => {
+      if (!card.cardId) return "";
+      const i = card.cardId.lastIndexOf("-");
+      return i < 0 ? "" : `https://images.pokemontcg.io/${card.cardId.slice(0, i)}/${card.cardId.slice(i + 1)}.png`;
+    })();
+    return `
+      <div class="trade-wanted-row">
+        ${imgSrc ? `<img src="${imgSrc}" alt="${card.name || card.query}" class="trade-wanted-img" />` : ""}
+        <div class="trade-wanted-info">
+          <div class="trade-wanted-name">${card.name || card.query}</div>
+          <div class="trade-wanted-binder">From: ${card.binderOwner || card.binderSlug}'s Binder</div>
+        </div>
+      </div>`;
+  }).join("");
+
+  // Show multi-binder notice
+  const errEl = document.getElementById("trade-error");
+  if (binderCount > 1) {
+    errEl.textContent = `Note: This will send ${binderCount} separate trade proposals (one per binder).`;
+    errEl.classList.remove("hidden");
+    errEl.style.color = "var(--accent)";
+  } else {
+    errEl.classList.add("hidden");
+    errEl.style.color = "";
+  }
 
   document.getElementById("trade-card-search").value = "";
   document.getElementById("trade-card-results").innerHTML = "";
   document.getElementById("trade-card-results").classList.add("hidden");
   document.getElementById("trade-message").value = "";
-  document.getElementById("trade-error").classList.add("hidden");
   document.getElementById("trade-drawer-backdrop").classList.remove("hidden");
   document.getElementById("trade-drawer").classList.remove("hidden");
 
@@ -404,7 +500,7 @@ async function openTradeDrawer(card) {
 function closeTradeDrawer() {
   document.getElementById("trade-drawer-backdrop").classList.add("hidden");
   document.getElementById("trade-drawer").classList.add("hidden");
-  tradeDrawerCard = null;
+  tradeDrawerCards = [];
 }
 
 document.getElementById("trade-card-search").addEventListener("input", filterCardResults);
@@ -421,33 +517,38 @@ document.getElementById("trade-submit-btn").addEventListener("click", async () =
   if (!offeredCards.length) {
     errEl.textContent = "Select at least one card from your collection to offer.";
     errEl.classList.remove("hidden");
+    errEl.style.color = "";
     return;
   }
-  errEl.classList.add("hidden");
 
   const btn = document.getElementById("trade-submit-btn");
   btn.disabled = true;
   btn.textContent = "Sending…";
+  errEl.classList.add("hidden");
 
   try {
     const user  = netlifyIdentity.currentUser();
     const token = user ? await user.jwt() : null;
-    const res = await fetch("/.netlify/functions/create-trade", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        wantedCard:   tradeDrawerCard,
-        offeredCards,
-        message: document.getElementById("trade-message").value.trim(),
-      }),
-    });
-    if (!res.ok) throw new Error((await res.json()).error || `HTTP ${res.status}`);
+    const message = document.getElementById("trade-message").value.trim();
+
+    // Group wanted cards by binder — one trade proposal per binder
+    const binderGroups = groupByBinder(tradeDrawerCards);
+    await Promise.all(
+      Object.values(binderGroups).map(wantedCards =>
+        fetch("/.netlify/functions/create-trade", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ wantedCards, offeredCards, message }),
+        }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); })
+      )
+    );
     closeTradeDrawer();
     showView("trades");
     loadTradeProposals();
   } catch (err) {
     errEl.textContent = err.message;
     errEl.classList.remove("hidden");
+    errEl.style.color = "";
   } finally {
     btn.disabled = false;
     btn.textContent = "Send Trade Proposal";
@@ -585,30 +686,39 @@ async function sendTradeMessage(tradeId, inputEl, msgsEl) {
 }
 
 function buildTradeCard(trade, direction) {
-  const card = trade.wantedCard;
-  const imgSrc = card.imageUrl || (() => {
-    if (!card.cardId) return "";
-    const i = card.cardId.lastIndexOf("-");
-    return i < 0 ? "" : `https://images.pokemontcg.io/${card.cardId.slice(0, i)}/${card.cardId.slice(i + 1)}.png`;
-  })();
+  // Support both wantedCards (array) and legacy wantedCard (single)
+  const wantedCards = trade.wantedCards || (trade.wantedCard ? [trade.wantedCard] : []);
+  const card = wantedCards[0] || {};
 
   const el = document.createElement("div");
   el.className = "trade-card-item";
   el.dataset.tradeId = trade.id;
 
   const heading = direction === "received"
-    ? `<strong>${trade.initiatorName}</strong> wants your card:`
-    : `You want:`;
+    ? `<strong>${trade.initiatorName}</strong> wants ${wantedCards.length > 1 ? "these cards" : "your card"}:`
+    : `You want${wantedCards.length > 1 ? ` (${wantedCards.length} cards)` : ""}:`;
+
+  const wantedHtml = wantedCards.map(c => {
+    const imgSrc = c.imageUrl || (() => {
+      if (!c.cardId) return "";
+      const i = c.cardId.lastIndexOf("-");
+      return i < 0 ? "" : `https://images.pokemontcg.io/${c.cardId.slice(0, i)}/${c.cardId.slice(i + 1)}.png`;
+    })();
+    return `
+      <div class="trade-wanted-row">
+        ${imgSrc ? `<img src="${imgSrc}" alt="${c.name || c.query}" class="trade-card-img" />` : ""}
+        <div class="trade-card-info">
+          <div class="trade-card-name">${c.name || c.query}</div>
+          <div class="trade-card-binder">From: ${c.binderOwner || c.binderSlug}'s Binder</div>
+        </div>
+      </div>`;
+  }).join("");
 
   el.innerHTML = `
     <div class="trade-card-top">
       <div class="trade-card-preview">
-        ${imgSrc ? `<img src="${imgSrc}" alt="${card.name || card.query}" class="trade-card-img" />` : ""}
-        <div class="trade-card-info">
-          <div class="trade-card-heading">${heading}</div>
-          <div class="trade-card-name">${card.name || card.query}</div>
-          <div class="trade-card-binder">From: ${card.binderOwner || card.binderSlug}'s Binder</div>
-        </div>
+        <div class="trade-card-info"><div class="trade-card-heading">${heading}</div></div>
+        ${wantedHtml}
       </div>
       <div class="trade-card-meta">
         ${tradeStatusBadge(trade.status)}
@@ -816,26 +926,44 @@ document.getElementById("popup-fullscreen")?.addEventListener("click", () => {
 
 // ── Make an Offer modal ──────────────────────────────────────
 
-let offerTargetCard = null;
+let offerTargetCards = [];
 
-function openOfferModal(card) {
-  offerTargetCard = card;
-  const imgSrc = card.imageUrl || (() => {
-    if (!card.cardId) return "";
-    const i = card.cardId.lastIndexOf("-");
-    return i < 0 ? "" : `https://images.pokemontcg.io/${card.cardId.slice(0, i)}/${card.cardId.slice(i + 1)}.png`;
-  })();
-  document.getElementById("offer-card-preview").innerHTML = `
-    <div class="offer-card-preview-inner">
-      ${imgSrc ? `<img src="${imgSrc}" alt="${card.name || card.query}" class="offer-preview-img" />` : ""}
-      <div>
-        <div class="offer-preview-name">${card.name || card.query}</div>
-        <div class="offer-preview-binder">From: ${card.binderOwner || card.binderSlug}'s Binder</div>
-      </div>
-    </div>`;
+function openOfferModal(cardsOrCard) {
+  offerTargetCards = Array.isArray(cardsOrCard) ? cardsOrCard : [cardsOrCard];
+
+  // Build preview: show all cards (scrollable if many)
+  document.getElementById("offer-card-preview").innerHTML = offerTargetCards.map(card => {
+    const imgSrc = card.imageUrl || (() => {
+      if (!card.cardId) return "";
+      const i = card.cardId.lastIndexOf("-");
+      return i < 0 ? "" : `https://images.pokemontcg.io/${card.cardId.slice(0, i)}/${card.cardId.slice(i + 1)}.png`;
+    })();
+    return `
+      <div class="offer-card-preview-inner">
+        ${imgSrc ? `<img src="${imgSrc}" alt="${card.name || card.query}" class="offer-preview-img" />` : ""}
+        <div>
+          <div class="offer-preview-name">${card.name || card.query}</div>
+          <div class="offer-preview-binder">From: ${card.binderOwner || card.binderSlug}'s Binder</div>
+        </div>
+      </div>`;
+  }).join("");
+
+  const binderCount = Object.keys(groupByBinder(offerTargetCards)).length;
+  const errEl = document.getElementById("offer-error");
+  if (binderCount > 1) {
+    errEl.textContent = `Note: This will send ${binderCount} separate offers (one per binder).`;
+    errEl.style.color = "var(--accent)";
+  } else {
+    errEl.textContent = "";
+    errEl.style.color = "";
+  }
+
+  // Update label to reflect total vs single
+  const label = document.querySelector(".offer-field-label");
+  if (label) label.textContent = offerTargetCards.length > 1 ? `Your Total Offer (USD)` : `Your Offer (USD)`;
+
   document.getElementById("offer-price-input").value = "";
   document.getElementById("offer-message-input").value = "";
-  document.getElementById("offer-error").textContent = "";
   document.getElementById("offer-modal-backdrop").classList.remove("hidden");
   document.getElementById("offer-modal").classList.remove("hidden");
   setTimeout(() => document.getElementById("offer-price-input").focus(), 50);
@@ -844,7 +972,7 @@ function openOfferModal(card) {
 function closeOfferModal() {
   document.getElementById("offer-modal-backdrop").classList.add("hidden");
   document.getElementById("offer-modal").classList.add("hidden");
-  offerTargetCard = null;
+  offerTargetCards = [];
 }
 
 document.getElementById("offer-modal-close").addEventListener("click", closeOfferModal);
@@ -852,13 +980,17 @@ document.getElementById("offer-cancel-btn").addEventListener("click", closeOffer
 document.getElementById("offer-modal-backdrop").addEventListener("click", closeOfferModal);
 
 document.getElementById("offer-submit-btn").addEventListener("click", async () => {
-  const errEl  = document.getElementById("offer-error");
-  const price  = parseFloat(document.getElementById("offer-price-input").value);
-  const msg    = document.getElementById("offer-message-input").value.trim();
+  const errEl    = document.getElementById("offer-error");
+  const price    = parseFloat(document.getElementById("offer-price-input").value);
+  const msg      = document.getElementById("offer-message-input").value.trim();
   const submitBtn = document.getElementById("offer-submit-btn");
 
-  if (!offerTargetCard) return;
-  if (!price || price <= 0) { errEl.textContent = "Please enter a valid offer amount."; return; }
+  if (!offerTargetCards.length) return;
+  if (!price || price <= 0) {
+    errEl.textContent = "Please enter a valid offer amount.";
+    errEl.style.color = "";
+    return;
+  }
 
   errEl.textContent = "";
   submitBtn.disabled = true;
@@ -866,15 +998,22 @@ document.getElementById("offer-submit-btn").addEventListener("click", async () =
 
   try {
     const token = await netlifyIdentity.currentUser()?.jwt();
-    const res = await fetch("/.netlify/functions/create-offer", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ card: offerTargetCard, price, message: msg }),
-    });
-    if (!res.ok) throw new Error((await res.json()).error || "Failed");
+
+    // Group by binder — one offer per binder
+    const binderGroups = groupByBinder(offerTargetCards);
+    await Promise.all(
+      Object.values(binderGroups).map(cards =>
+        fetch("/.netlify/functions/create-offer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ cards, price, message: msg }),
+        }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); })
+      )
+    );
     closeOfferModal();
   } catch (err) {
     errEl.textContent = err.message;
+    errEl.style.color = "";
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = "Submit Offer";
@@ -977,16 +1116,29 @@ async function loadOffersView() {
 }
 
 function buildOfferCard(offer, direction) {
-  const card   = offer.card;
-  const imgSrc = card.imageUrl || (() => {
-    if (!card.cardId) return "";
-    const i = card.cardId.lastIndexOf("-");
-    return i < 0 ? "" : `https://images.pokemontcg.io/${card.cardId.slice(0, i)}/${card.cardId.slice(i + 1)}.png`;
-  })();
+  // Support both cards (array) and legacy card (single)
+  const cards = offer.cards || (offer.card ? [offer.card] : []);
+  const card = cards[0] || {};
 
   const heading = direction === "received"
-    ? `<strong>${offer.initiatorEmail}</strong> wants your card:`
-    : `You offered on:`;
+    ? `<strong>${offer.initiatorEmail}</strong> wants ${cards.length > 1 ? `${cards.length} cards` : "your card"}:`
+    : `You offered on${cards.length > 1 ? ` (${cards.length} cards)` : ""}:`;
+
+  const cardsHtml = cards.map(c => {
+    const imgSrc = c.imageUrl || (() => {
+      if (!c.cardId) return "";
+      const i = c.cardId.lastIndexOf("-");
+      return i < 0 ? "" : `https://images.pokemontcg.io/${c.cardId.slice(0, i)}/${c.cardId.slice(i + 1)}.png`;
+    })();
+    return `
+      <div class="trade-wanted-row">
+        ${imgSrc ? `<img src="${imgSrc}" alt="${c.name || c.query}" class="trade-card-img" />` : ""}
+        <div class="trade-card-info">
+          <div class="trade-card-name">${c.name || c.query}</div>
+          <div class="trade-card-binder">From: ${c.binderOwner || c.binderSlug}'s Binder</div>
+        </div>
+      </div>`;
+  }).join("");
 
   const el = document.createElement("div");
   el.className = "trade-card-item";
@@ -995,12 +1147,8 @@ function buildOfferCard(offer, direction) {
   el.innerHTML = `
     <div class="trade-card-top">
       <div class="trade-card-preview">
-        ${imgSrc ? `<img src="${imgSrc}" alt="${card.name || card.query}" class="trade-card-img" />` : ""}
-        <div class="trade-card-info">
-          <div class="trade-card-heading">${heading}</div>
-          <div class="trade-card-name">${card.name || card.query}</div>
-          <div class="trade-card-binder">From: ${card.binderOwner || card.binderSlug}'s Binder</div>
-        </div>
+        <div class="trade-card-info"><div class="trade-card-heading">${heading}</div></div>
+        ${cardsHtml}
       </div>
       <div class="trade-card-meta">
         ${tradeStatusBadge(offer.status)}

@@ -1,5 +1,6 @@
 // POST /.netlify/functions/create-offer
-// Body: { card: { cardId, query, imageUrl, binderSlug, binderOwner }, price, message }
+// Body: { cards: card[], price, message }
+// (also accepts legacy card: single — wrapped to array)
 
 const { getSentOffers, putSentOffers, getReceivedOffers, putReceivedOffers } = require("./_blobs");
 
@@ -10,15 +11,19 @@ exports.handler = async (event, context) => {
   if (!user) return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
 
   try {
-    const { card, price, message } = JSON.parse(event.body);
-    if (!card?.binderSlug || !price || Number(price) <= 0) {
+    const body = JSON.parse(event.body);
+    // Support both cards (array) and legacy card (single)
+    const cards = body.cards || (body.card ? [body.card] : null);
+    const { price, message } = body;
+    if (!cards?.length || !cards[0].binderSlug || !price || Number(price) <= 0) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing or invalid fields" }) };
     }
 
+    const binderSlug = cards[0].binderSlug;
     const offer = {
       id:             `offer_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       status:         "pending",
-      card,
+      cards,
       price:          Number(price),
       message:        (message || "").trim(),
       initiatorId:    user.sub,
@@ -28,13 +33,13 @@ exports.handler = async (event, context) => {
 
     const [sent, received] = await Promise.all([
       getSentOffers(user.sub),
-      getReceivedOffers(card.binderSlug),
+      getReceivedOffers(binderSlug),
     ]);
     sent.unshift(offer);
     received.unshift(offer);
     await Promise.all([
       putSentOffers(user.sub, sent),
-      putReceivedOffers(card.binderSlug, received),
+      putReceivedOffers(binderSlug, received),
     ]);
 
     return {

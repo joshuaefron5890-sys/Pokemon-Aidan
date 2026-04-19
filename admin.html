@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" />
-  <link rel="stylesheet" href="admin.css?v=6" />
+  <link rel="stylesheet" href="admin.css?v=7" />
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
@@ -187,11 +187,29 @@
       <div class="view hidden" id="view-favorites">
         <div class="shared-view">
           <div class="shared-header">
-            <h2>My Favorites</h2>
-            <p>Cards you've saved from other binders</p>
+            <div>
+              <h2>My Favorites</h2>
+              <p>Cards you've saved from other binders</p>
+            </div>
+            <button id="fav-select-btn" class="fav-select-toggle-btn" style="display:none">Select</button>
           </div>
           <div id="favorites-grid" class="favorites-grid">
             <!-- Populated by admin.js -->
+          </div>
+        </div>
+        <!-- Bulk action bar -->
+        <div id="fav-bulk-bar" class="fav-bulk-bar hidden">
+          <span id="fav-bulk-count" class="fav-bulk-count"></span>
+          <div class="fav-bulk-actions">
+            <button id="fav-bulk-trade-btn" class="fav-bulk-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              Propose Trade
+            </button>
+            <button id="fav-bulk-offer-btn" class="fav-bulk-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              Make Offer
+            </button>
+            <button id="fav-bulk-cancel-btn" class="fav-bulk-cancel-btn">Cancel</button>
           </div>
         </div>
       </div>
@@ -515,7 +533,7 @@
     </div>
   </div>
 
-  <script src="admin.js?v=10"></script>
+  <script src="admin.js?v=11"></script>
   <script src="add-card-modal.js"></script>
 </body>
 </html>

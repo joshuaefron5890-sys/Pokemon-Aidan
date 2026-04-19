@@ -363,6 +363,10 @@ a { color: inherit; text-decoration: none; }
 
 .shared-header {
   margin-bottom: 1.75rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
 }
 .shared-header h2 {
   font-size: 1.4rem;
@@ -709,6 +713,101 @@ a.binder-card { cursor: pointer; }
 }
 .fav-offer-btn:hover { background: rgba(16,185,129,.2); border-color: rgba(16,185,129,.5); color: #34d399; }
 
+/* ── Favorites multi-select ─────────────────────────────────── */
+.fav-select-toggle-btn {
+  background: rgba(0,217,255,.08);
+  border: 1px solid rgba(0,217,255,.3);
+  color: var(--accent);
+  font-size: .75rem;
+  font-weight: 700;
+  font-family: inherit;
+  padding: .35rem .85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background .15s, border-color .15s;
+}
+.fav-select-toggle-btn:hover { background: rgba(0,217,255,.14); border-color: rgba(0,217,255,.5); }
+
+.fav-select-overlay {
+  display: none;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface2);
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color .15s, background .15s;
+  color: transparent;
+}
+.fav-select-active .fav-select-overlay { display: flex; }
+.fav-select-active .fav-item { cursor: pointer; }
+.fav-item.fav-selected { border-color: var(--accent); background: rgba(0,217,255,.06); }
+.fav-item.fav-selected .fav-select-overlay {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+}
+.fav-select-active .fav-item-actions { pointer-events: none; opacity: .35; }
+
+.fav-bulk-bar {
+  position: sticky;
+  bottom: 0;
+  background: rgba(8,14,26,.92);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  padding: .85rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  z-index: 20;
+}
+.fav-bulk-count { font-size: .85rem; font-weight: 600; color: var(--accent); }
+.fav-bulk-actions { display: flex; gap: .5rem; align-items: center; }
+.fav-bulk-btn {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  background: rgba(0,217,255,.1);
+  border: 1px solid rgba(0,217,255,.35);
+  color: var(--accent);
+  font-size: .78rem;
+  font-weight: 700;
+  font-family: inherit;
+  padding: .4rem .9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.fav-bulk-btn:hover { background: rgba(0,217,255,.18); border-color: rgba(0,217,255,.55); }
+.fav-bulk-cancel-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: .78rem;
+  font-weight: 600;
+  font-family: inherit;
+  padding: .4rem .85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.fav-bulk-cancel-btn:hover { border-color: rgba(255,255,255,.2); color: var(--text); }
+
+/* ── Trade wanted row (for multi-card display) ───────────────── */
+.trade-wanted-row {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .35rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.trade-wanted-row:last-child { border-bottom: none; }
+#trade-wanted-card { max-height: 260px; overflow-y: auto; }
+
 /* ── Offer modal ─────────────────────────────────────────────── */
 .offer-modal-backdrop {
   position: fixed;
@@ -755,12 +854,17 @@ a.binder-card { cursor: pointer; }
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: .75rem;
+  max-height: 220px;
+  overflow-y: auto;
 }
 .offer-card-preview-inner {
   display: flex;
   align-items: center;
   gap: .75rem;
+  padding: .2rem 0;
+  border-bottom: 1px solid var(--border);
 }
+.offer-card-preview-inner:last-child { border-bottom: none; }
 .offer-preview-img {
   width: 48px;
   height: 67px;

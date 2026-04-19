@@ -1,5 +1,6 @@
 // POST /.netlify/functions/create-trade
-// Body: { wantedCard, offeredCards: string[], message }
+// Body: { wantedCards: card[], offeredCards: string[], message }
+// (also accepts legacy wantedCard: card — wrapped to array)
 
 const { getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades } = require("./_blobs");
 
@@ -10,11 +11,15 @@ exports.handler = async (event, context) => {
   if (!user) return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
 
   try {
-    const { wantedCard, offeredCards, message } = JSON.parse(event.body);
-    if (!wantedCard || !offeredCards?.length) {
-      return { statusCode: 400, body: JSON.stringify({ error: "Missing wantedCard or offeredCards" }) };
+    const body = JSON.parse(event.body);
+    // Support both wantedCards (array) and legacy wantedCard (single)
+    const wantedCards = body.wantedCards || (body.wantedCard ? [body.wantedCard] : null);
+    const { offeredCards, message } = body;
+    if (!wantedCards?.length || !offeredCards?.length) {
+      return { statusCode: 400, body: JSON.stringify({ error: "Missing wantedCards or offeredCards" }) };
     }
 
+    const binderSlug = wantedCards[0].binderSlug;
     const trade = {
       id: `tr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       status: "pending",
@@ -22,14 +27,14 @@ exports.handler = async (event, context) => {
       initiatorId: user.sub,
       initiatorEmail: user.email,
       initiatorName: user.user_metadata?.full_name || user.email.split("@")[0],
-      wantedCard,
+      wantedCards,
       offeredCards,
       message: message || "",
     };
 
     const [sent, received] = await Promise.all([
       getSentTrades(user.sub),
-      getReceivedTrades(wantedCard.binderSlug),
+      getReceivedTrades(binderSlug),
     ]);
 
     sent.unshift(trade);
@@ -37,7 +42,7 @@ exports.handler = async (event, context) => {
 
     await Promise.all([
       putSentTrades(user.sub, sent),
-      putReceivedTrades(wantedCard.binderSlug, received),
+      putReceivedTrades(binderSlug, received),
     ]);
 
     return {
