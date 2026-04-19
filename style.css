@@ -1051,7 +1051,6 @@ footer a {
 
 
 /* ── Pricing hidden by default; owner toggle adds .prices-on to body ── */
-body:not(.prices-on) .card-price-badge,
 body:not(.prices-on) .card-price,
 body:not(.prices-on) .card-price-unknown,
 body:not(.prices-on) .card-price-static,
