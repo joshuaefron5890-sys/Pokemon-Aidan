@@ -324,7 +324,7 @@ function enterFavSelectMode() {
 function exitFavSelectMode() {
   favSelectMode = false;
   selectedFavs.clear();
-  document.getElementById("fav-select-btn").textContent = "Select";
+  document.getElementById("fav-select-btn").textContent = "Select Multiple";
   document.getElementById("favorites-grid").classList.remove("fav-select-active");
   document.querySelectorAll(".fav-item.fav-selected").forEach(el => el.classList.remove("fav-selected"));
   renderFavBulkBar();

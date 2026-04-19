@@ -173,13 +173,7 @@ a { color: inherit; text-decoration: none; }
 .view-public-link svg { flex-shrink: 0; }
 
 .sidebar-user {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  box-shadow: 0 0 12px rgba(0,217,255,.35);
-  cursor: pointer;
-  overflow: hidden;
-  flex-shrink: 0;
+  display: none;
 }
 .sidebar-user-icon { display: none; }
 .sidebar-user-info { display: none; }
