@@ -862,6 +862,7 @@ a.binder-card { cursor: pointer; }
   backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
   padding: .85rem 1.5rem;
+  padding-right: 220px;
   display: flex;
   align-items: center;
   justify-content: space-between;

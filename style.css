@@ -1136,3 +1136,40 @@ footer { display: none !important; }
 /* ── Netlify Identity widget: hide floating button, show modal on .nf-open ── */
 #netlify-identity-widget { visibility: hidden !important; }
 #netlify-identity-widget.nf-open { visibility: visible !important; }
+
+/* ── Owner price toggle ──────────────────────────────────── */
+body.prices-off .card-price-badge,
+body.prices-off .card-price { display: none !important; }
+
+.price-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  cursor: pointer;
+  user-select: none;
+  padding: .45rem .9rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: .83rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: border-color .15s, color .15s;
+  white-space: nowrap;
+}
+.price-toggle-label:has(input:checked) { border-color: rgba(0,217,255,.4); color: var(--text); }
+.price-toggle-label input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 30px; height: 17px; border-radius: 9px;
+  background: var(--border); position: relative;
+  cursor: pointer; flex-shrink: 0;
+  transition: background .2s;
+}
+.price-toggle-label input[type="checkbox"]:checked { background: linear-gradient(135deg,#00d9ff,#9b6dff); }
+.price-toggle-label input[type="checkbox"]::after {
+  content: ""; position: absolute;
+  top: 2px; left: 2px;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: #fff; transition: left .2s;
+}
+.price-toggle-label input[type="checkbox"]:checked::after { left: 15px; }

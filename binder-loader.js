@@ -68,7 +68,10 @@ async function initBinder() {
 
     // Show owner chat bubble whenever the owner views their own binder
     const inAdminFrame = window.self !== window.top;
-    if (data.isOwner) initOwnerBubble(slug, data.owner);
+    if (data.isOwner) {
+      initOwnerBubble(slug, data.owner);
+      initPriceToggle();
+    }
 
     // Enable favorites for all non-owner viewers (guests see hearts too; login modal on first click)
     const currentUser = window.netlifyIdentity?.currentUser();
@@ -87,6 +90,31 @@ async function initBinder() {
 function showError(msg) {
   const el = document.getElementById("loading-status");
   if (el) el.textContent = msg;
+}
+
+function initPriceToggle() {
+  const toolbar = document.getElementById("filter-bar");
+  if (!toolbar) return;
+
+  const showPrices = localStorage.getItem("binder_show_prices") !== "false";
+  document.body.classList.toggle("prices-off", !showPrices);
+
+  const wrap = document.createElement("div");
+  wrap.className = "filter-group";
+  wrap.innerHTML = `
+    <label class="price-toggle-label" title="Toggle market price display">
+      <input type="checkbox" id="price-toggle" ${showPrices ? "checked" : ""}>
+      <span class="price-toggle-track"></span>
+      <span class="price-toggle-text">Market Prices</span>
+    </label>
+  `;
+  toolbar.appendChild(wrap);
+
+  document.getElementById("price-toggle").addEventListener("change", e => {
+    const show = e.target.checked;
+    localStorage.setItem("binder_show_prices", show ? "true" : "false");
+    document.body.classList.toggle("prices-off", !show);
+  });
 }
 
 function showPrivateLock(owner) {
