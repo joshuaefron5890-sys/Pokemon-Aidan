@@ -7,6 +7,7 @@ let wizardData = {
   owner:     "",
   slug:      "",
   isPublic:  false,
+  location:  null,   // { zip, city, state } resolved from zip lookup
   token:     null,   // JWT after signup/login
   cards:     [],     // confirmed cards from step 3
   photo:     null,   // base64 JPEG after crop (persisted so page reloads don't lose it)
@@ -316,14 +317,63 @@ document.querySelectorAll(".vis-option").forEach(opt => {
   });
 });
 
+// ── Zip code lookup ───────────────────────────────────────────
+
+let zipLookupTimer = null;
+let resolvedLocation = null; // { zip, city, state } once valid
+
+document.getElementById("wizard-zip").addEventListener("input", e => {
+  const zip = e.target.value.trim();
+  clearTimeout(zipLookupTimer);
+  resolvedLocation = null;
+  const preview  = document.getElementById("wizard-zip-preview");
+  const cityEl   = document.getElementById("wizard-zip-city");
+  preview.classList.add("hidden");
+  if (zip.length === 5 && /^\d{5}$/.test(zip)) {
+    zipLookupTimer = setTimeout(() => doZipLookup(zip), 400);
+  }
+});
+
+async function doZipLookup(zip) {
+  const preview = document.getElementById("wizard-zip-preview");
+  const cityEl  = document.getElementById("wizard-zip-city");
+  try {
+    const res  = await fetch(`https://api.zippopotam.us/us/${zip}`);
+    if (!res.ok) { cityEl.textContent = "Zip code not found"; preview.classList.remove("hidden"); return; }
+    const data  = await res.json();
+    const place = data.places?.[0];
+    if (place) {
+      const city  = place["place name"];
+      const state = place["state abbreviation"];
+      resolvedLocation = { zip, city, state };
+      cityEl.textContent = `${city}, ${state}`;
+      preview.classList.remove("hidden");
+    }
+  } catch {
+    cityEl.textContent = "Could not look up zip code";
+    document.getElementById("wizard-zip-preview").classList.remove("hidden");
+  }
+}
+
+// Restore zip if returning after email confirmation
+if (wizardData.location) {
+  resolvedLocation = wizardData.location;
+  document.getElementById("wizard-zip").value = wizardData.location.zip;
+  document.getElementById("wizard-zip-city").textContent = `${wizardData.location.city}, ${wizardData.location.state}`;
+  document.getElementById("wizard-zip-preview").classList.remove("hidden");
+}
+
 document.getElementById("step1-next").addEventListener("click", () => {
   const owner = ownerInput.value.trim();
   const slug  = slugInput.value.trim();
+  const zip   = document.getElementById("wizard-zip").value.trim();
   const errEl = document.getElementById("step1-error");
   errEl.textContent = "";
 
   if (!owner) { errEl.textContent = "Please enter your name."; return; }
   if (!slugValid(slug)) { errEl.textContent = "Please enter a valid binder URL."; return; }
+  if (!zip || !/^\d{5}$/.test(zip)) { errEl.textContent = "Please enter a valid 5-digit zip code."; return; }
+  if (!resolvedLocation) { errEl.textContent = "Zip code not recognized — please try again."; return; }
 
   // Auto-apply crop if user clicked Continue without pressing "Use Photo"
   if (!cropArea.classList.contains("hidden") && cropImg) {
@@ -333,6 +383,7 @@ document.getElementById("step1-next").addEventListener("click", () => {
   wizardData.owner    = owner;
   wizardData.slug     = slug;
   wizardData.isPublic = document.querySelector("[name=visibility]:checked")?.value !== "private";
+  wizardData.location = resolvedLocation;
   saveState();
   goTo(2);
 });
@@ -572,6 +623,7 @@ async function createBinder() {
         isPublic: wizardData.isPublic,
         cards:    wizardData.cards,
         photo:    pendingPhoto || wizardData.photo || null,
+        location: wizardData.location || null,
       }),
     });
     const data = await res.json();

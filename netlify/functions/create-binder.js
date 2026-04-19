@@ -2,7 +2,7 @@
 // POST { slug, owner, isPublic, cards, photo? }
 // Requires Netlify Identity auth
 
-const { getManifest, putManifest, putBinder, putPhoto } = require("./_blobs");
+const { getManifest, putManifest, putBinder, putPhoto, putLocation } = require("./_blobs");
 const { getFile } = require("./_gh");
 
 function slugValid(slug) {
@@ -22,7 +22,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { slug, owner, isPublic, cards, photo } = JSON.parse(event.body);
+    const { slug, owner, isPublic, cards, photo, location } = JSON.parse(event.body);
 
     if (!slugValid(slug)) {
       return { statusCode: 400, body: JSON.stringify({ error: "Invalid slug. Use 3-30 lowercase letters, numbers, and hyphens." }) };
@@ -69,6 +69,10 @@ exports.handler = async (event, context) => {
 
     blobsManifest.push({ slug, owner: owner.trim(), email: user.email, public: Boolean(isPublic), hasPhoto, cardCount: binder.cards.length, createdAt: now });
     await putManifest(blobsManifest);
+
+    if (location?.city && location?.state) {
+      await putLocation(slug, { city: location.city, state: location.state });
+    }
 
     return {
       statusCode: 200,
