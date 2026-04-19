@@ -1266,4 +1266,11 @@ const CARD_LIST = [
     tcgUrl: "https://prices.pokemontcg.io/tcgplayer/sv9-165",
     fallbackPrice: 3.23,
   },
+  {
+    query: "Blastoise ex 009/165",
+    cardId: "sv3pt5-9",
+    setName: "151",
+    tcgUrl: "https://prices.pokemontcg.io/tcgplayer/sv3pt5-9",
+    fallbackPrice: 1.88,
+  },
 ];
