@@ -751,15 +751,15 @@ function _buildEditModal() {
       <div class="cem-body">
 
         <div class="cem-section">Identity</div>
-        <label class="cem-label">Card ID <span class="cem-hint">(pokemontcg.io, e.g. sv8-232)</span>
+        <label class="cem-label">TCG URL <span class="cem-hint">(link when card is clicked — refresh auto-fills Card ID &amp; metadata)</span>
           <div class="cem-input-row">
-            <input id="cem-card-id" class="cem-input" type="text" placeholder="e.g. sv8-232" autocomplete="off" />
+            <input id="cem-tcg-url" class="cem-input" type="url" placeholder="https://www.tcgplayer.com/…" autocomplete="off" />
             <button id="cem-refresh-btn" class="cem-refresh-btn" disabled>↺ Refresh</button>
           </div>
           <span id="cem-refresh-status" class="cem-refresh-status"></span>
         </label>
-        <label class="cem-label">TCG URL <span class="cem-hint">(link when card is clicked)</span>
-          <input id="cem-tcg-url" class="cem-input" type="url" placeholder="https://www.tcgplayer.com/…" autocomplete="off" />
+        <label class="cem-label">Card ID <span class="cem-hint">(pokemontcg.io — auto-filled on refresh, or enter manually)</span>
+          <input id="cem-card-id" class="cem-input" type="text" placeholder="e.g. sv8-232" autocomplete="off" />
         </label>
 
         <div class="cem-section">Image</div>
@@ -811,9 +811,8 @@ function _buildEditModal() {
   el.querySelector("#cem-cancel").addEventListener("click", closeEditModal);
   el.querySelector(".cem-backdrop").addEventListener("click", closeEditModal);
 
-  el.querySelector("#cem-card-id").addEventListener("input", () => {
-    const changed = el.querySelector("#cem-card-id").value.trim() !== (_cemCard?.overrides?.cardId || "");
-    el.querySelector("#cem-refresh-btn").disabled = !changed;
+  el.querySelector("#cem-tcg-url").addEventListener("input", () => {
+    el.querySelector("#cem-refresh-btn").disabled = !el.querySelector("#cem-tcg-url").value.trim();
   });
   el.querySelector("#cem-image-url").addEventListener("input", () => {
     const v = el.querySelector("#cem-image-url").value.trim();
@@ -860,7 +859,7 @@ function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
   const u = m.querySelector("#cem-number");  u.value = overrides.numberOverride || ""; u.placeholder = apiNum    || "API value";
   const r = m.querySelector("#cem-rarity");  r.value = overrides.rarityOverride  || ""; r.placeholder = apiRarity || "API value";
 
-  m.querySelector("#cem-refresh-btn").disabled = true;
+  m.querySelector("#cem-refresh-btn").disabled = !(overrides.tcgUrl || card?.tcgplayer?.url || "");
   m.querySelector("#cem-refresh-status").textContent = "";
   m.querySelector("#cem-save").disabled = false;
   m.querySelector("#cem-save").textContent = "Save Changes";
@@ -876,26 +875,62 @@ function closeEditModal() {
   _cemCard = null;
 }
 
+function _parseTcgUrl(url) {
+  try {
+    const slug = new URL(url).pathname.split("/").filter(Boolean).pop() || "";
+    const clean = slug.startsWith("pokemon-") ? slug.slice(8) : slug;
+    const parts = clean.split("-");
+
+    // Peel trailing numeric segments: if two in a row it's number-total format; keep the number
+    let number = "";
+    if (parts.length && /^\d+$/.test(parts[parts.length - 1])) {
+      const last = parts.pop();
+      if (parts.length && /^\d+$/.test(parts[parts.length - 1])) {
+        number = parts.pop(); // number-total: discard total, keep number
+      } else {
+        number = last;
+      }
+    }
+
+    // Peel trailing locale code (exactly 2 lowercase letters: en, jp, de, ko, fr)
+    if (parts.length && /^[a-z]{2}$/.test(parts[parts.length - 1])) {
+      parts.pop();
+    }
+
+    return { nameParts: parts, number };
+  } catch {
+    return { nameParts: [], number: "" };
+  }
+}
+
 async function _refreshCardData() {
   const m = _getModal();
-  const newId = m.querySelector("#cem-card-id").value.trim();
-  if (!newId) return;
+  const tcgUrl = m.querySelector("#cem-tcg-url").value.trim();
+  if (!tcgUrl) return;
 
   const refreshBtn = m.querySelector("#cem-refresh-btn");
   const statusEl   = m.querySelector("#cem-refresh-status");
-  refreshBtn.disabled   = true;
-  statusEl.textContent  = "Fetching…";
-  statusEl.className    = "cem-refresh-status";
+  refreshBtn.disabled  = true;
+  statusEl.textContent = "Fetching…";
+  statusEl.className   = "cem-refresh-status";
 
   try {
-    // Bust the local cache so we get fresh data for this ID
-    const cache = loadCache();
-    delete cache[newId];
-    saveCache(cache);
+    const { nameParts, number } = _parseTcgUrl(tcgUrl);
 
-    const card = await fetchCard(_cemCard.query, null, newId);
+    let card = null;
+
+    // Progressive search: skip 0, 1, 2, … leading slug words (set-name words)
+    // until the remaining words form a valid card name that matches
+    const maxSkip = Math.min(nameParts.length - 1, 8);
+    for (let skip = 0; skip <= maxSkip && !card; skip++) {
+      const nameWords = nameParts.slice(skip);
+      if (!nameWords.length) break;
+      const query = number ? `${nameWords.join(" ")} ${number}` : nameWords.join(" ");
+      card = await fetchCard(query, null, null);
+    }
+
     if (!card) {
-      statusEl.textContent = "Card not found";
+      statusEl.textContent = "Card not found — try entering the Card ID manually";
       statusEl.classList.add("cem-err");
       refreshBtn.disabled = false;
       return;
@@ -903,33 +938,30 @@ async function _refreshCardData() {
 
     _cemCard.card = card;
 
-    // Repopulate placeholders and any non-overridden fields with fresh API data
+    // Auto-fill Card ID with the resolved card
+    m.querySelector("#cem-card-id").value = card.id || "";
+
+    // Repopulate metadata placeholders with fresh API data
     const n = m.querySelector("#cem-name");
     const s = m.querySelector("#cem-set-name");
     const u = m.querySelector("#cem-number");
     const r = m.querySelector("#cem-rarity");
-    n.placeholder = card.name          || "API value"; if (!n.value) n.value = "";
-    s.placeholder = card.set?.name     || "API value"; if (!s.value) s.value = "";
-    u.placeholder = _apiNumber(card)   || "API value"; if (!u.value) u.value = "";
-    r.placeholder = card.rarity        || "API value"; if (!r.value) r.value = "";
+    n.placeholder = card.name        || "API value"; if (!n.value) n.value = "";
+    s.placeholder = card.set?.name   || "API value"; if (!s.value) s.value = "";
+    u.placeholder = _apiNumber(card) || "API value"; if (!u.value) u.value = "";
+    r.placeholder = card.rarity      || "API value"; if (!r.value) r.value = "";
 
-    // Update TCG URL field if it wasn't manually changed
-    const tcgInput = m.querySelector("#cem-tcg-url");
-    if (!tcgInput.value || tcgInput.value === (_cemCard.overrides?.tcgUrl || "")) {
-      tcgInput.value = card.tcgplayer?.url || "";
-    }
-
-    // Update image preview
+    // Update image preview if not manually overridden
     if (!m.querySelector("#cem-image-url").value) {
       const fresh = card.images?.large || card.images?.small || "";
       const prev  = m.querySelector("#cem-preview");
-      prev.src          = fresh;
+      prev.src = fresh;
       prev.style.display = fresh ? "" : "none";
     }
 
-    statusEl.textContent = "✓ Data refreshed";
+    statusEl.textContent = `✓ Found: ${card.name} (${card.id})`;
     statusEl.classList.add("cem-ok");
-    setTimeout(() => { statusEl.textContent = ""; statusEl.className = "cem-refresh-status"; }, 3000);
+    setTimeout(() => { statusEl.textContent = ""; statusEl.className = "cem-refresh-status"; }, 4000);
   } catch (err) {
     statusEl.textContent = `Error: ${err.message}`;
     statusEl.classList.add("cem-err");
