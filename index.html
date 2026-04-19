@@ -10,6 +10,26 @@
     /* ── Reset & base ────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── Parallax background ─────────────────────────────── */
+    #lp-bg {
+      position: fixed; inset: 0; z-index: 0;
+      overflow: hidden; pointer-events: none;
+    }
+    .lp-orb {
+      position: absolute; border-radius: 50%;
+      will-change: transform;
+      transition: transform .05s linear;
+    }
+    .lp-particle {
+      position: absolute; border-radius: 50%;
+      animation: lp-float linear infinite;
+    }
+    @keyframes lp-float {
+      0%   { transform: translateY(0)   scale(1);   opacity: var(--op); }
+      50%  { transform: translateY(-45vh) scale(.9); opacity: calc(var(--op) * .6); }
+      100% { transform: translateY(-95vh) scale(.8); opacity: 0; }
+    }
+
     /* ── Nav ─────────────────────────────────────────────── */
     .lp-nav {
       position: sticky; top: 0; z-index: 50;
@@ -207,7 +227,14 @@
   </style>
 </head>
 <body>
-  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+  <!-- Parallax background: gradient orbs + floating particles -->
+  <div id="lp-bg" aria-hidden="true">
+    <div class="lp-orb" id="lp-orb-1" style="width:800px;height:800px;background:radial-gradient(circle,rgba(29,78,216,.22) 0%,transparent 65%);top:-280px;left:-240px"></div>
+    <div class="lp-orb" id="lp-orb-2" style="width:640px;height:640px;background:radial-gradient(circle,rgba(109,40,217,.18) 0%,transparent 65%);top:15%;right:-200px"></div>
+    <div class="lp-orb" id="lp-orb-3" style="width:520px;height:520px;background:radial-gradient(circle,rgba(6,182,212,.14) 0%,transparent 65%);bottom:0;left:5%"></div>
+    <div class="lp-orb" id="lp-orb-4" style="width:360px;height:360px;background:radial-gradient(circle,rgba(247,201,72,.09) 0%,transparent 65%);top:55%;left:42%"></div>
+    <div id="lp-particles"></div>
+  </div>
 
   <!-- ── Nav ── -->
   <nav class="lp-nav">
@@ -315,8 +342,56 @@
     via the <a href="https://pokemontcg.io/" target="_blank" rel="noopener">Pokémon TCG API</a>.
   </footer>
 
-  <script src="background.js?v=44"></script>
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+    // ── Parallax orbs on scroll ───────────────────────────
+    const orbDefs = [
+      { id: 'lp-orb-1', speed: 0.07 },
+      { id: 'lp-orb-2', speed: 0.16 },
+      { id: 'lp-orb-3', speed: 0.05 },
+      { id: 'lp-orb-4', speed: 0.11 },
+    ];
+    const orbs = orbDefs.map(d => ({ el: document.getElementById(d.id), speed: d.speed }));
+    let rafPending = false;
+    window.addEventListener('scroll', () => {
+      if (!rafPending) {
+        requestAnimationFrame(() => {
+          const y = window.scrollY;
+          orbs.forEach(({ el, speed }) => {
+            if (el) el.style.transform = `translateY(${y * speed}px)`;
+          });
+          rafPending = false;
+        });
+        rafPending = true;
+      }
+    }, { passive: true });
+
+    // ── Floating particles ────────────────────────────────
+    (function () {
+      const container = document.getElementById('lp-particles');
+      if (!container) return;
+      const colors = ['96,165,250', '167,139,250', '247,201,72', '6,182,212'];
+      for (let i = 0; i < 38; i++) {
+        const d = document.createElement('div');
+        const size  = 1.5 + Math.random() * 3;
+        const dur   = 18 + Math.random() * 28;
+        const delay = -(Math.random() * dur);
+        const op    = (0.15 + Math.random() * 0.3).toFixed(2);
+        const col   = colors[Math.floor(Math.random() * colors.length)];
+        d.className = 'lp-particle';
+        d.style.cssText =
+          `width:${size}px;height:${size}px;` +
+          `left:${(Math.random() * 100).toFixed(1)}%;` +
+          `bottom:${(Math.random() * 100).toFixed(1)}%;` +
+          `background:rgba(${col},${op});` +
+          `--op:${op};` +
+          `animation-duration:${dur.toFixed(1)}s;` +
+          `animation-delay:${delay.toFixed(1)}s;` +
+          `box-shadow:0 0 ${(size * 2).toFixed(0)}px rgba(${col},.4);`;
+        container.appendChild(d);
+      }
+    })();
+  </script>
   <script>
     // Responsive create button label
     const short = document.querySelector('.lp-create-short');
