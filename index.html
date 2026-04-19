@@ -406,6 +406,9 @@
 
     // Auth
     if (window.netlifyIdentity) {
+      const _niw = () => document.getElementById("netlify-identity-widget");
+      window.netlifyIdentity.on("open",  () => _niw()?.classList.add("nf-open"));
+      window.netlifyIdentity.on("close", () => _niw()?.classList.remove("nf-open"));
       window.netlifyIdentity.on("init", user => {
         const btn = document.getElementById("login-btn");
         if (user) {
