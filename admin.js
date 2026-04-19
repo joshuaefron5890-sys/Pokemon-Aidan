@@ -56,11 +56,11 @@ function showAdmin(user) {
       <style>body{margin:0;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;color:#e2e8f0;text-align:center}
       .box{max-width:380px;padding:2rem}.h{font-size:1.4rem;font-weight:700;margin-bottom:.75rem}
       .p{color:#94a3b8;margin-bottom:1.5rem;line-height:1.6}
-      a{display:inline-block;padding:.65rem 1.5rem;background:#6366f1;color:#fff;border-radius:.5rem;text-decoration:none;font-weight:600}
-      a:hover{background:#4f46e5}</style></head>
+      button{display:inline-block;padding:.65rem 1.5rem;background:#6366f1;color:#fff;border:none;border-radius:.5rem;font-size:1rem;font-weight:600;cursor:pointer}
+      button:hover{background:#4f46e5}</style></head>
       <body><div class="box"><div class="h">No binder found</div>
-      <p class="p">It looks like your binder wasn't created yet. Click below to set one up.</p>
-      <a href="/create" target="_top">Create My Binder →</a></div></body></html>`;
+      <p class="p">It looks like your binder wasn't created yet. Add cards to get started.</p>
+      <button onclick="window.parent.document.getElementById('add-card-btn').click()">Add New Cards →</button></div></body></html>`;
     if (pubLink) pubLink.href = "/create";
   }
 
