@@ -721,8 +721,10 @@ async function loadProfileView() {
   // Profile photo
   const img         = document.getElementById("profile-current-photo");
   const placeholder = document.getElementById("profile-photo-placeholder");
-  img.style.display = "";
-  placeholder.style.display = "none";
+  img.onload  = () => { img.style.display = ""; placeholder.style.display = "none"; };
+  img.onerror = () => { img.style.display = "none"; placeholder.style.display = "flex"; };
+  img.style.display = "none";
+  placeholder.style.display = "flex";
   if (slug) img.src = `/.netlify/functions/get-photo?slug=${slug}&_t=${Date.now()}`;
 
   document.getElementById("profile-photo-status").textContent = "";
