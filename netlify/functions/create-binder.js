@@ -2,7 +2,7 @@
 // POST { slug, owner, isPublic, cards, photo? }
 // Requires Netlify Identity auth
 
-const { getManifest, putManifest, putBinder, putPhoto, putLocation } = require("./_blobs");
+const { getManifest, putManifest, putBinder, putPhoto, putLocation, getProfileData, putProfileData } = require("./_blobs");
 const { getFile } = require("./_gh");
 
 function slugValid(slug) {
@@ -72,6 +72,9 @@ exports.handler = async (event, context) => {
 
     if (location?.city && location?.state) {
       await putLocation(slug, { city: location.city, state: location.state });
+      // Also save to user profile so the admin profile page pre-fills the zip
+      const existing = await getProfileData(user.sub);
+      await putProfileData(user.sub, { ...existing, location: { zip: location.zip || "", city: location.city, state: location.state } });
     }
 
     return {
