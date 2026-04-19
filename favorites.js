@@ -30,7 +30,6 @@
           myFavorites.forEach(c => {
             if (c.binderSlug === slug) favoritedHere.add(c.cardId || c.query);
           });
-          refreshCounter();
         }
       } catch {}
     }
@@ -38,6 +37,7 @@
     createCounterBadge();
     injectSignupModal();
     injectStyles();
+    refreshCounter(); // must run after createCounterBadge so the element exists
 
     if (!observerActive) {
       observeCards();
@@ -235,8 +235,7 @@
     modal.querySelector(".fsm-close").addEventListener("click", closeSignupModal);
     document.getElementById("fsm-later-btn").addEventListener("click", closeSignupModal);
     document.getElementById("fsm-signup-btn").addEventListener("click", () => {
-      window._netlifyFavLogin = true;
-      window.netlifyIdentity?.open("signup");
+      window.location.href = "/create";
     });
     document.getElementById("fsm-login-btn").addEventListener("click", () => {
       window._netlifyFavLogin = true;

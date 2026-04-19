@@ -1129,3 +1129,11 @@ footer { display: none !important; }
   transition: opacity .2s;
 }
 .fav-counter-wrap.hidden { display: none !important; }
+
+/* ── Hide Netlify Identity widget's own floating button ───── */
+#netlify-identity-widget { display: none !important; }
+
+/* ── Heart buttons: always visible on touch devices ──────── */
+@media (hover: none) {
+  .card-fav-btn { opacity: .75; transform: scale(1); }
+}
