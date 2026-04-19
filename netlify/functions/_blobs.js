@@ -89,6 +89,19 @@ async function putLocation(slug, data) {
   await locationStore().set(slug, JSON.stringify(data));
 }
 
+const imageCacheStore = () => store("imageCache");
+
+async function getImageCache() {
+  return (await imageCacheStore().get("__all", { type: "json" })) ?? {};
+}
+
+async function setImageUrl(cardId, imageUrl) {
+  const cache = await getImageCache();
+  if (cache[cardId] === imageUrl) return;
+  cache[cardId] = imageUrl;
+  await imageCacheStore().set("__all", JSON.stringify(cache));
+}
+
 const offersStore = () => store("offers");
 
 async function getSentOffers(userId) {
@@ -122,4 +135,4 @@ async function putOfferMessages(offerId, messages) {
   await offersStore().set(`messages-${offerId}`, JSON.stringify(messages));
 }
 
-module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto, deletePhoto, getFavorites, putFavorites, getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades, getProfileData, putProfileData, getLocation, putLocation, getTradeMessages, putTradeMessages, getSentOffers, putSentOffers, getReceivedOffers, putReceivedOffers, getOfferMessages, putOfferMessages };
+module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto, deletePhoto, getFavorites, putFavorites, getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades, getProfileData, putProfileData, getLocation, putLocation, getTradeMessages, putTradeMessages, getSentOffers, putSentOffers, getReceivedOffers, putReceivedOffers, getOfferMessages, putOfferMessages, getImageCache, setImageUrl };

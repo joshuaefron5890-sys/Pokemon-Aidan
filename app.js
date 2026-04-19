@@ -519,9 +519,15 @@ async function loadCollection() {
   const skeletonCount = Math.min(PAGE_SIZE, CARD_LIST.length);
   for (let i = 0; i < skeletonCount; i++) grid.insertBefore(createSkeletonCard(), sentinel);
 
+  // Fetch shared server image cache concurrently (one request, shared across all binders)
+  const serverImageCachePromise = fetch("/.netlify/functions/get-image-cache")
+    .then(r => r.ok ? r.json() : {}).catch(() => ({}));
+
   // Fetch all in parallel — cached cards return immediately, others have a 5s timeout
   const backupStore = loadBackupStore();
   const newBackupEntries = {};
+  const newServerImageEntries = {};
+  const serverImageCache = await serverImageCachePromise;
   let doneCount = 0;
   const results = await Promise.all(
     CARD_LIST.map(async entry => {
@@ -548,6 +554,11 @@ async function loadCollection() {
         };
       }
 
+      // Queue new image URLs for server-side shared cache (keyed by stable cardId only)
+      if (apiImage && overrides.cardId && !serverImageCache[overrides.cardId]) {
+        newServerImageEntries[overrides.cardId] = apiImage;
+      }
+
       // Last resort: if price is still null and no manual override exists,
       // call the fallback price service (searches pokemontcg.io by name across
       // all printings and returns median market price). Result is saved to
@@ -569,10 +580,12 @@ async function loadCollection() {
 
       const isStaticPrice = overrides.price != null || (apiPrice == null && price != null);
 
-      // Image: explicit override → API → megacache
-      const needsBackupImage = !overrides.imageUrl && !apiImage;
-      const enrichedOverrides = (needsBackupImage && backup?.imageUrl)
-        ? { ...overrides, imageUrl: backup.imageUrl }
+      // Image: explicit override → API → server cache → local megacache
+      const needsFallbackImage = !overrides.imageUrl && !apiImage;
+      const serverCachedImage = needsFallbackImage && overrides.cardId ? (serverImageCache[overrides.cardId] || null) : null;
+      const fallbackImage = serverCachedImage || (needsFallbackImage && !serverCachedImage ? backup?.imageUrl : null) || null;
+      const enrichedOverrides = fallbackImage
+        ? { ...overrides, imageUrl: fallbackImage }
         : overrides;
 
       doneCount++;
@@ -584,6 +597,15 @@ async function loadCollection() {
   // Flush all megacache updates in one write
   if (Object.keys(newBackupEntries).length > 0) {
     saveBackupStore({ ...backupStore, ...newBackupEntries });
+  }
+
+  // Flush new image URLs to shared server cache (fire-and-forget, one request per new URL)
+  for (const [cardId, imageUrl] of Object.entries(newServerImageEntries)) {
+    fetch("/.netlify/functions/store-image-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cardId, imageUrl }),
+    }).catch(() => {});
   }
 
   // Sort by price descending (no price → end)
