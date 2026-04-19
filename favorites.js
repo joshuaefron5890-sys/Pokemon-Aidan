@@ -324,9 +324,9 @@
       .fsm-preview-name { font-size: .82rem; font-weight: 600; color: #eef2ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
       .fsm-title { font-size: 1.2rem; font-weight: 800; letter-spacing: -.02em; color: #eef2ff; margin: 0; }
       .fsm-desc { font-size: .83rem; color: rgba(238,242,255,.6); line-height: 1.5; margin: 0; }
-      .fsm-actions { display: flex; flex-direction: column; gap: .5rem; width: 100%; margin-top: .25rem; }
+      .fsm-actions { display: flex; flex-direction: row; gap: .5rem; width: 100%; margin-top: .25rem; }
       .fsm-btn-primary {
-        width: 100%; padding: .7rem 1rem;
+        flex: 2; padding: .7rem 1rem;
         background: linear-gradient(135deg, #00d9ff, #9b6dff);
         border: none; border-radius: 10px;
         color: #fff; font-size: .9rem; font-weight: 700; font-family: inherit;
@@ -334,7 +334,7 @@
       }
       .fsm-btn-primary:hover { opacity: .88; }
       .fsm-btn-secondary {
-        width: 100%; padding: .65rem 1rem;
+        flex: 1; padding: .65rem .75rem;
         background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
         border-radius: 10px; color: #eef2ff;
         font-size: .9rem; font-weight: 600; font-family: inherit;
