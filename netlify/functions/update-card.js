@@ -16,15 +16,22 @@ exports.handler = async (event, context) => {
     if (!slug)    return { statusCode: 400, body: JSON.stringify({ error: "Missing slug" }) };
     if (!updates) return { statusCode: 400, body: JSON.stringify({ error: "Missing updates" }) };
 
-    const binder = await getBinder(slug);
-    if (!binder)                   return { statusCode: 404, body: JSON.stringify({ error: "Binder not found" }) };
+    let binder = await getBinder(slug);
+    if (!binder) {
+      // Static binder page (e.g. AidanEfron.html) — auto-create the blob on first edit
+      binder = { email: user.email, slug, public: true, cards: [] };
+    }
     if (binder.email !== user.email) return { statusCode: 403, body: JSON.stringify({ error: "Forbidden" }) };
 
-    const card = cardId
+    let card = cardId
       ? binder.cards.find(c => c.cardId === cardId)
       : binder.cards.find(c => c.query  === query);
 
-    if (!card) return { statusCode: 404, body: JSON.stringify({ error: "Card not found" }) };
+    if (!card) {
+      // First edit of this card on a static binder page — add it to the blob
+      card = { query, ...(cardId ? { cardId } : {}) };
+      binder.cards.push(card);
+    }
 
     // Apply updates: null / empty string removes the field; anything else sets it
     for (const [key, value] of Object.entries(updates)) {

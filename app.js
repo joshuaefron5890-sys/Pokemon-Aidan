@@ -533,15 +533,28 @@ async function loadCollection() {
   const serverImageCachePromise = fetch("/.netlify/functions/get-image-cache")
     .then(r => r.ok ? r.json() : {}).catch(() => ({}));
 
+  // Fetch server-saved card overrides (for static binder pages where owner has edited via UI)
+  const serverOverridesPromise = window.BINDER_SLUG
+    ? fetch(`/.netlify/functions/get-binder?slug=${encodeURIComponent(window.BINDER_SLUG)}`)
+        .then(r => r.ok ? r.json() : { cards: [] })
+        .then(data => {
+          const map = {};
+          for (const c of (data.cards || [])) if (c.query) map[c.query] = c;
+          return map;
+        })
+        .catch(() => ({}))
+    : Promise.resolve({});
+
   // Fetch all in parallel — cached cards return immediately, others have a 5s timeout
   const backupStore = loadBackupStore();
   const newBackupEntries = {};
   const newServerImageEntries = {};
-  const serverImageCache = await serverImageCachePromise;
+  const [serverImageCache, serverOverridesMap] = await Promise.all([serverImageCachePromise, serverOverridesPromise]);
   let doneCount = 0;
   const results = await Promise.all(
-    CARD_LIST.map(async entry => {
-      const query = entryQuery(entry);
+    CARD_LIST.map(async rawEntry => {
+      const query = entryQuery(rawEntry);
+      const entry = serverOverridesMap[query] ? { ...rawEntry, ...serverOverridesMap[query] } : rawEntry;
       const overrides = entryOverrides(entry);
       const card = await fetchCard(query, overrides.setName, overrides.cardId);
       const apiPrice = getMarketPrice(card);
