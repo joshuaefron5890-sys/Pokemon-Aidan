@@ -3,7 +3,7 @@
 // Private binders: requires JWT with matching owner email
 // Falls back to GitHub if not yet migrated to Blobs
 
-const { getBinder, putBinder } = require("./_blobs");
+const { getBinder, putBinder, getLocation } = require("./_blobs");
 const { getFile } = require("./_gh");
 
 const NO_CACHE = { "Cache-Control": "no-store, no-cache, must-revalidate", "Content-Type": "application/json" };
@@ -51,6 +51,8 @@ exports.handler = async (event, context) => {
       ? `/.netlify/functions/get-photo?slug=${binder.slug}`
       : null;
 
+    const location = await getLocation(binder.slug);
+
     return {
       statusCode: 200,
       headers: NO_CACHE,
@@ -62,6 +64,7 @@ exports.handler = async (event, context) => {
         cards:     binder.cards,
         photoUrl,
         isOwner,
+        location,
       }),
     };
   } catch (err) {

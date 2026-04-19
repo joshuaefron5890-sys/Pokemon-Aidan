@@ -105,6 +105,22 @@ header h1 {
   line-height: 1.2;
 }
 
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.header-location {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.55);
+  margin: 0;
+}
+.binder-location {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.45);
+  margin: 0.1rem 0 0;
+}
+
 @keyframes spin-slow {
   to { transform: rotate(360deg); }
 }

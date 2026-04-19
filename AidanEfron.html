@@ -23,7 +23,10 @@
       <div class="header-photo-wrap">
         <img src="/.netlify/functions/get-photo?slug=aidan" alt="Aidan" class="header-photo" onerror="this.src='Aidan.jpg';this.onerror=null" />
       </div>
-      <h1>Aidan's Pokémon Collection</h1>
+      <div class="header-text">
+        <h1>Aidan's Pokémon Collection</h1>
+        <p id="header-location" class="header-location hidden"></p>
+      </div>
     </div>
   </header>
 
@@ -122,6 +125,19 @@
 
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
+    // Hide nav when embedded in the admin iframe
+    if (window.self !== window.top) document.querySelector('.binder-nav').style.display = 'none';
+
+    // Load owner location
+    fetch('/.netlify/functions/get-location?slug=aidan')
+      .then(r => r.ok ? r.json() : {})
+      .then(loc => {
+        if (loc.city) {
+          const el = document.getElementById('header-location');
+          if (el) { el.textContent = `📍 ${loc.city}, ${loc.state}`; el.classList.remove('hidden'); }
+        }
+      }).catch(() => {});
+
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
         const btn = document.getElementById("login-btn");

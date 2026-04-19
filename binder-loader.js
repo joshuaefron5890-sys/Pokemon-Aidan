@@ -35,6 +35,15 @@ async function initBinder() {
     const titleEl = document.getElementById("page-title");
     if (titleEl) titleEl.textContent = `${data.owner}'s Pokémon Collection`;
 
+    // Show location if owner has set one
+    if (data.location?.city) {
+      const locEl = document.getElementById("header-location");
+      if (locEl) {
+        locEl.textContent = `📍 ${data.location.city}, ${data.location.state}`;
+        locEl.classList.remove("hidden");
+      }
+    }
+
     // Show profile photo if available
     if (data.photoUrl) {
       const wrap = document.getElementById("header-photo-wrap");

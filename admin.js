@@ -139,7 +139,7 @@ async function loadSharedBinders() {
         </div>
         <div class="binder-card-info">
           <div class="binder-card-name">${b.owner}'s Binder</div>
-          <div class="binder-card-meta">Public collection</div>
+          <div class="binder-card-meta">${b.location?.city ? `📍 ${b.location.city}, ${b.location.state}` : 'Public collection'}</div>
         </div>
         <div class="binder-card-badge">View</div>`;
       grid.appendChild(card);
@@ -887,7 +887,7 @@ document.getElementById("profile-save-location-btn").addEventListener("click", a
     const resp  = await fetch("/.netlify/functions/update-profile", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ location: pendingLocation }),
+      body: JSON.stringify({ location: pendingLocation, slug: window.BINDER_SLUG }),
     });
     if (!resp.ok) throw new Error("Failed to save");
 

@@ -1,7 +1,7 @@
 // POST /.netlify/functions/update-profile
 // Merges the request body into the user's profile data
 
-const { getProfileData, putProfileData } = require("./_blobs");
+const { getProfileData, putProfileData, putLocation } = require("./_blobs");
 
 exports.handler = async (event, context) => {
   if (event.httpMethod !== "POST") return { statusCode: 405 };
@@ -10,9 +10,14 @@ exports.handler = async (event, context) => {
   if (!user) return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
 
   try {
-    const update   = JSON.parse(event.body);
+    const { slug, ...update } = JSON.parse(event.body);
     const existing = await getProfileData(user.sub);
     await putProfileData(user.sub, { ...existing, ...update });
+    // Persist location publicly by slug so binder pages can display it
+    if (slug && update.location?.city) {
+      const { city, state } = update.location;
+      await putLocation(slug, { city, state });
+    }
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },

@@ -79,8 +79,18 @@ async function putProfileData(userId, data) {
   await profileStore().set(userId, JSON.stringify(data));
 }
 
+const locationStore  = () => store("locations");
+
+async function getLocation(slug) {
+  return (await locationStore().get(slug, { type: "json" })) ?? null;
+}
+
+async function putLocation(slug, data) {
+  await locationStore().set(slug, JSON.stringify(data));
+}
+
 async function deletePhoto(slug) {
   await photoStore().delete(slug);
 }
 
-module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto, deletePhoto, getFavorites, putFavorites, getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades, getProfileData, putProfileData };
+module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto, deletePhoto, getFavorites, putFavorites, getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades, getProfileData, putProfileData, getLocation, putLocation };

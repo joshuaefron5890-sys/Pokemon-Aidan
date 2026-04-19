@@ -38,7 +38,10 @@
       <div class="header-photo-wrap hidden" id="header-photo-wrap">
         <img id="header-photo" class="header-photo" alt="" />
       </div>
-      <h1 id="page-title">Loading…</h1>
+      <div class="header-text">
+        <h1 id="page-title">Loading…</h1>
+        <p id="header-location" class="header-location hidden"></p>
+      </div>
     </div>
   </header>
 
@@ -157,6 +160,9 @@
   <script src="/background.js?v=44"></script>
   <script src="/favorites.js?v=1"></script>
   <script>
+    // Hide nav when embedded in the admin iframe
+    if (window.self !== window.top) document.querySelector('.binder-nav').style.display = 'none';
+
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
         const btn = document.getElementById("login-btn");

@@ -2,7 +2,7 @@
 // Merges Blobs manifest (new binders) + GitHub manifest (legacy binders)
 // No auth required
 
-const { getManifest } = require("./_blobs");
+const { getManifest, getLocation } = require("./_blobs");
 const { getFile }     = require("./_gh");
 
 exports.handler = async (event) => {
@@ -21,12 +21,15 @@ exports.handler = async (event) => {
     const seen = new Set(blobsManifest.map(b => b.slug));
     const merged = [...blobsManifest, ...ghManifest.filter(b => !seen.has(b.slug))];
 
-    const publicBinders = merged
-      .filter(b => b.public)
-      .map(({ slug, owner, cardCount, createdAt, hasPhoto }) => ({
-        slug, owner, cardCount, createdAt,
-        photoUrl: hasPhoto ? `/.netlify/functions/get-photo?slug=${slug}` : null,
-      }));
+    const publicBinders = await Promise.all(
+      merged
+        .filter(b => b.public)
+        .map(async ({ slug, owner, cardCount, createdAt, hasPhoto }) => ({
+          slug, owner, cardCount, createdAt,
+          photoUrl:  hasPhoto ? `/.netlify/functions/get-photo?slug=${slug}` : null,
+          location:  await getLocation(slug),
+        }))
+    );
 
     return {
       statusCode: 200,
