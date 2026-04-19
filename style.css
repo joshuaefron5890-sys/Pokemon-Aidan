@@ -1104,12 +1104,12 @@ footer { display: none !important; }
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  opacity: 0;
+  opacity: .55;
   transform: scale(.85);
   transition: opacity .15s, transform .15s, background .15s, color .15s;
   z-index: 10;
 }
-.card-item:hover .card-fav-btn { opacity: 1; transform: scale(1); }
+.card-item:hover .card-fav-btn { opacity: 1; }
 .card-fav-btn.faved { opacity: 1; color: #f43f5e; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
 .card-fav-btn:hover { background: #fff !important; color: #e11d48 !important; box-shadow: 0 2px 10px rgba(0,0,0,.4) !important; }
 @keyframes fav-pop { 0%,100% { transform: scale(1); } 50% { transform: scale(1.4); } }
@@ -1132,10 +1132,6 @@ footer { display: none !important; }
 }
 .fav-counter-wrap.hidden { display: none !important; }
 
-/* ── Heart buttons: always visible on touch devices ──────── */
-@media (hover: none) {
-  .card-fav-btn { opacity: .75; transform: scale(1); }
-}
 
 /* ── Netlify Identity widget: hide floating button, show modal on .nf-open ── */
 #netlify-identity-widget { visibility: hidden !important; }
