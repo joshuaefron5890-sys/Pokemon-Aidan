@@ -535,7 +535,7 @@ async function loadCollection() {
 
   // Fetch server-saved card overrides (for static binder pages where owner has edited via UI)
   const serverOverridesPromise = window.BINDER_SLUG
-    ? fetch(`/.netlify/functions/get-binder?slug=${encodeURIComponent(window.BINDER_SLUG)}`)
+    ? fetch(`/.netlify/functions/get-card-overrides?slug=${encodeURIComponent(window.BINDER_SLUG)}`)
         .then(r => r.ok ? r.json() : { cards: [] })
         .then(data => {
           const map = {};
