@@ -123,12 +123,12 @@
 
   function resetToStep(step) {
     document.getElementById("acm-step-input").classList.toggle("hidden", step !== "input");
+    document.getElementById("acm-step-pick").classList.toggle("hidden", step !== "pick");
     document.getElementById("acm-step-confirm").classList.toggle("hidden", step !== "confirm");
     document.getElementById("acm-step-done").classList.toggle("hidden", step !== "done");
     document.getElementById("acm-input-error").textContent = "";
     document.getElementById("acm-confirm-error").textContent = "";
     if (step === "input") {
-      // Clear the search fields so the user can enter a new card
       document.getElementById("acm-card-name").value = "";
       document.getElementById("acm-tcg-link").value = "";
       pendingPhoto = null;
@@ -206,11 +206,12 @@
     errEl.textContent = "";
 
     let userMessage;
+    const jsonArrayInstruction = 'Return up to 5 best fuzzy matches as a JSON array only — no markdown, no extra text. Format: [{"cardId":"sv3pt5-006","query":"Charizard ex","setName":"151","marketPrice":45.00,"tcgUrl":""}]. Return [] if nothing found.';
 
     if (activeTab === "name") {
       const name = document.getElementById("acm-card-name").value.trim();
       if (!name) { errEl.textContent = "Please enter a card name."; return; }
-      userMessage = { role: "user", content: `Look up this card and tell me the cardId, setName, and market price: ${name}` };
+      userMessage = { role: "user", content: `Search for Pokémon cards matching "${name}". ${jsonArrayInstruction}` };
     } else if (activeTab === "link") {
       const link = document.getElementById("acm-tcg-link").value.trim();
       if (!link || !link.includes("tcgplayer.com")) { errEl.textContent = "Please paste a valid TCGPlayer URL."; return; }
@@ -219,14 +220,14 @@
         const slug = new URL(link).pathname.split("/").filter(Boolean).pop();
         cardQuery = slug.replace(/^pokemon-/, "").replace(/-/g, " ").trim();
       } catch {}
-      userMessage = { role: "user", content: `Look up this Pokémon card and tell me the cardId, setName, and market price: ${cardQuery}` };
+      userMessage = { role: "user", content: `Look up this Pokémon card: "${cardQuery}". ${jsonArrayInstruction}` };
     } else {
       if (!pendingPhoto) { errEl.textContent = "Please select or drop a card photo first."; return; }
       userMessage = {
         role: "user",
         content: [
           { type: "image", source: { type: "base64", media_type: pendingPhoto.mediaType, data: pendingPhoto.data } },
-          { type: "text",  text: "Identify this Pokémon card. Tell me the cardId, setName, card name, number, and market price." },
+          { type: "text", text: `Identify this Pokémon card. ${jsonArrayInstruction}` },
         ],
       };
     }
@@ -237,19 +238,19 @@
 
     try {
       const data = await callChat([userMessage]);
-      const extracted = await callChat([
-        userMessage,
-        { role: "assistant", content: data.reply },
-        { role: "user", content: 'Now give me just this JSON (no other text): {"cardId":"...","query":"...","setName":"...","marketPrice":0.00,"tcgUrl":"...","imageUrl":""}' },
-      ]);
 
-      const jsonMatch = extracted.reply.match(/\{[\s\S]*"cardId"[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("Could not parse card information. Please try again.");
+      const arrayMatch = data.reply.match(/\[[\s\S]*\]/);
+      if (!arrayMatch) throw new Error("Could not parse results. Please try again.");
 
-      foundCard = JSON.parse(jsonMatch[0]);
-      if (!foundCard.cardId) throw new Error("Card not found. Please check the name or number.");
+      const cards = JSON.parse(arrayMatch[0]).filter(c => c && c.cardId);
+      if (!cards.length) throw new Error("No cards found. Try a different name or include the card number.");
 
-      showConfirmStep(foundCard);
+      if (cards.length === 1) {
+        foundCard = cards[0];
+        showConfirmStep(foundCard);
+      } else {
+        showPickStep(cards);
+      }
     } catch (err) {
       errEl.textContent = err.message;
       lookupBtn.disabled = false;
@@ -282,6 +283,38 @@
 
     resetToStep("confirm");
   }
+
+  function showPickStep(cards) {
+    lookupBtn.disabled = false;
+    lookupSpinner.classList.add("hidden");
+    lookupLabel.textContent = "Find Card";
+
+    const grid = document.getElementById("acm-pick-grid");
+    grid.innerHTML = "";
+    cards.forEach(card => {
+      const lastDash = card.cardId.lastIndexOf("-");
+      const setId    = card.cardId.slice(0, lastDash);
+      const num      = card.cardId.slice(lastDash + 1);
+      const imgUrl   = `https://images.pokemontcg.io/${setId}/${num}.png`;
+
+      const item = document.createElement("button");
+      item.className = "acm-pick-item";
+      item.innerHTML = `
+        <img src="${imgUrl}" alt="${card.query}" onerror="this.style.opacity='.25'" />
+        <div class="acm-pick-name">${card.query}</div>
+        <div class="acm-pick-set">${card.setName || ""}</div>
+        <div class="acm-pick-price">${card.marketPrice ? `$${Number(card.marketPrice).toFixed(2)}` : ""}</div>`;
+      item.addEventListener("click", () => {
+        foundCard = card;
+        showConfirmStep(card);
+      });
+      grid.appendChild(item);
+    });
+
+    resetToStep("pick");
+  }
+
+  document.getElementById("acm-pick-back-btn").addEventListener("click", () => resetToStep("input"));
 
   document.getElementById("acm-back-btn").addEventListener("click", () => resetToStep("input"));
 

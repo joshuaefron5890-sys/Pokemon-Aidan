@@ -432,6 +432,28 @@ a { color: inherit; text-decoration: none; }
 }
 .acm-queue-remove:hover { color: #ef4444; background: rgba(239,68,68,.08); }
 
+/* ── Card picker (multiple results) ─────────────────────── */
+.acm-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: .55rem;
+  margin-bottom: .25rem;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.acm-pick-item {
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: .5rem .4rem; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: .2rem;
+  text-align: center; transition: border-color .15s, background .15s;
+  font-family: inherit; width: 100%;
+}
+.acm-pick-item:hover { border-color: var(--accent2); background: rgba(96,165,250,.08); }
+.acm-pick-item img { width: 100%; border-radius: 5px; display: block; }
+.acm-pick-name { font-size: .68rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+.acm-pick-set  { font-size: .62rem; color: var(--text-muted); }
+.acm-pick-price { font-size: .68rem; color: var(--accent); font-weight: 600; }
+
 /* ── Shared Binders gallery ────────────────────────────────── */
 
 .shared-view {
