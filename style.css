@@ -487,14 +487,12 @@ header h1 {
 .card-item.graded:hover {
   box-shadow: 0 0 0 2px #fbbf24, 0 16px 40px rgba(245,158,11,.55);
 }
-.card-delete-btn {
+.card-delete-btn,
+.card-edit-btn {
   position: absolute;
-  top: 6px;
-  right: 6px;
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: rgba(220,38,38,.85);
   border: none;
   color: #fff;
   cursor: pointer;
@@ -505,8 +503,163 @@ header h1 {
   transition: opacity .15s, background .15s;
   z-index: 10;
 }
-.card-item:hover .card-delete-btn { opacity: 1; }
+.card-delete-btn {
+  top: 6px; right: 6px;
+  background: rgba(220,38,38,.85);
+}
+.card-edit-btn {
+  top: 6px; right: 40px;
+  background: rgba(30,80,140,.9);
+}
+.card-item:hover .card-delete-btn,
+.card-item:hover .card-edit-btn { opacity: 1; }
 .card-delete-btn:hover { background: rgba(185,28,28,1); }
+.card-edit-btn:hover   { background: rgba(37,99,235,1); }
+
+/* ── Card Edit Modal ─────────────────────────────────────── */
+#card-edit-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+}
+#card-edit-modal.open { display: flex; align-items: center; justify-content: center; }
+
+.cem-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(4px);
+}
+.cem-panel {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: min(560px, 96vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6);
+  overflow: hidden;
+}
+.cem-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.cem-title { font-size: 1rem; font-weight: 700; margin: 0; }
+.cem-close {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 1.1rem; cursor: pointer; padding: .25rem .4rem; border-radius: 6px;
+  transition: color .15s, background .15s;
+}
+.cem-close:hover { color: var(--text); background: var(--surface2); }
+
+.cem-body {
+  padding: 1.1rem 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+.cem-section {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-muted);
+  padding-top: .25rem;
+  border-top: 1px solid var(--border);
+  margin-top: .25rem;
+}
+.cem-section:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+.cem-hint { font-weight: 400; text-transform: none; letter-spacing: 0; font-size: .72rem; color: var(--text-muted); }
+.cem-label {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.cem-input {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: .55rem .75rem;
+  color: var(--text);
+  font-family: inherit;
+  font-size: .88rem;
+  outline: none;
+  transition: border-color .15s;
+  width: 100%;
+}
+.cem-input:focus { border-color: var(--accent2); }
+.cem-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.cem-input-row { display: flex; gap: .5rem; }
+.cem-input-row .cem-input { flex: 1; }
+
+.cem-refresh-btn {
+  flex-shrink: 0;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: .55rem .85rem;
+  color: var(--text-muted);
+  font-size: .82rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.cem-refresh-btn:not(:disabled) { border-color: var(--accent2); color: var(--accent2); }
+.cem-refresh-btn:not(:disabled):hover { background: rgba(96,165,250,.12); }
+.cem-refresh-btn:disabled { opacity: .4; cursor: default; }
+
+.cem-refresh-status { font-size: .75rem; min-height: 1rem; }
+.cem-refresh-status.cem-ok  { color: #34d399; }
+.cem-refresh-status.cem-err { color: var(--red); }
+
+.cem-image-row { display: flex; gap: .85rem; align-items: flex-start; }
+.cem-preview {
+  width: 70px;
+  height: 98px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.cem-footer {
+  display: flex;
+  gap: .75rem;
+  justify-content: flex-end;
+  padding: .9rem 1.25rem;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.cem-btn-sec {
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: .55rem 1.1rem; color: var(--text);
+  font-family: inherit; font-size: .88rem; cursor: pointer;
+  transition: background .15s;
+}
+.cem-btn-sec:hover { background: var(--border); }
+.cem-btn-pri {
+  background: linear-gradient(135deg, var(--accent2), #3b82f6);
+  border: none; border-radius: 8px; padding: .55rem 1.3rem;
+  color: #fff; font-family: inherit; font-size: .88rem;
+  font-weight: 600; cursor: pointer; transition: opacity .15s;
+}
+.cem-btn-pri:hover   { opacity: .88; }
+.cem-btn-pri:disabled { opacity: .5; cursor: default; }
+
+body.cem-open { overflow: hidden; }
 
 .card-grade-badge {
   position: absolute;

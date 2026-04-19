@@ -260,16 +260,16 @@ function createCardElement(query, card, price, overrides = {}, isStaticPrice = f
   wrapper.dataset.cardId  = overrides.cardId || "";
   wrapper.dataset.query   = query;
 
-  const tcgUrl = getTcgPlayerUrl(card, query, overrides.tcgUrl);
-  const imgSrc = overrides.imageUrl || card?.images?.large || card?.images?.small || "";
-  const cardName = card ? card.name : query;
-  const setName = card?.set?.name || "";
-  const series = card?.set?.series || "";
-  const cardNumber = card
+  const tcgUrl     = getTcgPlayerUrl(card, query, overrides.tcgUrl);
+  const imgSrc     = overrides.imageUrl || card?.images?.large || card?.images?.small || "";
+  const cardName   = overrides.nameOverride   || (card ? card.name : query);
+  const setName    = overrides.setDisplayOverride || card?.set?.name  || "";
+  const series     = overrides.seriesOverride || card?.set?.series || "";
+  const cardNumber = overrides.numberOverride || (card
     ? `${card.number}/${card.set?.printedTotal || card.set?.total || "?"}`
-    : query.split(" ").pop();
+    : query.split(" ").pop());
   const priceDisplay = formatPrice(price);
-  const rarity = card?.rarity || "";
+  const rarity     = overrides.rarityOverride || card?.rarity || "";
 
   wrapper.innerHTML = `
     <a href="${tcgUrl}" target="_blank" rel="noopener" class="card-link">
@@ -294,6 +294,13 @@ function createCardElement(query, card, price, overrides = {}, isStaticPrice = f
   `;
 
   if (window.self !== window.top && window.BINDER_SLUG) {
+    const editBtn = document.createElement("button");
+    editBtn.className = "card-edit-btn";
+    editBtn.title = "Edit card";
+    editBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    editBtn.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); openEditModal(query, card, price, overrides, isStaticPrice, wrapper); });
+    wrapper.appendChild(editBtn);
+
     const deleteBtn = document.createElement("button");
     deleteBtn.className = "card-delete-btn";
     deleteBtn.title = "Remove from binder";
@@ -725,4 +732,266 @@ function renderDebugTable(results) {
 
 if (!window.BINDER_LOADER) {
   document.addEventListener("DOMContentLoaded", loadCollection);
+}
+
+// ── Card Edit Modal ────────────────────────────────────────
+
+let _cemCard = null; // { query, card, price, overrides, isStaticPrice, wrapper }
+
+function _buildEditModal() {
+  const el = document.createElement("div");
+  el.id = "card-edit-modal";
+  el.innerHTML = `
+    <div class="cem-backdrop"></div>
+    <div class="cem-panel">
+      <div class="cem-header">
+        <h3 class="cem-title">Edit Card</h3>
+        <button class="cem-close" id="cem-close">✕</button>
+      </div>
+      <div class="cem-body">
+
+        <div class="cem-section">Identity</div>
+        <label class="cem-label">Card ID <span class="cem-hint">(pokemontcg.io, e.g. sv8-232)</span>
+          <div class="cem-input-row">
+            <input id="cem-card-id" class="cem-input" type="text" placeholder="e.g. sv8-232" autocomplete="off" />
+            <button id="cem-refresh-btn" class="cem-refresh-btn" disabled>↺ Refresh</button>
+          </div>
+          <span id="cem-refresh-status" class="cem-refresh-status"></span>
+        </label>
+        <label class="cem-label">TCG URL <span class="cem-hint">(link when card is clicked)</span>
+          <input id="cem-tcg-url" class="cem-input" type="url" placeholder="https://www.tcgplayer.com/…" autocomplete="off" />
+        </label>
+
+        <div class="cem-section">Image</div>
+        <div class="cem-image-row">
+          <img id="cem-preview" class="cem-preview" alt="" />
+          <label class="cem-label" style="flex:1">Image URL override <span class="cem-hint">(blank = use API)</span>
+            <input id="cem-image-url" class="cem-input" type="url" placeholder="https://… or local filename" autocomplete="off" />
+          </label>
+        </div>
+
+        <div class="cem-section">Price &amp; Grade</div>
+        <div class="cem-row-2">
+          <label class="cem-label">Price override <span class="cem-hint">(blank = use API)</span>
+            <input id="cem-price" class="cem-input" type="number" step="0.01" min="0" placeholder="e.g. 12.50" />
+          </label>
+          <label class="cem-label">Grade
+            <input id="cem-grade" class="cem-input" type="text" placeholder="e.g. PSA 10" autocomplete="off" />
+          </label>
+        </div>
+
+        <div class="cem-section">Metadata overrides <span class="cem-hint">— blank = use API value</span></div>
+        <div class="cem-row-2">
+          <label class="cem-label">Name
+            <input id="cem-name" class="cem-input" type="text" autocomplete="off" />
+          </label>
+          <label class="cem-label">Set Name
+            <input id="cem-set-name" class="cem-input" type="text" autocomplete="off" />
+          </label>
+        </div>
+        <div class="cem-row-2">
+          <label class="cem-label">Number
+            <input id="cem-number" class="cem-input" type="text" autocomplete="off" />
+          </label>
+          <label class="cem-label">Rarity
+            <input id="cem-rarity" class="cem-input" type="text" autocomplete="off" />
+          </label>
+        </div>
+
+      </div>
+      <div class="cem-footer">
+        <button id="cem-cancel" class="cem-btn-sec">Cancel</button>
+        <button id="cem-save"   class="cem-btn-pri">Save Changes</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(el);
+
+  el.querySelector("#cem-close").addEventListener("click",  closeEditModal);
+  el.querySelector("#cem-cancel").addEventListener("click", closeEditModal);
+  el.querySelector(".cem-backdrop").addEventListener("click", closeEditModal);
+
+  el.querySelector("#cem-card-id").addEventListener("input", () => {
+    const changed = el.querySelector("#cem-card-id").value.trim() !== (_cemCard?.overrides?.cardId || "");
+    el.querySelector("#cem-refresh-btn").disabled = !changed;
+  });
+  el.querySelector("#cem-image-url").addEventListener("input", () => {
+    const v = el.querySelector("#cem-image-url").value.trim();
+    const prev = el.querySelector("#cem-preview");
+    if (v) { prev.src = v; prev.style.display = ""; }
+  });
+  el.querySelector("#cem-refresh-btn").addEventListener("click", _refreshCardData);
+  el.querySelector("#cem-save").addEventListener("click",        _saveCardEdit);
+  return el;
+}
+
+function _getModal() {
+  return document.getElementById("card-edit-modal") || _buildEditModal();
+}
+
+function _apiNumber(card) {
+  if (!card) return "";
+  return `${card.number}/${card.set?.printedTotal || card.set?.total || "?"}`;
+}
+
+function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
+  _cemCard = { query, card, price, overrides, isStaticPrice, wrapper };
+  const m = _getModal();
+
+  const imgSrc = overrides.imageUrl || card?.images?.large || card?.images?.small || "";
+  const prev   = m.querySelector("#cem-preview");
+  prev.src          = imgSrc;
+  prev.style.display = imgSrc ? "" : "none";
+
+  m.querySelector("#cem-card-id").value   = overrides.cardId || "";
+  m.querySelector("#cem-tcg-url").value   = overrides.tcgUrl || card?.tcgplayer?.url || "";
+  m.querySelector("#cem-image-url").value = overrides.imageUrl || "";
+  m.querySelector("#cem-price").value     = overrides.fallbackPrice != null ? overrides.fallbackPrice : "";
+  m.querySelector("#cem-grade").value     = overrides.grade || "";
+
+  // Metadata: show stored override; placeholder = current API value
+  const apiName   = card?.name  || "";
+  const apiSet    = card?.set?.name || "";
+  const apiNum    = _apiNumber(card);
+  const apiRarity = card?.rarity || "";
+
+  const n = m.querySelector("#cem-name");    n.value = overrides.nameOverride || ""; n.placeholder = apiName   || "API value";
+  const s = m.querySelector("#cem-set-name");s.value = overrides.setDisplayOverride || ""; s.placeholder = apiSet || "API value";
+  const u = m.querySelector("#cem-number");  u.value = overrides.numberOverride || ""; u.placeholder = apiNum    || "API value";
+  const r = m.querySelector("#cem-rarity");  r.value = overrides.rarityOverride  || ""; r.placeholder = apiRarity || "API value";
+
+  m.querySelector("#cem-refresh-btn").disabled = true;
+  m.querySelector("#cem-refresh-status").textContent = "";
+  m.querySelector("#cem-save").disabled = false;
+  m.querySelector("#cem-save").textContent = "Save Changes";
+
+  m.classList.add("open");
+  document.body.classList.add("cem-open");
+}
+
+function closeEditModal() {
+  const m = document.getElementById("card-edit-modal");
+  if (m) m.classList.remove("open");
+  document.body.classList.remove("cem-open");
+  _cemCard = null;
+}
+
+async function _refreshCardData() {
+  const m = _getModal();
+  const newId = m.querySelector("#cem-card-id").value.trim();
+  if (!newId) return;
+
+  const refreshBtn = m.querySelector("#cem-refresh-btn");
+  const statusEl   = m.querySelector("#cem-refresh-status");
+  refreshBtn.disabled   = true;
+  statusEl.textContent  = "Fetching…";
+  statusEl.className    = "cem-refresh-status";
+
+  try {
+    // Bust the local cache so we get fresh data for this ID
+    const cache = loadCache();
+    delete cache[newId];
+    saveCache(cache);
+
+    const card = await fetchCard(_cemCard.query, null, newId);
+    if (!card) {
+      statusEl.textContent = "Card not found";
+      statusEl.classList.add("cem-err");
+      refreshBtn.disabled = false;
+      return;
+    }
+
+    _cemCard.card = card;
+
+    // Repopulate placeholders and any non-overridden fields with fresh API data
+    const n = m.querySelector("#cem-name");
+    const s = m.querySelector("#cem-set-name");
+    const u = m.querySelector("#cem-number");
+    const r = m.querySelector("#cem-rarity");
+    n.placeholder = card.name          || "API value"; if (!n.value) n.value = "";
+    s.placeholder = card.set?.name     || "API value"; if (!s.value) s.value = "";
+    u.placeholder = _apiNumber(card)   || "API value"; if (!u.value) u.value = "";
+    r.placeholder = card.rarity        || "API value"; if (!r.value) r.value = "";
+
+    // Update TCG URL field if it wasn't manually changed
+    const tcgInput = m.querySelector("#cem-tcg-url");
+    if (!tcgInput.value || tcgInput.value === (_cemCard.overrides?.tcgUrl || "")) {
+      tcgInput.value = card.tcgplayer?.url || "";
+    }
+
+    // Update image preview
+    if (!m.querySelector("#cem-image-url").value) {
+      const fresh = card.images?.large || card.images?.small || "";
+      const prev  = m.querySelector("#cem-preview");
+      prev.src          = fresh;
+      prev.style.display = fresh ? "" : "none";
+    }
+
+    statusEl.textContent = "✓ Data refreshed";
+    statusEl.classList.add("cem-ok");
+    setTimeout(() => { statusEl.textContent = ""; statusEl.className = "cem-refresh-status"; }, 3000);
+  } catch (err) {
+    statusEl.textContent = `Error: ${err.message}`;
+    statusEl.classList.add("cem-err");
+    refreshBtn.disabled = false;
+  }
+}
+
+async function _saveCardEdit() {
+  const m = _getModal();
+  const { query, card, overrides, wrapper } = _cemCard;
+  const saveBtn = m.querySelector("#cem-save");
+  saveBtn.disabled    = true;
+  saveBtn.textContent = "Saving…";
+
+  const newCardId   = m.querySelector("#cem-card-id").value.trim();
+  const newTcgUrl   = m.querySelector("#cem-tcg-url").value.trim();
+  const newImageUrl = m.querySelector("#cem-image-url").value.trim();
+  const newPriceRaw = m.querySelector("#cem-price").value.trim();
+  const newGrade    = m.querySelector("#cem-grade").value.trim();
+  const newName     = m.querySelector("#cem-name").value.trim();
+  const newSet      = m.querySelector("#cem-set-name").value.trim();
+  const newNumber   = m.querySelector("#cem-number").value.trim();
+  const newRarity   = m.querySelector("#cem-rarity").value.trim();
+
+  // null = remove the field; a value = store it
+  const updates = {
+    cardId:             newCardId   || null,
+    tcgUrl:             newTcgUrl   || null,
+    imageUrl:           newImageUrl || null,
+    fallbackPrice:      newPriceRaw !== "" ? parseFloat(newPriceRaw) : null,
+    grade:              newGrade    || null,
+    nameOverride:       newName     || null,
+    setDisplayOverride: newSet      || null,
+    numberOverride:     newNumber   || null,
+    rarityOverride:     newRarity   || null,
+  };
+
+  try {
+    const slug  = window.BINDER_SLUG;
+    const token = await window.netlifyIdentity?.currentUser()?.jwt();
+    const res   = await fetch("/.netlify/functions/update-card", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body:    JSON.stringify({ slug, cardId: overrides.cardId, query, updates }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+
+    // Rebuild the card element with updated data
+    const newOverrides = { ...overrides };
+    for (const [k, v] of Object.entries(updates)) {
+      if (v === null) delete newOverrides[k]; else newOverrides[k] = v;
+    }
+    const liveCard   = _cemCard.card;
+    const livePrice  = updates.fallbackPrice != null ? updates.fallbackPrice : getMarketPrice(liveCard);
+    const liveStatic = updates.fallbackPrice != null;
+    const fresh = createCardElement(newOverrides.query || query, liveCard, livePrice, newOverrides, liveStatic);
+    wrapper.replaceWith(fresh);
+    closeEditModal();
+  } catch (err) {
+    alert("Failed to save: " + err.message);
+    saveBtn.disabled    = false;
+    saveBtn.textContent = "Save Changes";
+  }
 }
