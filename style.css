@@ -1051,20 +1051,13 @@ footer a {
 
 
 /* ── Pricing hidden by default; owner toggle adds .prices-on to body ── */
-.card-price-badge,
-.card-price,
-.card-price-unknown,
-.card-price-static,
+body:not(.prices-on) .card-price-badge,
+body:not(.prices-on) .card-price,
+body:not(.prices-on) .card-price-unknown,
+body:not(.prices-on) .card-price-static,
 .skeleton-price,
-.stat-card:has(#total-value),
-footer { display: none !important; }
-
-body.prices-on .card-price-badge { display: block !important; }
-body.prices-on .card-price,
-body.prices-on .card-price-unknown,
-body.prices-on .card-price-static { display: block !important; }
-body.prices-on .stat-card:has(#total-value) { display: flex !important; }
-body.prices-on footer { display: block !important; }
+body:not(.prices-on) .stat-card:has(#total-value),
+body:not(.prices-on) footer { display: none !important; }
 
 
 /* ── Public binder nav (Log In / My Account) ────────────── */
