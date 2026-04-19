@@ -1258,4 +1258,11 @@ const CARD_LIST = [
     setName: "Ascended Heroes",
     tcgUrl: "https://prices.pokemontcg.io/tcgplayer/me2pt5-155",
   },
+  {
+    query: "Swinub 165/165",
+    cardId: "sv9-165",
+    setName: "Journey Together",
+    tcgUrl: "https://prices.pokemontcg.io/tcgplayer/sv9-165",
+    fallbackPrice: 3.23,
+  },
 ];
