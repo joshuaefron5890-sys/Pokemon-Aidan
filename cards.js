@@ -1252,4 +1252,10 @@ const CARD_LIST = [
     setName: "Evolutions",
     tcgUrl: "https://www.tcgplayer.com/product/124024/pokemon-xy-evolutions-charizard-ex",
   },
+  {
+    query: "N's Zekrom 155",
+    cardId: "me2pt5-155",
+    setName: "Ascended Heroes",
+    tcgUrl: "https://prices.pokemontcg.io/tcgplayer/me2pt5-155",
+  },
 ];
