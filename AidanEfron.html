@@ -5,7 +5,7 @@
   <meta name="pinterest" content="nopin" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aidan's Pokémon Card Collection</title>
-  <link rel="stylesheet" href="style.css?v=63" />
+  <link rel="stylesheet" href="style.css?v=64" />
 
   <!-- Favicon: Pokéball emoji -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
@@ -98,7 +98,7 @@
     </div>
     <div class="filter-group hidden" id="price-toggle-group">
       <label class="price-toggle-label" title="Toggle market price display">
-        <input type="checkbox" id="price-toggle" checked>
+        <input type="checkbox" id="price-toggle">
         <span class="price-toggle-track"></span>
         <span class="price-toggle-text">Market Prices</span>
       </label>
@@ -167,13 +167,14 @@
             const ptg = document.getElementById("price-toggle-group");
             const pt  = document.getElementById("price-toggle");
             if (ptg && pt) {
-              const showPrices = localStorage.getItem("binder_show_prices") !== "false";
-              if (!showPrices) { document.body.classList.add("prices-off"); pt.checked = false; }
+              const showPrices = localStorage.getItem("binder_show_prices") === "true";
+              pt.checked = showPrices;
+              if (showPrices) document.body.classList.add("prices-on");
               ptg.classList.remove("hidden");
               pt.addEventListener("change", e => {
                 const show = e.target.checked;
                 localStorage.setItem("binder_show_prices", show ? "true" : "false");
-                document.body.classList.toggle("prices-off", !show);
+                document.body.classList.toggle("prices-on", show);
               });
             }
           }

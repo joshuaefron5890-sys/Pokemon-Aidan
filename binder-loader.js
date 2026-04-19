@@ -96,8 +96,8 @@ function initPriceToggle() {
   const toolbar = document.getElementById("filter-bar");
   if (!toolbar) return;
 
-  const showPrices = localStorage.getItem("binder_show_prices") !== "false";
-  document.body.classList.toggle("prices-off", !showPrices);
+  const showPrices = localStorage.getItem("binder_show_prices") === "true";
+  document.body.classList.toggle("prices-on", showPrices);
 
   const wrap = document.createElement("div");
   wrap.className = "filter-group";
@@ -113,7 +113,7 @@ function initPriceToggle() {
   document.getElementById("price-toggle").addEventListener("change", e => {
     const show = e.target.checked;
     localStorage.setItem("binder_show_prices", show ? "true" : "false");
-    document.body.classList.toggle("prices-off", !show);
+    document.body.classList.toggle("prices-on", show);
   });
 }
 

@@ -1050,7 +1050,7 @@ footer a {
 .empty-state-sub { font-size: .9rem; margin: 0; }
 
 
-/* ── Hide all pricing ───────────────────────────────────── */
+/* ── Pricing hidden by default; owner toggle adds .prices-on to body ── */
 .card-price-badge,
 .card-price,
 .card-price-unknown,
@@ -1058,6 +1058,13 @@ footer a {
 .skeleton-price,
 .stat-card:has(#total-value),
 footer { display: none !important; }
+
+body.prices-on .card-price-badge { display: block !important; }
+body.prices-on .card-price,
+body.prices-on .card-price-unknown,
+body.prices-on .card-price-static { display: block !important; }
+body.prices-on .stat-card:has(#total-value) { display: flex !important; }
+body.prices-on footer { display: block !important; }
 
 
 /* ── Public binder nav (Log In / My Account) ────────────── */
@@ -1138,9 +1145,6 @@ footer { display: none !important; }
 #netlify-identity-widget.nf-open { visibility: visible !important; }
 
 /* ── Owner price toggle ──────────────────────────────────── */
-body.prices-off .card-price-badge,
-body.prices-off .card-price { display: none !important; }
-
 .price-toggle-label {
   display: flex;
   align-items: center;
