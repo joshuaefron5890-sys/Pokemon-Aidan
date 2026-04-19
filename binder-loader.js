@@ -70,10 +70,10 @@ async function initBinder() {
     const inAdminFrame = window.self !== window.top;
     if (data.isOwner && inAdminFrame) initOwnerBubble(slug, data.owner);
 
-    // Enable favorites for logged-in non-owners viewing on the public page
+    // Enable favorites for all non-owner viewers (guests see hearts too; login modal on first click)
     const currentUser = window.netlifyIdentity?.currentUser();
-    if (currentUser && !data.isOwner && !inAdminFrame) {
-      window.initFavorites?.(currentUser, slug, data.owner);
+    if (!data.isOwner && !inAdminFrame) {
+      window.initFavorites?.(currentUser || null, slug, data.owner);
     }
 
     // Kick off the card grid

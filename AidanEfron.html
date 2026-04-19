@@ -121,7 +121,7 @@
   <script src="cards.js?v=44"></script>
   <script src="app.js?v=51"></script>
   <script src="background.js?v=44"></script>
-  <script src="favorites.js?v=1"></script>
+  <script src="favorites.js?v=2"></script>
 
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
@@ -150,8 +150,12 @@
           btn.addEventListener("click", () => { document.location.href = "/admin"; });
           if (!isOwner) window.initFavorites?.(user, "aidan", "Aidan");
         } else {
+          // Show hearts to guests too; login modal on first click
+          window.initFavorites?.(null, "aidan", "Aidan");
           btn.addEventListener("click", () => { window.netlifyIdentity.open("login"); });
           window.netlifyIdentity.on("login", () => {
+            // Skip redirect when login was triggered by the favorites signup modal
+            if (window._netlifyFavLogin) return;
             const wizardState = localStorage.getItem("wizard_state_v1");
             if (wizardState) {
               try {
