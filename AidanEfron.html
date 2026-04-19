@@ -125,6 +125,9 @@
 
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
+    // Set BINDER_SLUG so app.js can show the delete button when inside the admin iframe
+    window.BINDER_SLUG = "aidan";
+
     // Hide nav when embedded in the admin iframe
     if (window.self !== window.top) document.querySelector('.binder-nav').style.display = 'none';
 
