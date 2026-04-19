@@ -550,9 +550,16 @@ async function loadCollection() {
   const newBackupEntries = {};
   const newServerImageEntries = {};
   const [serverImageCache, serverOverridesMap] = await Promise.all([serverImageCachePromise, serverOverridesPromise]);
+
+  // Include blob-only cards (added via admin chat) that aren't in the static CARD_LIST
+  const cardListQueries = new Set(CARD_LIST.map(entryQuery));
+  const blobOnlyCards = Object.values(serverOverridesMap).filter(c => !cardListQueries.has(c.query));
+  const effectiveCardList = blobOnlyCards.length ? [...CARD_LIST, ...blobOnlyCards] : CARD_LIST;
+  if (blobOnlyCards.length) countEl.textContent = effectiveCardList.length;
+
   let doneCount = 0;
   const results = await Promise.all(
-    CARD_LIST.map(async rawEntry => {
+    effectiveCardList.map(async rawEntry => {
       const query = entryQuery(rawEntry);
       const entry = serverOverridesMap[query] ? { ...rawEntry, ...serverOverridesMap[query] } : rawEntry;
       const overrides = entryOverrides(entry);
@@ -612,7 +619,7 @@ async function loadCollection() {
         : overrides;
 
       doneCount++;
-      if (freshCount > 0) loadingEl.textContent = `Loading ${doneCount} / ${CARD_LIST.length}…`;
+      if (freshCount > 0) loadingEl.textContent = `Loading ${doneCount} / ${effectiveCardList.length}…`;
       return { query, card, price, overrides: enrichedOverrides, isStaticPrice };
     })
   );
