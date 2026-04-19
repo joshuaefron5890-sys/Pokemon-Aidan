@@ -937,6 +937,7 @@ const CARD_LIST = [
     query: "Larry's Skill 139/131",
     cardId: "sv7pt5-139",
     setName: "Prismatic Evolutions",
+    tcgUrl: "https://www.tcgplayer.com/product/676048/pokemon-me-ascended-heroes-slurpuff-236-217?page=1&Language=English",
   },
   {
     query: "Judge 222/182",
