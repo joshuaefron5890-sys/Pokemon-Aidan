@@ -115,4 +115,11 @@ async function putTradeMessages(tradeId, messages) {
   await tradesStore().set(`messages-${tradeId}`, JSON.stringify(messages));
 }
 
-module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto, deletePhoto, getFavorites, putFavorites, getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades, getProfileData, putProfileData, getLocation, putLocation, getTradeMessages, putTradeMessages, getSentOffers, putSentOffers, getReceivedOffers, putReceivedOffers };
+async function getOfferMessages(offerId) {
+  return (await offersStore().get(`messages-${offerId}`, { type: "json" })) ?? [];
+}
+async function putOfferMessages(offerId, messages) {
+  await offersStore().set(`messages-${offerId}`, JSON.stringify(messages));
+}
+
+module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto, deletePhoto, getFavorites, putFavorites, getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades, getProfileData, putProfileData, getLocation, putLocation, getTradeMessages, putTradeMessages, getSentOffers, putSentOffers, getReceivedOffers, putReceivedOffers, getOfferMessages, putOfferMessages };

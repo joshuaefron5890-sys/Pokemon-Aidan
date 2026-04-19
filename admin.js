@@ -881,6 +881,47 @@ document.getElementById("offer-submit-btn").addEventListener("click", async () =
   }
 });
 
+// ── Offer chat ────────────────────────────────────────────────
+
+async function loadOfferMessages(offerId, msgsEl) {
+  try {
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
+    const slug  = encodeURIComponent(window.BINDER_SLUG || "");
+    const res   = await fetch(`/.netlify/functions/get-offer-messages?offerId=${encodeURIComponent(offerId)}&mySlug=${slug}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error();
+    const messages = await res.json();
+    renderTradeMessages(messages, msgsEl, user?.id);
+  } catch {
+    msgsEl.innerHTML = `<p class="trade-chat-empty">Could not load messages.</p>`;
+  }
+}
+
+async function sendOfferMessage(offerId, inputEl, msgsEl) {
+  const text = inputEl.value.trim();
+  if (!text) return;
+  inputEl.value = "";
+  inputEl.disabled = true;
+  try {
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
+    const res   = await fetch("/.netlify/functions/send-offer-message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ offerId, mySlug: window.BINDER_SLUG || "", text }),
+    });
+    if (!res.ok) throw new Error();
+    await loadOfferMessages(offerId, msgsEl);
+  } catch {
+    inputEl.value = text;
+  } finally {
+    inputEl.disabled = false;
+    inputEl.focus();
+  }
+}
+
 // ── Offers Made view ─────────────────────────────────────────
 
 async function loadOffersView() {
@@ -912,11 +953,23 @@ async function loadOffersView() {
 
     if (received.length) {
       container.insertAdjacentHTML("beforeend", `<div class="trades-section-label">Received</div>`);
-      received.forEach(offer => container.appendChild(buildOfferCard(offer, "received")));
+      received.forEach(offer => {
+        const el = buildOfferCard(offer, "received");
+        container.appendChild(el);
+        if (["pending", "accepted"].includes(offer.status)) {
+          loadOfferMessages(offer.id, el.querySelector(".trade-chat-msgs"));
+        }
+      });
     }
     if (sent.length) {
       container.insertAdjacentHTML("beforeend", `<div class="trades-section-label" style="margin-top:1.5rem">Sent by You</div>`);
-      sent.forEach(offer => container.appendChild(buildOfferCard(offer, "sent")));
+      sent.forEach(offer => {
+        const el = buildOfferCard(offer, "sent");
+        container.appendChild(el);
+        if (["pending", "accepted"].includes(offer.status)) {
+          loadOfferMessages(offer.id, el.querySelector(".trade-chat-msgs"));
+        }
+      });
     }
   } catch (err) {
     container.innerHTML = `<p style="padding:1.5rem;color:var(--text-muted)">Failed to load: ${err.message}</p>`;
@@ -990,6 +1043,24 @@ function buildOfferCard(offer, direction) {
     rmBtn.textContent = "Remove";
     rmBtn.addEventListener("click", () => doOfferAction(offer.id, "delete", null, el));
     actionsEl.appendChild(rmBtn);
+  }
+
+  if (["pending", "accepted"].includes(offer.status)) {
+    const chatEl = document.createElement("div");
+    chatEl.className = "trade-chat";
+    chatEl.innerHTML = `
+      <div class="trade-chat-label">Messages</div>
+      <div class="trade-chat-msgs"><p class="trade-chat-empty">Loading…</p></div>
+      <div class="trade-chat-compose">
+        <input class="trade-chat-input" type="text" placeholder="Type a message…" autocomplete="off" />
+        <button class="trade-chat-send">Send</button>
+      </div>`;
+    const input   = chatEl.querySelector(".trade-chat-input");
+    const sendBtn = chatEl.querySelector(".trade-chat-send");
+    const msgsEl  = chatEl.querySelector(".trade-chat-msgs");
+    sendBtn.addEventListener("click", () => { if (input.value.trim()) sendOfferMessage(offer.id, input, msgsEl); });
+    input.addEventListener("keydown", e => { if (e.key === "Enter" && input.value.trim()) sendOfferMessage(offer.id, input, msgsEl); });
+    el.appendChild(chatEl);
   }
 
   return el;
