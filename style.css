@@ -1134,3 +1134,7 @@ footer { display: none !important; }
 @media (hover: none) {
   .card-fav-btn { opacity: .75; transform: scale(1); }
 }
+
+/* ── Netlify Identity widget: hide floating button, show modal on .nf-open ── */
+#netlify-identity-widget { visibility: hidden !important; }
+#netlify-identity-widget.nf-open { visibility: visible !important; }

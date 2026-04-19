@@ -282,7 +282,7 @@
     const style = document.createElement("style");
     style.id = "fav-signup-styles";
     style.textContent = `
-      #fav-signup-modal { display: none; position: fixed; inset: 0; z-index: 9000; align-items: center; justify-content: center; }
+      #fav-signup-modal { display: none; position: fixed; inset: 0; z-index: 999999; align-items: center; justify-content: center; }
       #fav-signup-modal.fsm-visible { display: flex; }
       .fsm-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); }
       .fsm-card {

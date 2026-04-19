@@ -5,7 +5,7 @@
   <meta name="pinterest" content="nopin" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aidan's Pokémon Card Collection</title>
-  <link rel="stylesheet" href="style.css?v=58" />
+  <link rel="stylesheet" href="style.css?v=59" />
 
   <!-- Favicon: Pokéball emoji -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
@@ -121,7 +121,7 @@
   <script src="cards.js?v=44"></script>
   <script src="app.js?v=51"></script>
   <script src="background.js?v=44"></script>
-  <script src="favorites.js?v=3"></script>
+  <script src="favorites.js?v=4"></script>
 
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
@@ -130,6 +130,13 @@
 
     // Hide nav when embedded in the admin iframe
     if (window.self !== window.top) document.querySelector('.binder-nav').style.display = 'none';
+
+    // Suppress Netlify Identity's floating button; show widget only when modal is open
+    if (window.netlifyIdentity) {
+      const _niw = () => document.getElementById("netlify-identity-widget");
+      window.netlifyIdentity.on("open",  () => _niw()?.classList.add("nf-open"));
+      window.netlifyIdentity.on("close", () => _niw()?.classList.remove("nf-open"));
+    }
 
     // Load owner location
     fetch('/.netlify/functions/get-location?slug=aidan')
