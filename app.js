@@ -275,7 +275,7 @@ function createCardElement(query, card, price, overrides = {}, isStaticPrice = f
           : `<div class="card-img-placeholder"><span>${cardName}</span></div>`
         }
         ${grade ? `<div class="card-grade-badge">Grade ${grade}</div>` : ""}
-        ${price != null ? `<div class="card-price-badge${isStaticPrice ? " static" : ""}">${isStaticPrice ? "~" : ""}${priceDisplay}</div>` : ""}
+        ${price != null ? `<div class="card-price-badge${isStaticPrice ? " static" : ""}${price != null && !isStaticPrice ? (price >= 50 ? " tier-epic" : price >= 20 ? " tier-high" : price >= 5 ? " tier-mid" : " tier-low") : ""}">${isStaticPrice ? "~" : ""}${priceDisplay}</div>` : ""}
       </div>
       <div class="card-info">
         <div class="card-name">${cardName}</div>

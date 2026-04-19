@@ -137,12 +137,20 @@ header h1 {
 }
 
 .stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: rgba(14,32,64,0.55);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(30,58,95,0.6);
+  border-radius: 14px;
   padding: 1rem 2rem;
   text-align: center;
   min-width: 160px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05);
+  transition: box-shadow .2s, border-color .2s;
+}
+.stat-card:hover {
+  border-color: rgba(96,165,250,.3);
+  box-shadow: 0 12px 40px rgba(0,0,0,.35), 0 0 0 1px rgba(96,165,250,.08), inset 0 1px 0 rgba(255,255,255,.07);
 }
 
 .stat-label {
@@ -439,17 +447,23 @@ header h1 {
 /* ── Card Item ─────────────────────────────────────────── */
 .card-item {
   border-radius: var(--card-radius);
-  background: var(--surface);
+  background: linear-gradient(160deg, #0f2444 0%, #0a1a30 100%);
   border: 1px solid var(--border);
-  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s ease, border-color .2s;
   overflow: hidden;
   position: relative;
+  animation: card-in .38s ease both;
+}
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(16px) scale(.97); }
+  to   { opacity: 1; transform: none; }
 }
 
 .card-item:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 16px 40px var(--shadow);
-  border-color: var(--accent);
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 20px 50px rgba(0,0,0,.65), 0 0 0 1px rgba(247,201,72,.2);
+  border-color: rgba(247,201,72,.5);
   z-index: 2;
 }
 
@@ -500,19 +514,19 @@ header h1 {
 /* Rarity glows */
 .rarity-secret {
   border-color: #a855f7;
-  box-shadow: 0 0 0 1px #a855f7, 0 4px 20px rgba(168,85,247,.25);
+  box-shadow: 0 0 0 1px #a855f7, 0 4px 24px rgba(168,85,247,.3), 0 0 40px rgba(168,85,247,.12);
 }
 .rarity-secret:hover {
-  box-shadow: 0 16px 40px rgba(168,85,247,.5);
+  box-shadow: 0 20px 50px rgba(168,85,247,.55), 0 0 0 1px #c084fc, 0 0 60px rgba(168,85,247,.2);
   border-color: #c084fc;
 }
 
 .rarity-ultra {
   border-color: #f59e0b;
-  box-shadow: 0 0 0 1px #f59e0b, 0 4px 20px rgba(245,158,11,.2);
+  box-shadow: 0 0 0 1px #f59e0b, 0 4px 24px rgba(245,158,11,.25), 0 0 40px rgba(245,158,11,.1);
 }
 .rarity-ultra:hover {
-  box-shadow: 0 16px 40px rgba(245,158,11,.4);
+  box-shadow: 0 20px 50px rgba(245,158,11,.5), 0 0 0 1px #fbbf24, 0 0 60px rgba(245,158,11,.18);
 }
 
 .rarity-holo {
@@ -529,9 +543,45 @@ header h1 {
 }
 
 /* ── Card Image ────────────────────────────────────────── */
+/* ── Holographic shimmer (appears on hover) ────────────── */
+.card-image-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    transparent 22%,
+    rgba(247,201,72,.09) 30%,
+    rgba(96,165,250,.12) 37%,
+    rgba(168,85,247,.1) 44%,
+    rgba(16,185,129,.09) 51%,
+    rgba(239,68,68,.08) 58%,
+    transparent 66%,
+    transparent 100%
+  );
+  background-size: 300% 100%;
+  opacity: 0;
+  transition: opacity .4s;
+  pointer-events: none;
+  z-index: 1;
+}
+.card-item:hover .card-image-wrap::after {
+  opacity: 1;
+  animation: holo-sweep 3s linear infinite;
+}
+.rarity-secret .card-image-wrap::after,
+.rarity-ultra .card-image-wrap::after { opacity: .35; animation: holo-sweep 4s linear infinite; }
+.rarity-secret:hover .card-image-wrap::after,
+.rarity-ultra:hover .card-image-wrap::after { opacity: 1; animation: holo-sweep 1.8s linear infinite; }
+@keyframes holo-sweep {
+  0%   { background-position: 200% 0%; }
+  100% { background-position: -200% 0%; }
+}
+
 .card-image-wrap {
   position: relative;
-  background: var(--surface2);
+  background: radial-gradient(ellipse at 50% 110%, #1a3560 0%, #090f1e 100%);
   aspect-ratio: 2.5 / 3.5;
   overflow: hidden;
 }
@@ -565,15 +615,24 @@ header h1 {
   position: absolute;
   bottom: 8px;
   right: 8px;
-  background: rgba(0,0,0,.85);
+  background: rgba(0,0,0,.8);
   color: var(--accent);
-  font-size: .8rem;
+  font-size: .78rem;
   font-weight: 700;
-  padding: .2rem .55rem;
+  padding: .22rem .6rem;
   border-radius: 20px;
-  border: 1px solid rgba(247,201,72,.3);
-  backdrop-filter: blur(4px);
+  border: 1px solid rgba(247,201,72,.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0,0,0,.5);
+  letter-spacing: .01em;
 }
+/* Price tier color coding */
+.card-price-badge.tier-low  { color: #34d399; border-color: rgba(16,185,129,.4); background: rgba(0,0,0,.82); }
+.card-price-badge.tier-mid  { color: #60a5fa; border-color: rgba(96,165,250,.4); background: rgba(0,0,0,.82); }
+.card-price-badge.tier-high { color: #fbbf24; border-color: rgba(245,158,11,.4); background: rgba(0,0,0,.82); }
+.card-price-badge.tier-epic { color: #c084fc; border-color: rgba(168,85,247,.45); background: rgba(0,0,0,.82); box-shadow: 0 0 10px rgba(168,85,247,.25), 0 2px 8px rgba(0,0,0,.5); }
 
 /* ── Card Info ─────────────────────────────────────────── */
 .card-info {
@@ -990,33 +1049,30 @@ footer { display: none !important; }
 
 
 /* ── Public binder nav (Log In / My Account) ────────────── */
+/* ── Binder nav ─────────────────────────────────────────── */
 .binder-nav {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 100;
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: .75rem 1.5rem;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: rgba(10,10,20,.82);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255,255,255,.06);
+  gap: .5rem;
 }
 .binder-nav-btn {
-  background: none;
-  border: 1.5px solid var(--border);
+  background: rgba(7,22,36,.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(30,58,95,.7);
+  border-radius: 20px;
   color: var(--text-muted);
   font-family: inherit;
-  font-size: .85rem;
+  font-size: .8rem;
   font-weight: 600;
-  padding: .45rem 1.1rem;
-  border-radius: 8px;
+  padding: .4rem .9rem;
   cursor: pointer;
-  text-decoration: none;
-  transition: border-color .15s, color .15s;
+  transition: background .15s, color .15s, border-color .15s;
 }
-.binder-nav-btn:hover { border-color: var(--accent2); color: var(--text); }
+.binder-nav-btn:hover { background: rgba(14,32,64,.9); color: var(--text); border-color: rgba(96,165,250,.35); }
 
 /* ── Favorites heart button ─────────────────────────────── */
 .card-fav-btn {
