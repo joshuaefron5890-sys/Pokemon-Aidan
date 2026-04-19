@@ -646,7 +646,7 @@ async function createBinder() {
     const fullUrl = `${location.origin}/binder/${data.slug}`;
     document.getElementById("success-url").textContent = fullUrl;
     document.getElementById("go-to-binder").addEventListener("click", () => {
-      window.location.href = fullUrl;
+      window.location.href = "/admin";
     });
     document.getElementById("success-url").addEventListener("click", () => {
       navigator.clipboard?.writeText(fullUrl);
