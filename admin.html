@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" />
-  <link rel="stylesheet" href="admin.css?v=7" />
+  <link rel="stylesheet" href="admin.css?v=8" />
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
@@ -256,6 +256,13 @@
             </div>
             <button id="profile-save-location-btn" class="add-card-trigger-btn" disabled>Save Location</button>
             <p id="profile-location-status" class="profile-status"></p>
+          </div>
+
+          <!-- Sign Out -->
+          <div class="profile-section-card profile-signout-card">
+            <h3 class="profile-section-title">Account</h3>
+            <p class="profile-section-desc">You are signed in as <strong id="profile-user-email"></strong></p>
+            <button id="profile-logout-btn" class="profile-remove-btn profile-logout-btn">Sign Out</button>
           </div>
 
         </div>
@@ -533,7 +540,7 @@
     </div>
   </div>
 
-  <script src="admin.js?v=11"></script>
+  <script src="admin.js?v=12"></script>
   <script src="add-card-modal.js"></script>
 </body>
 </html>

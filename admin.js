@@ -14,6 +14,8 @@ document.getElementById("login-btn").addEventListener("click",
   () => netlifyIdentity.open("login"));
 document.getElementById("logout-btn").addEventListener("click",
   () => netlifyIdentity.logout());
+document.getElementById("profile-logout-btn").addEventListener("click",
+  () => netlifyIdentity.logout());
 
 // Map known admin emails to their binder URLs.
 // Add entries here as new admins are created.
@@ -40,6 +42,8 @@ function showAdmin(user) {
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("admin-app").classList.remove("hidden");
   document.getElementById("user-email").textContent = user.email;
+  const profileEmail = document.getElementById("profile-user-email");
+  if (profileEmail) profileEmail.textContent = user.email;
 
   const binderUrl = binderUrlForUser(user);
   document.getElementById("binder-iframe").src = binderUrl;

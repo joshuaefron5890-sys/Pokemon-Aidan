@@ -1343,6 +1343,7 @@ a.binder-card { cursor: pointer; }
   transition: background .15s;
 }
 .profile-remove-btn:hover { background: rgba(239,68,68,.08); }
+.profile-logout-btn { padding: .5rem 1.5rem; }
 .profile-status {
   font-size: .82rem;
   color: var(--text-muted);
