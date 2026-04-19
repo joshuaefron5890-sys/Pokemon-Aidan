@@ -36,16 +36,33 @@ function isAidan(user) {
   return user?.email === "joshuaefron5890@gmail.com";
 }
 
-function showAdmin(user) {
+async function showAdmin(user) {
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("admin-app").classList.remove("hidden");
   document.getElementById("user-email").textContent = user.email;
   const profileEmail = document.getElementById("profile-user-email");
   if (profileEmail) profileEmail.textContent = user.email;
 
-  const binderUrl = binderUrlForUser(user);
-  const iframe    = document.getElementById("binder-iframe");
-  const pubLink   = document.getElementById("view-public-link");
+  let binderUrl = binderUrlForUser(user);
+  const iframe  = document.getElementById("binder-iframe");
+  const pubLink = document.getElementById("view-public-link");
+
+  // If metadata/map lookup missed, query the server for a binder linked to this email
+  if (!binderUrl && !isAidan(user)) {
+    try {
+      const token = await user.jwt().catch(() => null);
+      const res   = await fetch("/.netlify/functions/get-my-binder", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        binderUrl = data.binderUrl;
+        window.BINDER_SLUG = data.slug;
+        // Persist to metadata so we don't need to re-query next time
+        try { await user.update({ data: { binder_url: binderUrl } }); } catch {}
+      }
+    } catch {}
+  }
 
   if (binderUrl) {
     iframe.src = binderUrl;
@@ -68,9 +85,11 @@ function showAdmin(user) {
   // Add Card button is for all binder owners — modal routes to the right endpoint.
   const aidan = isAidan(user);
   window.IS_AIDAN_ADMIN = aidan;
-  window.BINDER_SLUG = aidan ? "aidan"
-    : binderUrl?.startsWith("/binder/") ? binderUrl.replace("/binder/", "")
-    : null;
+  if (!window.BINDER_SLUG) {
+    window.BINDER_SLUG = aidan ? "aidan"
+      : binderUrl?.startsWith("/binder/") ? binderUrl.replace("/binder/", "")
+      : null;
+  }
 
   showView("binder");
 }

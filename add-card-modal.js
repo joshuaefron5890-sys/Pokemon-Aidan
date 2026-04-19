@@ -411,6 +411,20 @@
     }
   });
 
-  document.getElementById("acm-done-btn").addEventListener("click", closeModal);
+  document.getElementById("acm-done-btn").addEventListener("click", () => {
+    closeModal();
+    // Refresh the binder iframe so newly added cards are visible
+    const iframe = document.getElementById("binder-iframe");
+    if (iframe && window.BINDER_SLUG) {
+      const newSrc = `/binder/${window.BINDER_SLUG}`;
+      if (iframe.src !== newSrc && !iframe.src.endsWith(newSrc)) {
+        iframe.src = newSrc;
+      } else {
+        iframe.contentWindow?.location.reload();
+      }
+      const pubLink = document.getElementById("view-public-link");
+      if (pubLink) pubLink.href = newSrc;
+    }
+  });
 
 })();
