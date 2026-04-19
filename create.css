@@ -148,6 +148,14 @@ input::placeholder { color: var(--muted); }
 
 .field-error { color: var(--red); font-size: .8rem; margin-top: .4rem; }
 .field-opt { font-size: .75rem; font-weight: 400; color: var(--muted); margin-left: .3rem; }
+.step-optional-tag {
+  display: inline-block;
+  font-size: .65rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--accent2); background: rgba(155,109,255,.12);
+  border: 1px solid rgba(155,109,255,.25);
+  border-radius: 4px; padding: .1rem .4rem; margin-left: .5rem;
+  vertical-align: middle;
+}
 .hidden { display: none !important; }
 
 /* ── Photo upload ─────────────────────────────────────────── */

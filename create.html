@@ -99,15 +99,15 @@
         <div class="field">
           <label>Visibility</label>
           <div class="vis-group">
-            <label class="vis-option checked" id="opt-public">
-              <input type="radio" name="visibility" value="public" checked />
+            <label class="vis-option" id="opt-public">
+              <input type="radio" name="visibility" value="public" />
               <span class="vis-label">🌐 Public</span>
               <span class="vis-desc">Anyone can view your binder</span>
             </label>
-            <label class="vis-option" id="opt-private">
-              <input type="radio" name="visibility" value="private" />
+            <label class="vis-option checked" id="opt-private">
+              <input type="radio" name="visibility" value="private" checked />
               <span class="vis-label">🔒 Private</span>
-              <span class="vis-desc">Only you can see it</span>
+              <span class="vis-desc">Only you can see it (you can make it public later)</span>
             </label>
           </div>
         </div>
@@ -149,9 +149,9 @@
 
       <!-- ── Step 3: Add cards ── -->
       <div class="wizard-step" id="step-3">
-        <div class="step-eyebrow">Step 3 of 4</div>
+        <div class="step-eyebrow">Step 3 of 4 <span class="step-optional-tag">Optional</span></div>
         <h2>Add your cards</h2>
-        <p class="sub">Search for cards by name and number to add them to your binder.</p>
+        <p class="sub">Search for cards to add them now, or skip and add them any time from your binder.</p>
 
         <div class="card-search-field">
           <div class="card-search-row">
@@ -177,9 +177,7 @@
           <span id="step3-label">Create My Binder</span>
           <div class="spinner hidden" id="step3-spinner"></div>
         </button>
-        <p style="text-align:center;margin-top:.75rem">
-          <button id="skip-cards" class="btn-secondary">Skip — add cards later</button>
-        </p>
+        <button id="skip-cards" class="btn-secondary" style="width:100%;margin-top:.5rem">Skip — add cards later</button>
       </div>
 
       <!-- ── Step 4: Success ── -->

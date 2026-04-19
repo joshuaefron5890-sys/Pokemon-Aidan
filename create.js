@@ -6,7 +6,7 @@ const STATE_KEY = "wizard_state_v1";
 let wizardData = {
   owner:     "",
   slug:      "",
-  isPublic:  true,
+  isPublic:  false,
   token:     null,   // JWT after signup/login
   cards:     [],     // confirmed cards from step 3
   photo:     null,   // base64 JPEG after crop (persisted so page reloads don't lose it)
