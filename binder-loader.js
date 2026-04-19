@@ -9,7 +9,8 @@ async function initBinder() {
   if (!slug) { showError("No binder specified."); return; }
   window.BINDER_SLUG = slug;
 
-  const token = window.netlifyIdentity?.currentUser()?.token?.access_token;
+  const currentUser = window.netlifyIdentity?.currentUser();
+  const token = currentUser ? await currentUser.jwt().catch(() => null) : null;
 
   // Blobs storage is instant — no retry needed
   let res, data;
@@ -200,7 +201,7 @@ async function sendBinderMsg(slug) {
   const typing = appendBinderTyping(msgs);
 
   try {
-    const token = window.netlifyIdentity?.currentUser()?.token?.access_token;
+    const token = await window.netlifyIdentity?.currentUser()?.jwt().catch(() => null);
     const res = await fetch("/.netlify/functions/binder-chat", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
