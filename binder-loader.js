@@ -105,7 +105,7 @@ function initPriceToggle() {
     <label class="price-toggle-label" title="Toggle market price display">
       <input type="checkbox" id="price-toggle" ${showPrices ? "checked" : ""}>
       <span class="price-toggle-track"></span>
-      <span class="price-toggle-text">Market Prices</span>
+      <span class="price-toggle-text">Show Prices</span>
     </label>
   `;
   toolbar.appendChild(wrap);
