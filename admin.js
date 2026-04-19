@@ -24,14 +24,12 @@ const ADMIN_BINDER_MAP = {
 };
 
 function binderUrlForUser(user) {
-  if (!user) return "/";
+  if (!user) return null;
   // 1. Explicit binder_url in Netlify Identity user metadata
   if (user.user_metadata?.binder_url) return user.user_metadata.binder_url;
   // 2. Known email mapping
   if (ADMIN_BINDER_MAP[user.email]) return ADMIN_BINDER_MAP[user.email];
-  // 3. Derive from full name: "Aidan Efron" → "/AidanEfron"
-  const slug = (user.user_metadata?.full_name || "").replace(/\s+/g, "");
-  return slug ? `/${slug}` : "/";
+  return null;
 }
 
 function isAidan(user) {
@@ -46,17 +44,32 @@ function showAdmin(user) {
   if (profileEmail) profileEmail.textContent = user.email;
 
   const binderUrl = binderUrlForUser(user);
-  document.getElementById("binder-iframe").src = binderUrl;
-  const pubLink = document.getElementById("view-public-link");
-  if (pubLink) pubLink.href = binderUrl;
+  const iframe    = document.getElementById("binder-iframe");
+  const pubLink   = document.getElementById("view-public-link");
+
+  if (binderUrl) {
+    iframe.src = binderUrl;
+    if (pubLink) pubLink.href = binderUrl;
+  } else {
+    // No binder yet — show a prompt inside the iframe area
+    iframe.srcdoc = `<!doctype html><html><head><meta charset="UTF-8">
+      <style>body{margin:0;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;color:#e2e8f0;text-align:center}
+      .box{max-width:380px;padding:2rem}.h{font-size:1.4rem;font-weight:700;margin-bottom:.75rem}
+      .p{color:#94a3b8;margin-bottom:1.5rem;line-height:1.6}
+      a{display:inline-block;padding:.65rem 1.5rem;background:#6366f1;color:#fff;border-radius:.5rem;text-decoration:none;font-weight:600}
+      a:hover{background:#4f46e5}</style></head>
+      <body><div class="box"><div class="h">No binder found</div>
+      <p class="p">It looks like your binder wasn't created yet. Click below to set one up.</p>
+      <a href="/create" target="_top">Create My Binder →</a></div></body></html>`;
+    if (pubLink) pubLink.href = "/create";
+  }
 
   // Card Assistant (chat-bubble) is only for Aidan.
   // Add Card button is for all binder owners — modal routes to the right endpoint.
   const aidan = isAidan(user);
-  // Expose routing info for add-card-modal.js
   window.IS_AIDAN_ADMIN = aidan;
   window.BINDER_SLUG = aidan ? "aidan"
-    : binderUrl.startsWith("/binder/") ? binderUrl.replace("/binder/", "")
+    : binderUrl?.startsWith("/binder/") ? binderUrl.replace("/binder/", "")
     : null;
 
   showView("binder");
