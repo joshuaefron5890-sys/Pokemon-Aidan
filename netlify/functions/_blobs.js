@@ -93,4 +93,11 @@ async function deletePhoto(slug) {
   await photoStore().delete(slug);
 }
 
-module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto, deletePhoto, getFavorites, putFavorites, getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades, getProfileData, putProfileData, getLocation, putLocation };
+async function getTradeMessages(tradeId) {
+  return (await tradesStore().get(`messages-${tradeId}`, { type: "json" })) ?? [];
+}
+async function putTradeMessages(tradeId, messages) {
+  await tradesStore().set(`messages-${tradeId}`, JSON.stringify(messages));
+}
+
+module.exports = { getBinder, putBinder, deleteBinder, getManifest, putManifest, putPhoto, getPhoto, deletePhoto, getFavorites, putFavorites, getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades, getProfileData, putProfileData, getLocation, putLocation, getTradeMessages, putTradeMessages };

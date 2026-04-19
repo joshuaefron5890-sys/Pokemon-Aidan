@@ -496,6 +496,9 @@ async function loadTradeProposals() {
       received.forEach(trade => {
         const el = buildTradeCard(trade, "received");
         container.appendChild(el);
+        if (["pending", "accepted"].includes(trade.status)) {
+          loadTradeMessages(trade.id, el.querySelector(".trade-chat-msgs"));
+        }
       });
     }
 
@@ -504,10 +507,73 @@ async function loadTradeProposals() {
       sent.forEach(trade => {
         const el = buildTradeCard(trade, "sent");
         container.appendChild(el);
+        if (["pending", "accepted"].includes(trade.status)) {
+          loadTradeMessages(trade.id, el.querySelector(".trade-chat-msgs"));
+        }
       });
     }
   } catch (err) {
     container.innerHTML = `<p style="padding:1.5rem;color:var(--text-muted)">Failed to load: ${err.message}</p>`;
+  }
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+async function loadTradeMessages(tradeId, msgsEl) {
+  try {
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
+    const slug  = encodeURIComponent(window.BINDER_SLUG || "");
+    const res   = await fetch(`/.netlify/functions/get-trade-messages?tradeId=${encodeURIComponent(tradeId)}&mySlug=${slug}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error();
+    const messages = await res.json();
+    renderTradeMessages(messages, msgsEl, user?.id);
+  } catch {
+    msgsEl.innerHTML = `<p class="trade-chat-empty">Could not load messages.</p>`;
+  }
+}
+
+function renderTradeMessages(messages, msgsEl, myId) {
+  if (!messages.length) {
+    msgsEl.innerHTML = `<p class="trade-chat-empty">No messages yet — start the conversation!</p>`;
+    return;
+  }
+  msgsEl.innerHTML = messages.map(msg => {
+    const mine = msg.senderId === myId;
+    const time = new Date(msg.timestamp).toLocaleTimeString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    return `<div class="trade-chat-msg ${mine ? "mine" : "theirs"}">
+      <span class="trade-chat-sender">${mine ? "You" : escHtml(msg.senderEmail)}</span>
+      <div class="trade-chat-bubble">${escHtml(msg.text)}</div>
+      <span class="trade-chat-time">${time}</span>
+    </div>`;
+  }).join("");
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+async function sendTradeMessage(tradeId, inputEl, msgsEl) {
+  const text = inputEl.value.trim();
+  if (!text) return;
+  inputEl.value = "";
+  inputEl.disabled = true;
+  try {
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
+    const res   = await fetch("/.netlify/functions/send-trade-message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ tradeId, mySlug: window.BINDER_SLUG || "", text }),
+    });
+    if (!res.ok) throw new Error();
+    await loadTradeMessages(tradeId, msgsEl);
+  } catch {
+    inputEl.value = text;
+  } finally {
+    inputEl.disabled = false;
+    inputEl.focus();
   }
 }
 
@@ -580,6 +646,31 @@ function buildTradeCard(trade, direction) {
     rmBtn.textContent = "Remove";
     rmBtn.addEventListener("click", () => doTradeAction(trade.id, "delete", null, el));
     actionsEl.appendChild(rmBtn);
+  }
+
+  // Chat section for active trades
+  if (["pending", "accepted"].includes(trade.status)) {
+    const chatEl = document.createElement("div");
+    chatEl.className = "trade-chat";
+    chatEl.innerHTML = `
+      <div class="trade-chat-label">Messages</div>
+      <div class="trade-chat-msgs"><p class="trade-chat-empty">Loading…</p></div>
+      <div class="trade-chat-compose">
+        <input class="trade-chat-input" type="text" placeholder="Type a message…" autocomplete="off" />
+        <button class="trade-chat-send">Send</button>
+      </div>`;
+
+    const input   = chatEl.querySelector(".trade-chat-input");
+    const sendBtn = chatEl.querySelector(".trade-chat-send");
+    const msgsEl  = chatEl.querySelector(".trade-chat-msgs");
+
+    const doSend = () => {
+      if (input.value.trim()) sendTradeMessage(trade.id, input, msgsEl);
+    };
+    input.addEventListener("keydown", e => { if (e.key === "Enter") doSend(); });
+    sendBtn.addEventListener("click", doSend);
+
+    el.appendChild(chatEl);
   }
 
   return el;

@@ -864,6 +864,99 @@ a.binder-card { cursor: pointer; }
 .trade-action-reject { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.3); color: #ef4444; }
 .trade-action-withdraw { background: rgba(107,114,128,.1); border-color: rgba(107,114,128,.3); color: #9ca3af; }
 
+/* ── Trade chat ──────────────────────────────────────────────── */
+.trade-chat {
+  border-top: 1px solid var(--border);
+  padding-top: .75rem;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+.trade-chat-label {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.trade-chat-msgs {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  padding-right: .25rem;
+}
+.trade-chat-empty {
+  font-size: .78rem;
+  color: var(--text-muted);
+  margin: 0;
+  text-align: center;
+  padding: .35rem 0;
+}
+.trade-chat-msg {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  max-width: 82%;
+}
+.trade-chat-msg.mine  { align-self: flex-end;  align-items: flex-end; }
+.trade-chat-msg.theirs { align-self: flex-start; align-items: flex-start; }
+.trade-chat-sender {
+  font-size: .67rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.trade-chat-bubble {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: .4rem .65rem;
+  font-size: .82rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.trade-chat-msg.mine .trade-chat-bubble {
+  background: rgba(99,102,241,.14);
+  border-color: rgba(99,102,241,.28);
+}
+.trade-chat-time {
+  font-size: .63rem;
+  color: var(--text-muted);
+  opacity: .6;
+}
+.trade-chat-compose {
+  display: flex;
+  gap: .45rem;
+  align-items: center;
+}
+.trade-chat-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: .82rem;
+  padding: .4rem .6rem;
+  transition: border-color .15s;
+}
+.trade-chat-input:focus { outline: none; border-color: var(--accent2); }
+.trade-chat-send {
+  font-family: inherit;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: .38rem .8rem;
+  border-radius: 8px;
+  border: 1px solid rgba(99,102,241,.35);
+  background: rgba(99,102,241,.12);
+  color: #a5b4fc;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity .15s;
+}
+.trade-chat-send:hover { opacity: .8; }
+
 @media (max-width: 700px) {
   .trade-drawer { width: 100vw; }
   .fav-trade-btn span { display: none; }
