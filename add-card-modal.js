@@ -158,7 +158,14 @@
     } else if (activeTab === "link") {
       const link = document.getElementById("acm-tcg-link").value.trim();
       if (!link || !link.includes("tcgplayer.com")) { errEl.textContent = "Please paste a valid TCGPlayer URL."; return; }
-      userMessage = { role: "user", content: `This is the TCGPlayer link for the card I want to add. Look it up, find its cardId: ${link}` };
+      // Extract card name from URL slug: /product/12345/pokemon-sv-black-bolt-serperior-ex
+      // → remove "pokemon-" brand prefix, convert hyphens to spaces → "sv black bolt serperior ex"
+      let cardQuery = link;
+      try {
+        const slug = new URL(link).pathname.split("/").filter(Boolean).pop();
+        cardQuery = slug.replace(/^pokemon-/, "").replace(/-/g, " ").trim();
+      } catch {}
+      userMessage = { role: "user", content: `Look up this Pokémon card and tell me the cardId, setName, and market price: ${cardQuery}` };
     } else {
       // Photo tab
       if (!pendingPhoto) { errEl.textContent = "Please select or drop a card photo first."; return; }
