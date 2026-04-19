@@ -754,6 +754,14 @@ async function loadProfileView() {
           pendingLocation = { zip, city, state };
           document.getElementById("profile-save-location-btn").disabled = false;
         }
+        // Sync to public locations store in case this was saved before the locations store existed
+        if (slug && city) {
+          fetch("/.netlify/functions/update-profile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ location: { zip, city, state }, slug }),
+          }).catch(() => {});
+        }
       } else {
         document.getElementById("profile-saved-location").classList.add("hidden");
       }
