@@ -96,6 +96,13 @@
         </div>
       </div>
     </div>
+    <div class="filter-group hidden" id="price-toggle-group">
+      <label class="price-toggle-label" title="Toggle market price display">
+        <input type="checkbox" id="price-toggle" checked>
+        <span class="price-toggle-track"></span>
+        <span class="price-toggle-text">Market Prices</span>
+      </label>
+    </div>
   </div>
   <div id="search-status" class="search-status"></div>
 
@@ -156,6 +163,20 @@
           btn.textContent = "My Account";
           btn.addEventListener("click", () => { document.location.href = "/admin"; });
           if (!isOwner) window.initFavorites?.(user, "aidan", "Aidan");
+          if (isOwner) {
+            const ptg = document.getElementById("price-toggle-group");
+            const pt  = document.getElementById("price-toggle");
+            if (ptg && pt) {
+              const showPrices = localStorage.getItem("binder_show_prices") !== "false";
+              if (!showPrices) { document.body.classList.add("prices-off"); pt.checked = false; }
+              ptg.classList.remove("hidden");
+              pt.addEventListener("change", e => {
+                const show = e.target.checked;
+                localStorage.setItem("binder_show_prices", show ? "true" : "false");
+                document.body.classList.toggle("prices-off", !show);
+              });
+            }
+          }
         } else {
           // Show hearts to guests too; login modal on first click
           window.initFavorites?.(null, "aidan", "Aidan");
