@@ -70,6 +70,7 @@ const VIEW_LABELS = {
   shared:    "Shared Binders",
   favorites: "My Favorites",
   trades:    "Trade Proposals",
+  offers:    "Offers Made",
   profile:   "My Profile",
 };
 
@@ -99,6 +100,7 @@ document.querySelectorAll(".nav-item[data-view]").forEach(btn => {
     if (btn.dataset.view === "shared")    loadSharedBinders();
     if (btn.dataset.view === "favorites") loadFavorites();
     if (btn.dataset.view === "trades")    loadTradeProposals();
+    if (btn.dataset.view === "offers")    loadOffersView();
     if (btn.dataset.view === "profile")   loadProfileView();
   });
 });
@@ -213,12 +215,17 @@ async function loadFavorites() {
         <div class="fav-item-actions">
           <button class="fav-trade-btn" title="Propose a trade">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-            Propose Trade
+            <span>Propose Trade</span>
+          </button>
+          <button class="fav-offer-btn" title="Make a price offer">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <span>Make an Offer</span>
           </button>
           <button class="fav-remove-btn" title="Remove from favorites">✕</button>
         </div>`;
 
       el.querySelector(".fav-trade-btn").addEventListener("click", () => openTradeDrawer(card));
+      el.querySelector(".fav-offer-btn").addEventListener("click", () => openOfferModal(card));
       el.querySelector(".fav-remove-btn").addEventListener("click", () => removeFavorite(card, el));
       grid.appendChild(el);
     });
@@ -806,6 +813,203 @@ document.getElementById("popup-fullscreen")?.addEventListener("click", () => {
   bubble.classList.remove("active");
   showView("assistant");
 });
+
+// ── Make an Offer modal ──────────────────────────────────────
+
+let offerTargetCard = null;
+
+function openOfferModal(card) {
+  offerTargetCard = card;
+  const imgSrc = card.imageUrl || (() => {
+    if (!card.cardId) return "";
+    const i = card.cardId.lastIndexOf("-");
+    return i < 0 ? "" : `https://images.pokemontcg.io/${card.cardId.slice(0, i)}/${card.cardId.slice(i + 1)}.png`;
+  })();
+  document.getElementById("offer-card-preview").innerHTML = `
+    <div class="offer-card-preview-inner">
+      ${imgSrc ? `<img src="${imgSrc}" alt="${card.name || card.query}" class="offer-preview-img" />` : ""}
+      <div>
+        <div class="offer-preview-name">${card.name || card.query}</div>
+        <div class="offer-preview-binder">From: ${card.binderOwner || card.binderSlug}'s Binder</div>
+      </div>
+    </div>`;
+  document.getElementById("offer-price-input").value = "";
+  document.getElementById("offer-message-input").value = "";
+  document.getElementById("offer-error").textContent = "";
+  document.getElementById("offer-modal-backdrop").classList.remove("hidden");
+  document.getElementById("offer-modal").classList.remove("hidden");
+  setTimeout(() => document.getElementById("offer-price-input").focus(), 50);
+}
+
+function closeOfferModal() {
+  document.getElementById("offer-modal-backdrop").classList.add("hidden");
+  document.getElementById("offer-modal").classList.add("hidden");
+  offerTargetCard = null;
+}
+
+document.getElementById("offer-modal-close").addEventListener("click", closeOfferModal);
+document.getElementById("offer-cancel-btn").addEventListener("click", closeOfferModal);
+document.getElementById("offer-modal-backdrop").addEventListener("click", closeOfferModal);
+
+document.getElementById("offer-submit-btn").addEventListener("click", async () => {
+  const errEl  = document.getElementById("offer-error");
+  const price  = parseFloat(document.getElementById("offer-price-input").value);
+  const msg    = document.getElementById("offer-message-input").value.trim();
+  const submitBtn = document.getElementById("offer-submit-btn");
+
+  if (!offerTargetCard) return;
+  if (!price || price <= 0) { errEl.textContent = "Please enter a valid offer amount."; return; }
+
+  errEl.textContent = "";
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Submitting…";
+
+  try {
+    const token = await netlifyIdentity.currentUser()?.jwt();
+    const res = await fetch("/.netlify/functions/create-offer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ card: offerTargetCard, price, message: msg }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || "Failed");
+    closeOfferModal();
+  } catch (err) {
+    errEl.textContent = err.message;
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Submit Offer";
+  }
+});
+
+// ── Offers Made view ─────────────────────────────────────────
+
+async function loadOffersView() {
+  const container = document.getElementById("offers-content");
+  container.innerHTML = `<p style="padding:1.5rem;color:var(--text-muted)">Loading…</p>`;
+
+  try {
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
+    const slug  = window.BINDER_SLUG || "";
+    const res   = await fetch(`/.netlify/functions/get-offers?slug=${encodeURIComponent(slug)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { sent, received: allReceived } = await res.json();
+    const received = allReceived.filter(o => o.status !== "withdrawn");
+
+    if (!sent.length && !received.length) {
+      container.innerHTML = `
+        <div class="favorites-empty">
+          <div class="favorites-empty-icon" style="font-size:2rem">$</div>
+          <div class="favorites-empty-title">No offers yet</div>
+          <p style="font-size:.85rem;color:var(--text-muted)">Favorite a card and click "Make an Offer" to get started.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = "";
+
+    if (received.length) {
+      container.insertAdjacentHTML("beforeend", `<div class="trades-section-label">Received</div>`);
+      received.forEach(offer => container.appendChild(buildOfferCard(offer, "received")));
+    }
+    if (sent.length) {
+      container.insertAdjacentHTML("beforeend", `<div class="trades-section-label" style="margin-top:1.5rem">Sent by You</div>`);
+      sent.forEach(offer => container.appendChild(buildOfferCard(offer, "sent")));
+    }
+  } catch (err) {
+    container.innerHTML = `<p style="padding:1.5rem;color:var(--text-muted)">Failed to load: ${err.message}</p>`;
+  }
+}
+
+function buildOfferCard(offer, direction) {
+  const card   = offer.card;
+  const imgSrc = card.imageUrl || (() => {
+    if (!card.cardId) return "";
+    const i = card.cardId.lastIndexOf("-");
+    return i < 0 ? "" : `https://images.pokemontcg.io/${card.cardId.slice(0, i)}/${card.cardId.slice(i + 1)}.png`;
+  })();
+
+  const heading = direction === "received"
+    ? `<strong>${offer.initiatorEmail}</strong> wants your card:`
+    : `You offered on:`;
+
+  const el = document.createElement("div");
+  el.className = "trade-card-item";
+  el.dataset.offerId = offer.id;
+
+  el.innerHTML = `
+    <div class="trade-card-top">
+      <div class="trade-card-preview">
+        ${imgSrc ? `<img src="${imgSrc}" alt="${card.name || card.query}" class="trade-card-img" />` : ""}
+        <div class="trade-card-info">
+          <div class="trade-card-heading">${heading}</div>
+          <div class="trade-card-name">${card.name || card.query}</div>
+          <div class="trade-card-binder">From: ${card.binderOwner || card.binderSlug}'s Binder</div>
+        </div>
+      </div>
+      <div class="trade-card-meta">
+        ${tradeStatusBadge(offer.status)}
+        <span class="trade-card-date">${fmtDate(offer.createdAt)}</span>
+      </div>
+    </div>
+    <div class="offer-price-row">
+      <span class="offer-price-label">${direction === "received" ? "Their offer:" : "Your offer:"}</span>
+      <span class="offer-price-amount">$${Number(offer.price).toFixed(2)}</span>
+    </div>
+    ${offer.message ? `<div class="trade-card-message">"${offer.message}"</div>` : ""}
+    <div class="trade-card-actions"></div>`;
+
+  const actionsEl = el.querySelector(".trade-card-actions");
+
+  if (offer.status === "pending") {
+    if (direction === "sent") {
+      const wdBtn = document.createElement("button");
+      wdBtn.className = "trade-action-btn trade-action-withdraw";
+      wdBtn.textContent = "Withdraw";
+      wdBtn.addEventListener("click", () => doOfferAction(offer.id, "withdraw", null, el));
+      actionsEl.appendChild(wdBtn);
+    } else {
+      const acceptBtn = document.createElement("button");
+      acceptBtn.className = "trade-action-btn trade-action-accept";
+      acceptBtn.textContent = "Accept";
+      acceptBtn.addEventListener("click", () => doOfferAction(offer.id, "accept", window.BINDER_SLUG, el));
+      const rejectBtn = document.createElement("button");
+      rejectBtn.className = "trade-action-btn trade-action-reject";
+      rejectBtn.textContent = "Reject";
+      rejectBtn.addEventListener("click", () => doOfferAction(offer.id, "reject", window.BINDER_SLUG, el));
+      actionsEl.appendChild(acceptBtn);
+      actionsEl.appendChild(rejectBtn);
+    }
+  }
+
+  if (offer.status === "withdrawn" && direction === "sent") {
+    const rmBtn = document.createElement("button");
+    rmBtn.className = "trade-action-btn trade-action-withdraw";
+    rmBtn.textContent = "Remove";
+    rmBtn.addEventListener("click", () => doOfferAction(offer.id, "delete", null, el));
+    actionsEl.appendChild(rmBtn);
+  }
+
+  return el;
+}
+
+async function doOfferAction(offerId, action, binderSlug, el) {
+  el.style.opacity = ".5";
+  try {
+    const token = await netlifyIdentity.currentUser()?.jwt();
+    const res = await fetch("/.netlify/functions/update-offer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ offerId, action, binderSlug }),
+    });
+    if (!res.ok) throw new Error("Failed");
+    if (action === "delete") { el.remove(); } else { loadOffersView(); }
+  } catch {
+    el.style.opacity = "1";
+  }
+}
 
 // ── My Profile view ─────────────────────────────────────────
 

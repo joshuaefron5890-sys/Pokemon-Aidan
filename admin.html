@@ -93,6 +93,15 @@
           </button>
         </div>
 
+        <!-- Section 5: Offers Made -->
+        <div class="nav-section">
+          <button class="nav-item" data-view="offers">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Offers Made
+          </button>
+        </div>
 
       </nav>
 
@@ -242,6 +251,19 @@
             <p>Trades you've initiated and proposals you've received</p>
           </div>
           <div id="trades-content">
+            <!-- Populated by admin.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- View: Offers Made -->
+      <div class="view hidden" id="view-offers">
+        <div class="shared-view">
+          <div class="shared-header">
+            <h2>Offers Made</h2>
+            <p>Price offers you've sent and offers received on your cards</p>
+          </div>
+          <div id="offers-content">
             <!-- Populated by admin.js -->
           </div>
         </div>
@@ -462,6 +484,34 @@
 
       <p id="trade-error" class="trade-error hidden"></p>
       <button id="trade-submit-btn" class="acm-primary-btn" style="width:100%">Send Trade Proposal</button>
+    </div>
+  </div>
+
+  <!-- ── Make an Offer Modal ── -->
+  <div id="offer-modal-backdrop" class="offer-modal-backdrop hidden"></div>
+  <div id="offer-modal" class="offer-modal hidden" role="dialog" aria-modal="true" aria-label="Make an offer">
+    <div class="offer-modal-header">
+      <h3>Make an Offer</h3>
+      <button id="offer-modal-close" class="acm-close" aria-label="Close">✕</button>
+    </div>
+    <div class="offer-modal-body">
+      <div id="offer-card-preview" class="offer-card-preview"></div>
+      <div class="offer-field">
+        <label class="offer-field-label">Your Offer (USD)</label>
+        <div class="offer-price-wrap">
+          <span class="offer-price-symbol">$</span>
+          <input id="offer-price-input" type="number" min="0.01" step="0.01" placeholder="0.00" class="offer-price-input" />
+        </div>
+      </div>
+      <div class="offer-field">
+        <label class="offer-field-label">Message <span class="offer-optional">(optional)</span></label>
+        <textarea id="offer-message-input" class="offer-message-input" placeholder="Add a note to your offer…" rows="2"></textarea>
+      </div>
+      <p id="offer-error" class="offer-error"></p>
+    </div>
+    <div class="offer-modal-footer">
+      <button id="offer-cancel-btn" class="profile-remove-btn">Cancel</button>
+      <button id="offer-submit-btn" class="add-card-trigger-btn">Submit Offer</button>
     </div>
   </div>
 
