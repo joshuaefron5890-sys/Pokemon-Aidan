@@ -66,9 +66,9 @@ async function initBinder() {
       grade:         c.grade,
     }));
 
-    // Show owner chat bubble only when inside the admin iframe, not on public views
+    // Show owner chat bubble whenever the owner views their own binder
     const inAdminFrame = window.self !== window.top;
-    if (data.isOwner && inAdminFrame) initOwnerBubble(slug, data.owner);
+    if (data.isOwner) initOwnerBubble(slug, data.owner);
 
     // Enable favorites for all non-owner viewers (guests see hearts too; login modal on first click)
     const currentUser = window.netlifyIdentity?.currentUser();
