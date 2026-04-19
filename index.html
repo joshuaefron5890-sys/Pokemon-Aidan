@@ -147,13 +147,6 @@
       <p id="aidan-location" class="binder-location"></p>
       <div class="binder-label">View collection →</div>
     </a>
-    <a href="/emma" class="binder-card">
-      <img src="/Furball.jpg" alt="Emma" class="binder-avatar"
-        onerror="this.outerHTML='<div class=\'binder-avatar-placeholder\'>📒</div>'" />
-      <div class="binder-name">Emma's Binder</div>
-      <p id="emma-location" class="binder-location"></p>
-      <div class="binder-label">View collection →</div>
-    </a>
   </div>
 
   <!-- Create CTA hidden while limiting to one binder per user -->
@@ -211,7 +204,7 @@
     })();
 
     // Load locations for static binder cards
-    ['aidan', 'emma'].forEach(slug => {
+    ['aidan'].forEach(slug => {
       fetch(`/.netlify/functions/get-location?slug=${slug}`)
         .then(r => r.ok ? r.json() : {})
         .then(loc => {

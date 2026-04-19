@@ -114,17 +114,15 @@ async function loadSharedBinders() {
   const grid = document.querySelector(".binders-grid");
   if (!grid) return;
 
-  // Update location for static binder cards (Aidan, Emma)
-  ["aidan", "emma"].forEach(slug => {
-    fetch(`/.netlify/functions/get-location?slug=${slug}`)
-      .then(r => r.ok ? r.json() : {})
-      .then(loc => {
-        if (loc.city) {
-          const el = document.getElementById(`${slug}-shared-meta`);
-          if (el) el.textContent = `📍 ${loc.city}, ${loc.state}`;
-        }
-      }).catch(() => {});
-  });
+  // Update location for static binder cards
+  fetch(`/.netlify/functions/get-location?slug=aidan`)
+    .then(r => r.ok ? r.json() : {})
+    .then(loc => {
+      if (loc.city) {
+        const el = document.getElementById("aidan-shared-meta");
+        if (el) el.textContent = `📍 ${loc.city}, ${loc.state}`;
+      }
+    }).catch(() => {});
 
   try {
     const res  = await fetch("/.netlify/functions/list-binders");
@@ -163,7 +161,7 @@ async function loadSharedBinders() {
 
 function binderPageUrl(slug) {
   if (slug === "aidan") return "/AidanEfron";
-  if (slug === "emma")  return "/emma";
+
   return `/binder/${slug}`;
 }
 
