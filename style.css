@@ -1063,11 +1063,13 @@ footer { display: none !important; }
 /* ── Public binder nav (Log In / My Account) ────────────── */
 /* ── Binder nav ─────────────────────────────────────────── */
 .binder-nav {
-  position: fixed;
+  position: fixed !important;
   top: 1rem;
   right: 1rem;
   z-index: 100;
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
   gap: .5rem;
 }
 .binder-nav-btn {
