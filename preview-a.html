@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Preview A — Premium Dark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #06090f;
+    --surface: #0d1220;
+    --border: rgba(255,255,255,.07);
+    --accent: #e8c840;
+    --accent2: #a78bfa;
+    --text: #f0f4ff;
+    --muted: #5a6480;
+  }
+  body { font-family: "Inter", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* Label */
+  .preview-label {
+    position: fixed; top: 1rem; right: 1rem; z-index: 999;
+    background: #e8c840; color: #000; font-weight: 700; font-size: .75rem;
+    padding: .35rem .8rem; border-radius: 20px; letter-spacing: .05em; text-transform: uppercase;
+  }
+
+  /* Sidebar */
+  .shell { display: flex; height: 100vh; overflow: hidden; }
+  .sidebar {
+    width: 220px; flex-shrink: 0;
+    background: #080b12;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; padding: 1.5rem 0;
+  }
+  .logo {
+    padding: 0 1.25rem 1.5rem;
+    font-size: 1rem; font-weight: 800; letter-spacing: -.02em;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+  }
+  .logo span { color: rgba(255,255,255,.3); font-weight: 400; font-size: .75rem; display: block; margin-top: .15rem; letter-spacing: .04em; text-transform: uppercase; }
+  .nav-item {
+    display: flex; align-items: center; gap: .65rem;
+    padding: .55rem 1.25rem; font-size: .82rem; font-weight: 500;
+    color: var(--muted); cursor: pointer; transition: color .15s;
+    border-left: 2px solid transparent;
+    margin-bottom: .1rem;
+  }
+  .nav-item:hover { color: var(--text); }
+  .nav-item.active { color: var(--text); border-left-color: var(--accent); background: rgba(232,200,64,.04); }
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .5; flex-shrink: 0; }
+  .nav-item.active .nav-dot { opacity: 1; background: var(--accent); }
+  .sidebar-footer { margin-top: auto; padding: 1.25rem; border-top: 1px solid var(--border); }
+  .user-row { display: flex; align-items: center; gap: .65rem; }
+  .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #e8c840, #a78bfa); flex-shrink: 0; }
+  .user-name { font-size: .78rem; font-weight: 600; }
+  .user-sub { font-size: .68rem; color: var(--muted); }
+
+  /* Main */
+  .main { flex: 1; overflow-y: auto; }
+
+  /* Topbar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 2rem; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: rgba(6,9,15,.9);
+    backdrop-filter: blur(20px); z-index: 10;
+  }
+  .topbar-title { font-size: 1rem; font-weight: 700; letter-spacing: -.01em; }
+  .topbar-actions { display: flex; gap: .5rem; }
+  .btn-ghost {
+    padding: .4rem .85rem; border: 1px solid var(--border); border-radius: 8px;
+    background: none; color: var(--muted); font-size: .78rem; font-weight: 600;
+    cursor: pointer; font-family: inherit; transition: all .15s;
+  }
+  .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,.15); }
+  .btn-accent {
+    padding: .4rem .85rem; border: none; border-radius: 8px;
+    background: var(--accent); color: #000; font-size: .78rem; font-weight: 700;
+    cursor: pointer; font-family: inherit; transition: opacity .15s;
+  }
+
+  /* Stats */
+  .stats { display: flex; gap: 1px; border-bottom: 1px solid var(--border); }
+  .stat {
+    flex: 1; padding: 1.5rem 2rem;
+    border-right: 1px solid var(--border);
+  }
+  .stat:last-child { border-right: none; }
+  .stat-label { font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: .4rem; }
+  .stat-value { font-size: 1.8rem; font-weight: 800; letter-spacing: -.03em; color: var(--text); }
+  .stat-sub { font-size: .72rem; color: var(--muted); margin-top: .2rem; }
+  .stat-value.gold { color: var(--accent); }
+
+  /* Grid */
+  .content { padding: 2rem; }
+  .section-label { font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin-bottom: 1.25rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1px; }
+  .card-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    overflow: hidden; cursor: pointer; transition: all .2s;
+    position: relative;
+  }
+  .card-wrap:hover { z-index: 2; border-color: rgba(232,200,64,.4); }
+  .card-wrap:hover .card-img-area { filter: brightness(1.08); }
+  .card-img-area {
+    aspect-ratio: 2.5/3.5;
+    background: linear-gradient(160deg, #0f1928, #080c18);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,.08); font-size: 2.5rem;
+    transition: filter .2s;
+  }
+  .card-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(0,0,0,.9); color: var(--accent);
+    font-size: .7rem; font-weight: 700; padding: .18rem .5rem; border-radius: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .card-footer { padding: .7rem .85rem; border-top: 1px solid var(--border); }
+  .card-name { font-size: .8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-set { font-size: .68rem; color: var(--muted); margin-top: .15rem; }
+</style>
+</head>
+<body>
+<div class="preview-label">Option A — Premium Dark</div>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo">Poké Binder <span>Aidan Efron</span></div>
+    <nav>
+      <div class="nav-item active"><span class="nav-dot"></span>My Binder</div>
+      <div class="nav-item"><span class="nav-dot"></span>Shared Binders</div>
+      <div class="nav-item"><span class="nav-dot"></span>My Favorites</div>
+      <div class="nav-item"><span class="nav-dot"></span>Trade Proposals</div>
+      <div class="nav-item"><span class="nav-dot"></span>Offers Made</div>
+      <div class="nav-item"><span class="nav-dot"></span>My Profile</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="user-avatar"></div>
+        <div>
+          <div class="user-name">Aidan E.</div>
+          <div class="user-sub">Sign out</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title">My Binder</div>
+      <div class="topbar-actions">
+        <button class="btn-ghost">Filter</button>
+        <button class="btn-accent">+ Add Card</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Total Value</div><div class="stat-value gold">$4,821</div><div class="stat-sub">+$124 this week</div></div>
+      <div class="stat"><div class="stat-label">Cards</div><div class="stat-value">143</div><div class="stat-sub">across 12 sets</div></div>
+      <div class="stat"><div class="stat-label">Rarest Card</div><div class="stat-value" style="font-size:1.1rem;padding-top:.35rem">Charizard ex</div><div class="stat-sub">$420.00</div></div>
+      <div class="stat"><div class="stat-label">Pending Trades</div><div class="stat-value">3</div><div class="stat-sub">2 received</div></div>
+    </div>
+    <div class="content">
+      <div class="section-label">Recent additions</div>
+      <div class="grid">
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge">$420</div><div class="card-footer"><div class="card-name">Charizard ex</div><div class="card-set">Scarlet &amp; Violet</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge">$180</div><div class="card-footer"><div class="card-name">Pikachu VMAX</div><div class="card-set">Vivid Voltage</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge">$95</div><div class="card-footer"><div class="card-name">Umbreon VMAX</div><div class="card-set">Evolving Skies</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge">$62</div><div class="card-footer"><div class="card-name">Rayquaza VMAX</div><div class="card-set">Evolving Skies</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge">$34</div><div class="card-footer"><div class="card-name">Lugia V</div><div class="card-set">Silver Tempest</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge">$18</div><div class="card-footer"><div class="card-name">Mewtwo V</div><div class="card-set">SWSH Promo</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge">$12</div><div class="card-footer"><div class="card-name">Gardevoir ex</div><div class="card-set">Paldea Evolved</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge">$8</div><div class="card-footer"><div class="card-name">Miraidon ex</div><div class="card-set">Scarlet &amp; Violet</div></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

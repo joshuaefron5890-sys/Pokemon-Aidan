@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Preview B — Vivid Gaming</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #080e1a;
+    --surface: rgba(255,255,255,.04);
+    --border: rgba(255,255,255,.08);
+    --cyan: #00d9ff;
+    --purple: #9b6dff;
+    --pink: #ff4eb8;
+    --text: #eef2ff;
+    --muted: #4a5680;
+  }
+  body { font-family: "Inter", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  body::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 10% 20%, rgba(0,217,255,.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 90% 80%, rgba(155,109,255,.07) 0%, transparent 60%);
+  }
+
+  .preview-label {
+    position: fixed; top: 1rem; right: 1rem; z-index: 999;
+    background: linear-gradient(135deg, #00d9ff, #9b6dff); color: #fff; font-weight: 700; font-size: .75rem;
+    padding: .35rem .8rem; border-radius: 20px; letter-spacing: .05em; text-transform: uppercase;
+  }
+
+  .shell { display: flex; height: 100vh; overflow: hidden; position: relative; z-index: 1; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 64px; flex-shrink: 0;
+    background: rgba(8,14,26,.9);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 1.25rem 0; gap: .25rem;
+    position: relative;
+  }
+  .sidebar::after {
+    content: "";
+    position: absolute; top: 0; right: 0; width: 1px; height: 100%;
+    background: linear-gradient(180deg, transparent, var(--cyan), transparent);
+    opacity: .3;
+  }
+  .logo-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; margin-bottom: 1rem; flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(0,217,255,.3);
+  }
+  .nav-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .15s; color: var(--muted);
+    font-size: 1rem; position: relative;
+  }
+  .nav-icon:hover { background: rgba(255,255,255,.06); color: var(--text); }
+  .nav-icon.active {
+    background: rgba(0,217,255,.1);
+    color: var(--cyan);
+    box-shadow: 0 0 16px rgba(0,217,255,.2);
+  }
+  .nav-icon.active::before {
+    content: "";
+    position: absolute; left: -12px; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 20px; background: var(--cyan); border-radius: 0 2px 2px 0;
+    box-shadow: 0 0 8px var(--cyan);
+  }
+  .sidebar-bottom { margin-top: auto; }
+  .user-dot {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    box-shadow: 0 0 12px rgba(0,217,255,.4);
+  }
+
+  /* Main */
+  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  /* Topbar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
+    background: rgba(8,14,26,.8); backdrop-filter: blur(20px);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 1rem; }
+  .breadcrumb { display: flex; align-items: center; gap: .4rem; font-size: .8rem; color: var(--muted); }
+  .breadcrumb-current { color: var(--text); font-weight: 600; }
+  .topbar-title { font-size: 1.1rem; font-weight: 800; letter-spacing: -.02em; }
+  .topbar-actions { display: flex; gap: .6rem; align-items: center; }
+  .search-pill {
+    display: flex; align-items: center; gap: .5rem;
+    background: rgba(255,255,255,.05); border: 1px solid var(--border);
+    border-radius: 20px; padding: .35rem .85rem;
+    font-size: .78rem; color: var(--muted); cursor: text;
+    transition: border-color .15s;
+  }
+  .search-pill:hover { border-color: rgba(0,217,255,.3); color: var(--text); }
+  .btn-glow {
+    padding: .4rem 1rem; border: 1px solid rgba(0,217,255,.4); border-radius: 8px;
+    background: rgba(0,217,255,.08); color: var(--cyan); font-size: .78rem; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 0 16px rgba(0,217,255,.15);
+    transition: all .15s;
+  }
+  .btn-glow:hover { background: rgba(0,217,255,.15); box-shadow: 0 0 24px rgba(0,217,255,.25); }
+
+  /* Stats */
+  .stats {
+    display: flex; gap: 1rem; padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .stat {
+    flex: 1; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 1rem 1.25rem;
+    position: relative; overflow: hidden;
+    transition: border-color .2s;
+  }
+  .stat::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,217,255,.4), transparent);
+  }
+  .stat:hover { border-color: rgba(0,217,255,.2); }
+  .stat-label { font-size: .65rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: .35rem; }
+  .stat-value { font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em; }
+  .stat-value.cyan { color: var(--cyan); text-shadow: 0 0 20px rgba(0,217,255,.4); }
+  .stat-value.purple { color: var(--purple); }
+
+  /* Grid */
+  .content { padding: 1.25rem 1.5rem; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .section-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+  .view-all { font-size: .72rem; color: var(--cyan); cursor: pointer; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: .75rem; }
+  .card-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; cursor: pointer;
+    transition: all .2s; position: relative;
+  }
+  .card-wrap:hover {
+    border-color: rgba(0,217,255,.4);
+    box-shadow: 0 0 24px rgba(0,217,255,.12), 0 8px 24px rgba(0,0,0,.4);
+    transform: translateY(-4px);
+  }
+  .card-img-area {
+    aspect-ratio: 2.5/3.5;
+    background: linear-gradient(160deg, #0c1628, #060b16);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,.06); font-size: 2.5rem;
+  }
+  .card-badge {
+    position: absolute; top: 8px; right: 8px;
+    font-size: .7rem; font-weight: 700; padding: .2rem .55rem; border-radius: 20px;
+    backdrop-filter: blur(8px);
+  }
+  .card-badge.tier-epic { background: rgba(155,109,255,.2); color: #c084fc; border: 1px solid rgba(155,109,255,.4); }
+  .card-badge.tier-high { background: rgba(251,191,36,.15); color: #fbbf24; border: 1px solid rgba(251,191,36,.35); }
+  .card-badge.tier-mid { background: rgba(0,217,255,.12); color: var(--cyan); border: 1px solid rgba(0,217,255,.3); }
+  .card-badge.tier-low { background: rgba(52,211,153,.1); color: #34d399; border: 1px solid rgba(52,211,153,.3); }
+  .card-footer { padding: .65rem .8rem; }
+  .card-name { font-size: .8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-set { font-size: .67rem; color: var(--muted); margin-top: .1rem; }
+</style>
+</head>
+<body>
+<div class="preview-label">Option B — Vivid Gaming</div>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo-icon">⚡</div>
+    <div class="nav-icon active" title="My Binder">📁</div>
+    <div class="nav-icon" title="Shared Binders">🌐</div>
+    <div class="nav-icon" title="Favorites">♥</div>
+    <div class="nav-icon" title="Trades">🔄</div>
+    <div class="nav-icon" title="Offers">$</div>
+    <div class="nav-icon" title="Profile">👤</div>
+    <div class="sidebar-bottom">
+      <div class="user-dot"></div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="breadcrumb">
+          <span>Collection</span>
+          <span>›</span>
+          <span class="breadcrumb-current">My Binder</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="search-pill">🔍 Search cards…</div>
+        <button class="btn-glow">+ Add Card</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Total Value</div><div class="stat-value cyan">$4,821</div></div>
+      <div class="stat"><div class="stat-label">Cards</div><div class="stat-value purple">143</div></div>
+      <div class="stat"><div class="stat-label">Secret Rares</div><div class="stat-value" style="color:#ff4eb8;text-shadow:0 0 20px rgba(255,78,184,.4)">12</div></div>
+      <div class="stat"><div class="stat-label">Active Trades</div><div class="stat-value" style="color:#fbbf24">3</div></div>
+    </div>
+    <div class="content">
+      <div class="section-header">
+        <div class="section-label">All Cards</div>
+        <div class="view-all">Sort by value ↓</div>
+      </div>
+      <div class="grid">
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-epic">$420</div><div class="card-footer"><div class="card-name">Charizard ex</div><div class="card-set">Scarlet & Violet</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-epic">$180</div><div class="card-footer"><div class="card-name">Pikachu VMAX</div><div class="card-set">Vivid Voltage</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-high">$95</div><div class="card-footer"><div class="card-name">Umbreon VMAX</div><div class="card-set">Evolving Skies</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-high">$62</div><div class="card-footer"><div class="card-name">Rayquaza VMAX</div><div class="card-set">Evolving Skies</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-mid">$34</div><div class="card-footer"><div class="card-name">Lugia V</div><div class="card-set">Silver Tempest</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-mid">$18</div><div class="card-footer"><div class="card-name">Mewtwo V</div><div class="card-set">SWSH Promo</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-low">$12</div><div class="card-footer"><div class="card-name">Gardevoir ex</div><div class="card-set">Paldea Evolved</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-low">$8</div><div class="card-footer"><div class="card-name">Miraidon ex</div><div class="card-set">Scarlet & Violet</div></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

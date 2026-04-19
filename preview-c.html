@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Preview C — Soft Modern</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2335;
+    --border: rgba(255,255,255,.07);
+    --indigo: #818cf8;
+    --violet: #a78bfa;
+    --green: #34d399;
+    --text: #e2e8ff;
+    --muted: #4b5580;
+  }
+  body { font-family: "Inter", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .preview-label {
+    position: fixed; top: 1rem; right: 1rem; z-index: 999;
+    background: linear-gradient(135deg, #818cf8, #a78bfa); color: #fff; font-weight: 700; font-size: .75rem;
+    padding: .35rem .8rem; border-radius: 20px; letter-spacing: .05em; text-transform: uppercase;
+  }
+
+  .shell { display: flex; height: 100vh; overflow: hidden; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 240px; flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 0;
+  }
+  .sidebar-brand {
+    display: flex; align-items: center; gap: .75rem;
+    padding: 1.25rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--indigo), var(--violet));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .brand-name { font-size: .9rem; font-weight: 700; letter-spacing: -.01em; }
+  .brand-sub { font-size: .68rem; color: var(--muted); margin-top: .05rem; }
+
+  .sidebar-section { padding: 1rem 0 .5rem; }
+  .sidebar-section-label {
+    padding: 0 1.25rem .4rem; font-size: .65rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .1em; color: var(--muted);
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: .65rem;
+    padding: .5rem 1rem; margin: 0 .5rem .1rem;
+    border-radius: 8px; font-size: .84rem; font-weight: 500;
+    color: var(--muted); cursor: pointer; transition: all .12s;
+  }
+  .nav-item:hover { background: rgba(255,255,255,.04); color: var(--text); }
+  .nav-item.active { background: rgba(129,140,248,.12); color: var(--indigo); }
+  .nav-item svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .nav-badge {
+    margin-left: auto; background: rgba(129,140,248,.15); color: var(--indigo);
+    font-size: .65rem; font-weight: 700; padding: .1rem .45rem; border-radius: 20px;
+  }
+
+  .sidebar-footer {
+    margin-top: auto; padding: 1rem 1.25rem;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: .75rem;
+  }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--indigo), var(--violet));
+    flex-shrink: 0;
+  }
+  .user-name { font-size: .8rem; font-weight: 600; }
+  .user-action { font-size: .7rem; color: var(--muted); cursor: pointer; }
+  .user-action:hover { color: var(--text); }
+
+  /* Main */
+  .main { flex: 1; overflow-y: auto; background: var(--bg); }
+
+  /* Topbar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.75rem; border-bottom: 1px solid var(--border);
+    background: rgba(15,17,23,.9); backdrop-filter: blur(20px);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar-title { font-size: 1rem; font-weight: 700; letter-spacing: -.01em; }
+  .topbar-right { display: flex; align-items: center; gap: .75rem; }
+  .search-bar {
+    display: flex; align-items: center; gap: .5rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: .4rem .85rem;
+    font-size: .8rem; color: var(--muted); width: 200px;
+    transition: border-color .15s, width .2s;
+    cursor: text;
+  }
+  .search-bar:focus-within, .search-bar:hover { border-color: rgba(129,140,248,.35); color: var(--text); }
+  .btn-primary {
+    display: flex; align-items: center; gap: .4rem;
+    padding: .45rem 1rem; border: none; border-radius: 8px;
+    background: var(--indigo); color: #fff; font-size: .8rem; font-weight: 600;
+    cursor: pointer; font-family: inherit; transition: opacity .15s, transform .1s;
+  }
+  .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+
+  /* Stats row */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat {
+    padding: 1.25rem 1.75rem; background: var(--bg);
+    transition: background .15s;
+  }
+  .stat:hover { background: rgba(129,140,248,.03); }
+  .stat-label { font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: .3rem; }
+  .stat-value { font-size: 1.65rem; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .stat-value.indigo { color: var(--indigo); }
+  .stat-value.violet { color: var(--violet); }
+  .stat-value.green  { color: var(--green); }
+  .stat-change { font-size: .7rem; color: var(--green); margin-top: .25rem; }
+
+  /* Content */
+  .content { padding: 1.5rem 1.75rem; }
+  .content-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .content-title { font-size: .9rem; font-weight: 700; letter-spacing: -.01em; }
+  .view-toggle { display: flex; gap: .25rem; background: var(--surface); border-radius: 8px; padding: .2rem; }
+  .vt-btn { padding: .3rem .6rem; border: none; background: none; border-radius: 6px; font-size: .72rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: all .12s; }
+  .vt-btn.active { background: var(--surface2); color: var(--text); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+  .card-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; cursor: pointer;
+    transition: all .2s ease; position: relative;
+  }
+  .card-wrap:hover {
+    border-color: rgba(129,140,248,.4);
+    box-shadow: 0 8px 32px rgba(0,0,0,.4), 0 0 0 1px rgba(129,140,248,.08);
+    transform: translateY(-5px);
+  }
+  .card-img-area {
+    aspect-ratio: 2.5/3.5;
+    background: linear-gradient(160deg, var(--surface2), var(--surface));
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,.06); font-size: 2.5rem;
+  }
+  .card-badge {
+    position: absolute; top: 8px; right: 8px;
+    font-size: .7rem; font-weight: 700; padding: .2rem .55rem; border-radius: 20px;
+    backdrop-filter: blur(8px);
+  }
+  .tier-epic   { background: rgba(167,139,250,.18); color: #c4b5fd; border: 1px solid rgba(167,139,250,.35); }
+  .tier-high   { background: rgba(251,191,36,.14);  color: #fde68a; border: 1px solid rgba(251,191,36,.3); }
+  .tier-mid    { background: rgba(129,140,248,.14);  color: #a5b4fc; border: 1px solid rgba(129,140,248,.3); }
+  .tier-low    { background: rgba(52,211,153,.1);   color: #6ee7b7; border: 1px solid rgba(52,211,153,.25); }
+  .card-body { padding: .75rem .85rem; }
+  .card-name { font-size: .8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: .15rem; }
+  .card-set  { font-size: .67rem; color: var(--muted); }
+  .card-price { font-size: .82rem; font-weight: 700; color: var(--indigo); margin-top: .35rem; }
+</style>
+</head>
+<body>
+<div class="preview-label">Option C — Soft Modern</div>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-name">Poké Binder</div>
+        <div class="brand-sub">Aidan Efron</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Collection</div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        My Binder
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+        Shared Binders
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        My Favorites
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Trading</div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Trade Proposals
+        <span class="nav-badge">3</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Offers Made
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Account</div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        My Profile
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="avatar"></div>
+      <div>
+        <div class="user-name">Aidan E.</div>
+        <div class="user-action">Sign out</div>
+      </div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title">My Binder</div>
+      <div class="topbar-right">
+        <div class="search-bar">🔍 &nbsp;Search…</div>
+        <button class="btn-primary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Card
+        </button>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-label">Total Value</div><div class="stat-value indigo">$4,821</div><div class="stat-change">↑ $124 this week</div></div>
+      <div class="stat"><div class="stat-label">Cards</div><div class="stat-value violet">143</div></div>
+      <div class="stat"><div class="stat-label">Secret Rares</div><div class="stat-value green">12</div></div>
+      <div class="stat"><div class="stat-label">Active Trades</div><div class="stat-value" style="color:#fde68a">3</div></div>
+    </div>
+    <div class="content">
+      <div class="content-header">
+        <div class="content-title">All Cards</div>
+        <div class="view-toggle">
+          <button class="vt-btn active">Grid</button>
+          <button class="vt-btn">List</button>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-epic">$420</div><div class="card-body"><div class="card-name">Charizard ex</div><div class="card-set">Scarlet & Violet</div><div class="card-price">$420.00</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-epic">$180</div><div class="card-body"><div class="card-name">Pikachu VMAX</div><div class="card-set">Vivid Voltage</div><div class="card-price">$180.00</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-high">$95</div><div class="card-body"><div class="card-name">Umbreon VMAX</div><div class="card-set">Evolving Skies</div><div class="card-price">$95.00</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-high">$62</div><div class="card-body"><div class="card-name">Rayquaza VMAX</div><div class="card-set">Evolving Skies</div><div class="card-price">$62.00</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-mid">$34</div><div class="card-body"><div class="card-name">Lugia V</div><div class="card-set">Silver Tempest</div><div class="card-price">$34.00</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-mid">$18</div><div class="card-body"><div class="card-name">Mewtwo V</div><div class="card-set">SWSH Promo</div><div class="card-price">$18.00</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-low">$12</div><div class="card-body"><div class="card-name">Gardevoir ex</div><div class="card-set">Paldea Evolved</div><div class="card-price">$12.00</div></div></div>
+        <div class="card-wrap"><div class="card-img-area">🃏</div><div class="card-badge tier-low">$8</div><div class="card-body"><div class="card-name">Miraidon ex</div><div class="card-set">Scarlet & Violet</div><div class="card-price">$8.00</div></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>
