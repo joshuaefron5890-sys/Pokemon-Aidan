@@ -38,7 +38,7 @@ body::before {
   pointer-events: none;
 }
 
-body > *:not(#bg-canvas):not(#owner-bubble):not(#owner-popup):not(#private-lock):not(#fav-signup-modal):not(#netlify-identity-widget) {
+body > *:not(#bg-canvas):not(#owner-bubble):not(#owner-popup):not(#private-lock):not(#fav-signup-modal):not(#netlify-identity-widget):not(#card-edit-modal) {
   position: relative;
 }
 
@@ -519,7 +519,7 @@ header h1 {
 /* ── Card Edit Modal ─────────────────────────────────────── */
 #card-edit-modal {
   display: none;
-  position: fixed;
+  position: fixed !important;
   inset: 0;
   z-index: 9000;
 }
