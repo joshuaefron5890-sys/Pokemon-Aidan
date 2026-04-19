@@ -718,14 +718,23 @@ let pendingLocation = null;
 async function loadProfileView() {
   const slug = window.BINDER_SLUG;
 
-  // Profile photo
+  // Profile photo — fetch via JS so we control success/failure reliably
   const img         = document.getElementById("profile-current-photo");
   const placeholder = document.getElementById("profile-photo-placeholder");
-  img.onload  = () => { img.style.display = ""; placeholder.style.display = "none"; };
-  img.onerror = () => { img.style.display = "none"; placeholder.style.display = "flex"; };
   img.style.display = "none";
   placeholder.style.display = "flex";
-  if (slug) img.src = `/.netlify/functions/get-photo?slug=${slug}&_t=${Date.now()}`;
+  if (slug) {
+    try {
+      const resp = await fetch(`/.netlify/functions/get-photo?slug=${encodeURIComponent(slug)}&_t=${Date.now()}`);
+      if (resp.ok) {
+        const blob = await resp.blob();
+        if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
+        img.src = URL.createObjectURL(blob);
+        img.style.display = "";
+        placeholder.style.display = "none";
+      }
+    } catch { /* no photo — placeholder stays */ }
+  }
 
   document.getElementById("profile-photo-status").textContent = "";
   document.getElementById("profile-location-status").textContent = "";
