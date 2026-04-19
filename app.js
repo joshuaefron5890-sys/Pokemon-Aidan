@@ -152,8 +152,12 @@ async function fetchCard(query, setName, cardId) {
       return card;
     }
 
+    // Strip chars that break the Pokémon TCG API's Lucene query parser (parentheses, brackets)
+    const apiName = namePart.replace(/[()[\]{}]/g, "").replace(/\s+/g, " ").trim();
+
     // First try: name + number (+ set name if provided)
-    let q1 = `name:"${namePart}" number:"${numberPart}"`;
+    let q1 = `name:"${apiName}"`;
+    if (numberPart) q1 += ` number:"${numberPart}"`;
     if (setName) q1 += ` set.name:"${setName}"`;
     const json1 = await apiFetch(`${API_BASE}?q=${encodeURIComponent(q1)}&pageSize=10`);
     if (json1.data && json1.data.length > 0) {
@@ -170,7 +174,7 @@ async function fetchCard(query, setName, cardId) {
       return null;
     }
 
-    const q2 = `name:"${namePart}"`;
+    const q2 = `name:"${apiName}"`;
     const json2 = await apiFetch(`${API_BASE}?q=${encodeURIComponent(q2)}&pageSize=10`);
     const card = (json2.data || []).find(c => c.name.toLowerCase() === namePart.toLowerCase())
       || json2.data?.[0]
