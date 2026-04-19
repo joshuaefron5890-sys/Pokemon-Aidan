@@ -12,6 +12,47 @@
 
   // ── Chat routing ──────────────────────────────────────────
 
+  async function resolveBinderSlug(user, token) {
+    if (window.BINDER_SLUG) return window.BINDER_SLUG;
+
+    // Try to find an existing binder by email
+    const lookup = await fetch("/.netlify/functions/get-my-binder", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (lookup.ok) {
+      const { slug, binderUrl } = await lookup.json();
+      window.BINDER_SLUG = slug;
+      try { await user.update({ data: { binder_url: binderUrl } }); } catch {}
+      return slug;
+    }
+
+    // No binder found — auto-create one from the user's name / email
+    const owner = (user.user_metadata?.full_name || user.email.split("@")[0]).trim();
+    let slug = owner.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 26);
+    if (slug.length < 3) slug = "binder-" + slug;
+
+    const create = await fetch("/.netlify/functions/create-binder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ slug, owner, isPublic: false, cards: [] }),
+    });
+
+    if (!create.ok) {
+      // Slug taken — append a short suffix and retry
+      slug = slug.slice(0, 22) + "-" + Date.now().toString(36).slice(-4);
+      const retry = await fetch("/.netlify/functions/create-binder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ slug, owner, isPublic: false, cards: [] }),
+      });
+      if (!retry.ok) throw new Error("Could not create your binder. Please try again.");
+    }
+
+    window.BINDER_SLUG = slug;
+    try { await user.update({ data: { binder_url: `/binder/${slug}` } }); } catch {}
+    return slug;
+  }
+
   async function callChat(messages) {
     const user = window.netlifyIdentity?.currentUser();
     if (!user) throw new Error("Please log in first.");
@@ -23,8 +64,7 @@
         body: JSON.stringify({ messages }),
       }));
     }
-    const slug = window.BINDER_SLUG;
-    if (!slug) throw new Error("Binder not found. Please refresh and try again.");
+    const slug = await resolveBinderSlug(user, token);
     return safeJson(await fetch("/.netlify/functions/binder-chat", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
