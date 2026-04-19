@@ -19,6 +19,15 @@
   --transition: .2s ease;
 }
 
+/* ── Ambient glows ─────────────────────────────────── */
+body::before {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 5% 10%, rgba(0,217,255,.05) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 45% at 95% 90%, rgba(155,109,255,.06) 0%, transparent 60%);
+}
+
 /* ── Background Canvas ─────────────────────────────────── */
 #bg-canvas {
   position: fixed;
@@ -163,12 +172,15 @@ header h1 {
 
 .stat-value {
   font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--accent);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: #00d9ff;
+  text-shadow: 0 0 20px rgba(0,217,255,.35);
 }
 
 .stat-card.stat-count .stat-value {
-  color: var(--accent2);
+  color: #9b6dff;
+  text-shadow: 0 0 20px rgba(155,109,255,.35);
 }
 
 /* ── Toolbar (search + filters on one line) ─────────────── */
