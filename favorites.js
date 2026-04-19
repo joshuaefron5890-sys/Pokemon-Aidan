@@ -239,6 +239,7 @@
     });
     document.getElementById("fsm-login-btn").addEventListener("click", () => {
       window._netlifyFavLogin = true;
+      closeSignupModal();
       window.netlifyIdentity?.open("login");
     });
 
