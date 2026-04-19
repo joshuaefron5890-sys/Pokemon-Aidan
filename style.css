@@ -38,7 +38,7 @@ body::before {
   pointer-events: none;
 }
 
-body > *:not(#bg-canvas):not(#owner-bubble):not(#owner-popup):not(#private-lock) {
+body > *:not(#bg-canvas):not(#owner-bubble):not(#owner-popup):not(#private-lock):not(#fav-signup-modal):not(#netlify-identity-widget) {
   position: relative;
 }
 
