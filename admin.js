@@ -49,10 +49,6 @@ function showAdmin(user) {
   // Card Assistant (chat-bubble) is only for Aidan.
   // Add Card button is for all binder owners — modal routes to the right endpoint.
   const aidan = isAidan(user);
-  document.querySelector(".nav-item[data-view='assistant']")?.closest(".nav-section")
-    ?.classList.toggle("hidden", !aidan);
-  document.getElementById("chat-bubble")?.classList.toggle("hidden", !aidan);
-
   // Expose routing info for add-card-modal.js
   window.IS_AIDAN_ADMIN = aidan;
   window.BINDER_SLUG = aidan ? "aidan"
@@ -75,7 +71,6 @@ const VIEW_LABELS = {
   favorites: "My Favorites",
   trades:    "Trade Proposals",
   profile:   "My Profile",
-  assistant: "Card Assistant",
 };
 
 function showView(id) {
