@@ -1271,7 +1271,25 @@ async function doOfferAction(offerId, action, binderSlug, el) {
 let pendingLocation = null;
 
 async function loadProfileView() {
-  const slug = window.BINDER_SLUG;
+  let slug = window.BINDER_SLUG;
+
+  // If slug not resolved yet (showAdmin still in flight), look it up now
+  if (!slug || slug === "aidan") {
+    if (slug !== "aidan") {
+      try {
+        const user  = netlifyIdentity.currentUser();
+        const token = user ? await user.jwt().catch(() => null) : null;
+        const res   = await fetch("/.netlify/functions/get-my-binder", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const data = await res.json();
+          window.BINDER_SLUG = data.slug;
+          slug = data.slug;
+        }
+      } catch {}
+    }
+  }
 
   // Profile photo — fetch via JS so we control success/failure reliably
   const img         = document.getElementById("profile-current-photo");
