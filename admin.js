@@ -1293,6 +1293,26 @@ async function loadProfileView() {
 
   document.getElementById("profile-photo-status").textContent = "";
   document.getElementById("profile-location-status").textContent = "";
+  document.getElementById("profile-privacy-status").textContent = "";
+
+  // Load binder privacy state
+  const privacyCard = document.getElementById("profile-privacy-card");
+  if (slug && slug !== "aidan") {
+    privacyCard?.classList.remove("hidden");
+    try {
+      const res = await fetch(`/.netlify/functions/get-binder?slug=${encodeURIComponent(slug)}`);
+      if (res.ok) {
+        const data = await res.json();
+        const toggle = document.getElementById("binder-public-toggle");
+        if (toggle) {
+          toggle.checked = !!data.public;
+          document.getElementById("binder-privacy-label").textContent = data.public ? "Public" : "Private";
+        }
+      }
+    } catch {}
+  } else {
+    privacyCard?.classList.add("hidden");
+  }
 
   // Load saved location
   try {
@@ -1465,6 +1485,33 @@ document.getElementById("profile-save-location-btn").addEventListener("click", a
     document.getElementById("profile-saved-location").classList.remove("hidden");
   } catch (err) {
     statusEl.textContent = err.message;
+  }
+});
+
+// ── Binder privacy toggle ───────────────────────────────────
+
+document.getElementById("binder-public-toggle").addEventListener("change", async e => {
+  const isPublic = e.target.checked;
+  const statusEl = document.getElementById("profile-privacy-status");
+  const labelEl  = document.getElementById("binder-privacy-label");
+  const slug = window.BINDER_SLUG;
+  if (!slug) return;
+
+  statusEl.textContent = "Saving…";
+  try {
+    const token = await netlifyIdentity.currentUser()?.jwt();
+    const resp  = await fetch("/.netlify/functions/set-binder-privacy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ slug, public: isPublic }),
+    });
+    if (!resp.ok) throw new Error("Failed to save");
+    labelEl.textContent = isPublic ? "Public" : "Private";
+    statusEl.textContent = isPublic ? "✓ Binder is now public" : "✓ Binder is now private";
+    setTimeout(() => { statusEl.textContent = ""; }, 3000);
+  } catch (err) {
+    statusEl.textContent = err.message;
+    e.target.checked = !isPublic; // revert on error
   }
 });
 
