@@ -704,6 +704,7 @@ a.binder-card { cursor: pointer; }
   .sidebar { transform: translateX(0); position: fixed; }
   .sidebar-close { display: none; }
   .mobile-header { display: none; }
+  .admin-layout { padding-left: var(--sidebar-w); }
 }
 
 /* ── My Favorites view ─────────────────────────────────────── */
