@@ -700,6 +700,12 @@ a.binder-card { cursor: pointer; }
   .card-thumb { width: 58px; height: 80px; }
 }
 
+@media (max-width: 700px) and (display-mode: standalone) {
+  .sidebar { transform: translateX(0); position: fixed; }
+  .sidebar-close { display: none; }
+  .mobile-header { display: none; }
+}
+
 /* ── My Favorites view ─────────────────────────────────────── */
 .favorites-grid {
   display: flex;
