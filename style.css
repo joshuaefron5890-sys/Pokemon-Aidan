@@ -953,6 +953,10 @@ footer a {
   }
 }
 
+@media (display-mode: standalone) and (max-width: 480px) {
+  #card-grid { grid-template-columns: 1fr; }
+}
+
 /* ── Private binder lock screen ────────────────────────── */
 .private-lock {
   position: fixed; inset: 0; z-index: 100;
