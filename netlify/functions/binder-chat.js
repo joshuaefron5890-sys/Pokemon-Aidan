@@ -29,32 +29,46 @@ async function writeBinder(slug, binder) {
 
 // ── Tool implementations ───────────────────────────────────
 
-async function tool_lookup_card({ query, cardId }) {
+function cardSummary(c) {
+  return {
+    id: c.id, name: c.name, number: c.number,
+    set: { name: c.set?.name, series: c.set?.series },
+    rarity: c.rarity, tcgUrl: c.tcgplayer?.url,
+    marketPrice: c.tcgplayer?.prices?.holofoil?.market ?? c.tcgplayer?.prices?.normal?.market ?? null,
+  };
+}
+
+async function tool_lookup_card({ query, number, cardId }) {
   try {
     if (cardId) {
       const res = await fetch(`${TCG_API}/cards/${encodeURIComponent(cardId)}`);
       if (!res.ok) return { error: `No card found with ID "${cardId}"` };
       const { data: c } = await res.json();
-      return {
-        id: c.id, name: c.name, number: c.number,
-        set: { id: c.set?.id, name: c.set?.name, series: c.set?.series },
-        rarity: c.rarity, hasImage: !!c.images?.large, tcgUrl: c.tcgplayer?.url,
-        marketPrice:
-          c.tcgplayer?.prices?.holofoil?.market ??
-          c.tcgplayer?.prices?.normal?.market ??
-          c.tcgplayer?.prices?.["1stEditionHolofoil"]?.market ?? null,
-      };
+      return cardSummary(c);
     }
-    const q = encodeURIComponent(`name:"${query}"`);
+
+    // Parse trailing number out of query if not passed separately — e.g. "Mesprit 204" → name="Mesprit", num="204"
+    let name = query;
+    let numPart = number ? number.split("/")[0].trim() : null;
+    if (!numPart) {
+      const m = query.match(/^(.+?)\s+(\d+(?:\/\d+)?)$/);
+      if (m) { name = m[1].trim(); numPart = m[2].split("/")[0]; }
+    }
+
+    // Try name + number first for an exact match
+    if (numPart) {
+      const q1 = encodeURIComponent(`name:"${name}" number:"${numPart}"`);
+      const res1 = await fetch(`${TCG_API}/cards?q=${q1}&pageSize=6&orderBy=-set.releaseDate`);
+      const { data: d1 } = await res1.json();
+      if (d1?.length) return d1.map(cardSummary);
+    }
+
+    // Fall back to name-only
+    const q = encodeURIComponent(`name:"${name}"`);
     const res = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
     const { data } = await res.json();
     if (!data?.length) return { error: `No cards found for "${query}"` };
-    return data.map(c => ({
-      id: c.id, name: c.name, number: c.number,
-      set: { name: c.set?.name, series: c.set?.series },
-      rarity: c.rarity, tcgUrl: c.tcgplayer?.url,
-      marketPrice: c.tcgplayer?.prices?.holofoil?.market ?? c.tcgplayer?.prices?.normal?.market ?? null,
-    }));
+    return data.map(cardSummary);
   } catch (e) { return { error: e.message }; }
 }
 
@@ -117,7 +131,8 @@ const TOOLS = [
     input_schema: {
       type: "object",
       properties: {
-        query:  { type: "string", description: "Card name, e.g. \"Charizard ex\" or \"Pikachu 025/102\"" },
+        query:  { type: "string", description: "Card name only, e.g. \"Charizard ex\" or \"Mesprit\". Do not include the card number here." },
+        number: { type: "string", description: "Card number within its set, e.g. \"204\" or \"006/165\". Pass separately from the name." },
         cardId: { type: "string", description: "Direct API card ID, e.g. \"sv3pt5-6\"" },
       },
     },
