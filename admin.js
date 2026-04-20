@@ -1300,7 +1300,11 @@ async function loadProfileView() {
   if (slug && slug !== "aidan") {
     privacyCard?.classList.remove("hidden");
     try {
-      const res = await fetch(`/.netlify/functions/get-binder?slug=${encodeURIComponent(slug)}`);
+      const user  = netlifyIdentity.currentUser();
+      const token = user ? await user.jwt().catch(() => null) : null;
+      const res = await fetch(`/.netlify/functions/get-binder?slug=${encodeURIComponent(slug)}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (res.ok) {
         const data = await res.json();
         const toggle = document.getElementById("binder-public-toggle");
