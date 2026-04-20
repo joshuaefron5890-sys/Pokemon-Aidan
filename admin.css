@@ -59,6 +59,11 @@ a { color: inherit; text-decoration: none; }
 .back-link { display: block; margin-top: 1.25rem; color: var(--text-muted); font-size: .85rem; transition: color .15s; }
 .back-link:hover { color: var(--text); }
 
+@media (display-mode: standalone) {
+  .back-link { display: none; }
+  #chat-bubble { display: none !important; }
+}
+
 /* ── App shell ─────────────────────────────────────────────── */
 
 #admin-app {
