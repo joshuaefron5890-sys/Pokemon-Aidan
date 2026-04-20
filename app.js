@@ -785,14 +785,14 @@ function _buildEditModal() {
         <div class="cem-section">Image</div>
         <div class="cem-image-row">
           <img id="cem-preview" class="cem-preview" alt="" />
-          <label class="cem-label" style="flex:1">Image URL override <span class="cem-hint">(blank = use API)</span>
+          <label class="cem-label" style="flex:1">Image URL override
             <input id="cem-image-url" class="cem-input" type="url" placeholder="https://… or local filename" autocomplete="off" />
           </label>
         </div>
 
         <div class="cem-section">Price &amp; Grade</div>
         <div class="cem-row-2">
-          <label class="cem-label">Price override <span class="cem-hint">(blank = use API)</span>
+          <label class="cem-label">Price override
             <input id="cem-price" class="cem-input" type="number" step="0.01" min="0" placeholder="e.g. 12.50" />
           </label>
           <label class="cem-label">Grade
@@ -800,7 +800,7 @@ function _buildEditModal() {
           </label>
         </div>
 
-        <div class="cem-section">Metadata overrides <span class="cem-hint">— blank = use API value</span></div>
+        <div class="cem-section">Metadata overrides</div>
         <div class="cem-row-2">
           <label class="cem-label">Name
             <input id="cem-name" class="cem-input" type="text" autocomplete="off" />
