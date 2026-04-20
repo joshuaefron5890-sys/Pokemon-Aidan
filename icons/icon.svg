@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <circle cx="256" cy="256" r="256" fill="#0f172a"/>
+  <!-- Top half (indigo) -->
+  <path d="M256 36 A220 220 0 0 1 476 256 L256 256 Z" fill="#6366f1"/>
+  <path d="M256 36 A220 220 0 0 0 36 256 L256 256 Z" fill="#6366f1"/>
+  <!-- Bottom half (slate) -->
+  <path d="M36 256 A220 220 0 0 0 476 256 L256 256 Z" fill="#1e293b"/>
+  <!-- Center band -->
+  <rect x="36" y="243" width="440" height="26" fill="#0f172a"/>
+  <!-- Button outer ring -->
+  <circle cx="256" cy="256" r="52" fill="#0f172a"/>
+  <!-- Button white ring -->
+  <circle cx="256" cy="256" r="42" fill="#e2e8f0"/>
+  <!-- Button center -->
+  <circle cx="256" cy="256" r="26" fill="#6366f1"/>
+  <!-- Shine -->
+  <circle cx="220" cy="178" r="30" fill="rgba(255,255,255,0.12)"/>
+</svg>
