@@ -261,14 +261,18 @@
           <!-- Section 3: Binder Privacy -->
           <div class="profile-section-card" id="profile-privacy-card">
             <h3 class="profile-section-title">Binder Privacy</h3>
-            <p class="profile-section-desc">Control who can view your Pokémon collection.</p>
+            <p class="profile-section-desc">Control who can view your Pokémon collection. Public binders appear in the Shared Binders gallery.</p>
             <div class="profile-privacy-row">
-              <label class="price-toggle-label" title="Toggle binder visibility">
-                <input type="checkbox" id="binder-public-toggle">
-                <span class="price-toggle-track"></span>
-                <span class="price-toggle-text" id="binder-privacy-label">Public</span>
+              <label class="profile-radio-label">
+                <input type="radio" name="binder-privacy" id="binder-privacy-public" value="public">
+                <span>Public</span>
+              </label>
+              <label class="profile-radio-label">
+                <input type="radio" name="binder-privacy" id="binder-privacy-private" value="private">
+                <span>Private</span>
               </label>
             </div>
+            <button id="profile-save-privacy-btn" class="add-card-trigger-btn" disabled>Save</button>
             <p id="profile-privacy-status" class="profile-status"></p>
           </div>
 

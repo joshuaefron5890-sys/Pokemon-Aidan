@@ -1307,11 +1307,10 @@ async function loadProfileView() {
       });
       if (res.ok) {
         const data = await res.json();
-        const toggle = document.getElementById("binder-public-toggle");
-        if (toggle) {
-          toggle.checked = !!data.public;
-          document.getElementById("binder-privacy-label").textContent = data.public ? "Public" : "Private";
-        }
+        const val = data.public ? "public" : "private";
+        const radio = document.querySelector(`input[name="binder-privacy"][value="${val}"]`);
+        if (radio) radio.checked = true;
+        document.getElementById("profile-save-privacy-btn").disabled = true;
       }
     } catch {}
   } else {
@@ -1492,15 +1491,25 @@ document.getElementById("profile-save-location-btn").addEventListener("click", a
   }
 });
 
-// ── Binder privacy toggle ───────────────────────────────────
+// ── Binder privacy radio + save ─────────────────────────────
 
-document.getElementById("binder-public-toggle").addEventListener("change", async e => {
-  const isPublic = e.target.checked;
+document.querySelectorAll("input[name='binder-privacy']").forEach(radio => {
+  radio.addEventListener("change", () => {
+    document.getElementById("profile-save-privacy-btn").disabled = false;
+    document.getElementById("profile-privacy-status").textContent = "";
+  });
+});
+
+document.getElementById("profile-save-privacy-btn").addEventListener("click", async () => {
+  const selected = document.querySelector("input[name='binder-privacy']:checked");
+  if (!selected) return;
+  const isPublic = selected.value === "public";
   const statusEl = document.getElementById("profile-privacy-status");
-  const labelEl  = document.getElementById("binder-privacy-label");
+  const saveBtn  = document.getElementById("profile-save-privacy-btn");
   const slug = window.BINDER_SLUG;
   if (!slug) return;
 
+  saveBtn.disabled = true;
   statusEl.textContent = "Saving…";
   try {
     const token = await netlifyIdentity.currentUser()?.jwt();
@@ -1510,12 +1519,13 @@ document.getElementById("binder-public-toggle").addEventListener("change", async
       body: JSON.stringify({ slug, public: isPublic }),
     });
     if (!resp.ok) throw new Error("Failed to save");
-    labelEl.textContent = isPublic ? "Public" : "Private";
     statusEl.textContent = isPublic ? "✓ Binder is now public" : "✓ Binder is now private";
     setTimeout(() => { statusEl.textContent = ""; }, 3000);
+    // Reset shared gallery so it reloads with updated visibility
+    sharedLoaded = false;
   } catch (err) {
     statusEl.textContent = err.message;
-    e.target.checked = !isPublic; // revert on error
+    saveBtn.disabled = false;
   }
 });
 
