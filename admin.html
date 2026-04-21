@@ -429,12 +429,12 @@
       <div id="acm-step-input" class="acm-body">
         <p class="acm-sub">How do you want to find a card?</p>
         <div class="acm-tabs">
+          <button class="acm-tab" data-tab="photo">Photo</button>
           <button class="acm-tab active" data-tab="name">Card Name</button>
           <button class="acm-tab" data-tab="link">TCG Link</button>
-          <button class="acm-tab" data-tab="photo">Photo</button>
         </div>
 
-        <div class="acm-tab-panel active" id="tab-name">
+        <div class="acm-tab-panel" id="tab-name">
           <div class="acm-field">
             <input type="text" id="acm-card-name" placeholder="e.g. Charizard ex 006/165" autocomplete="off" />
             <p class="acm-hint">Include the card number for more accurate results.</p>
@@ -450,12 +450,12 @@
 
         <div class="acm-tab-panel" id="tab-photo">
           <div class="acm-dropzone" id="acm-dropzone">
-            <div class="acm-drop-icon">🖼️</div>
-            <p class="acm-drop-label">Drag & drop a photo here</p>
+            <div class="acm-drop-icon">📷</div>
+            <p class="acm-drop-label">Take or upload a photo</p>
             <p class="acm-drop-sub">or</p>
             <label class="acm-file-btn">
-              Select from computer
-              <input type="file" id="acm-photo-input" accept="image/*" />
+              Choose Photo
+              <input type="file" id="acm-photo-input" accept="image/*" capture="environment" />
             </label>
             <div id="acm-photo-preview-wrap" class="hidden">
               <img id="acm-photo-preview" alt="Card photo" />

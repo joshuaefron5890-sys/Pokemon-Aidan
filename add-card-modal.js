@@ -95,6 +95,11 @@
     cardQueue = [];
     renderQueue();
     resetToStep("input");
+    // Default to photo tab on mobile
+    const defaultTab = window.matchMedia("(max-width: 600px)").matches ? "photo" : "name";
+    activeTab = defaultTab;
+    document.querySelectorAll(".acm-tab").forEach(t => t.classList.toggle("active", t.dataset.tab === defaultTab));
+    document.querySelectorAll(".acm-tab-panel").forEach(p => p.classList.toggle("active", p.id === `tab-${defaultTab}`));
     modal.classList.remove("hidden");
     document.body.style.overflow = "hidden";
   }
