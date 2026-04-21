@@ -281,13 +281,42 @@
       userMessage = { role: "user", content: `Look up this Pokémon card: "${cardQuery}". ${jsonArrayInstruction}` };
     } else {
       if (!pendingPhoto) { errEl.textContent = "Please select or drop a card photo first."; return; }
-      userMessage = {
-        role: "user",
-        content: [
-          { type: "image", source: { type: "base64", media_type: pendingPhoto.mediaType, data: pendingPhoto.data } },
-          { type: "text", text: `Identify this Pokémon card. ${jsonArrayInstruction}` },
-        ],
-      };
+
+      lookupBtn.disabled = true;
+      lookupSpinner.classList.remove("hidden");
+      lookupLabel.textContent = "Identifying…";
+
+      try {
+        const user  = window.netlifyIdentity?.currentUser();
+        const token = user ? await user.jwt().catch(() => null) : null;
+        const res = await fetch("/.netlify/functions/identify-card", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ imageData: pendingPhoto.data, mediaType: pendingPhoto.mediaType }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+
+        const cards = (data.cards || []).filter(c => c && c.cardId);
+        if (!cards.length) throw new Error("Could not identify card. Try a clearer photo or use Card Name instead.");
+
+        if (cards.length === 1) {
+          foundCard = cards[0];
+          showConfirmStep(foundCard);
+        } else {
+          showPickStep(cards);
+        }
+      } catch (err) {
+        console.error("identify-card error:", err);
+        errEl.textContent = err.message;
+        lookupBtn.disabled = false;
+        lookupSpinner.classList.add("hidden");
+        lookupLabel.textContent = "Find Card";
+      }
+      return;
     }
 
     lookupBtn.disabled = true;
