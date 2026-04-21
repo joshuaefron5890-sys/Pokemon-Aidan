@@ -349,7 +349,6 @@
     via the <a href="https://pokemontcg.io/" target="_blank" rel="noopener">Pokémon TCG API</a>.
   </footer>
 
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
     // ── Parallax orbs on scroll ───────────────────────────
     const orbDefs = [
@@ -411,21 +410,17 @@
     updateLabel();
     window.addEventListener('resize', updateLabel);
 
-    // Auth
-    if (window.netlifyIdentity) {
-      const _niw = () => document.getElementById("netlify-identity-widget");
-      window.netlifyIdentity.on("open",  () => _niw()?.classList.add("nf-open"));
-      window.netlifyIdentity.on("close", () => _niw()?.classList.remove("nf-open"));
-      window.netlifyIdentity.on("init", user => {
-        const btn = document.getElementById("login-btn");
-        if (user) {
+    // Auth — use our own session key; always send to /admin
+    (function () {
+      const btn = document.getElementById("login-btn");
+      try {
+        const s = JSON.parse(localStorage.getItem("pokebinder.admin.session") || "null");
+        if (s?.access_token && (s.expires_at || 0) > Math.round(Date.now() / 1000)) {
           btn.textContent = "My Binder";
-          btn.addEventListener("click", () => { document.location.href = "/admin"; });
-        } else {
-          btn.addEventListener("click", () => { document.location.href = "/admin"; });
         }
-      });
-    }
+      } catch {}
+      btn.addEventListener("click", () => { document.location.href = "/admin"; });
+    })();
 
     // Load public binders
     (async () => {
