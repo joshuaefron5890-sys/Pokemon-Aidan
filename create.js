@@ -449,7 +449,13 @@ step2Btn.addEventListener("click", async () => {
     }
 
     if (data.access_token) {
-      // Immediate login (email confirmation disabled)
+      // Sync into Identity Widget's localStorage so the admin page recognises the session
+      try {
+        localStorage.setItem("gotrue.user", JSON.stringify({
+          ...data,
+          expires_at: Math.round(Date.now() / 1000) + (data.expires_in || 3600),
+        }));
+      } catch {}
       wizardData.token = data.access_token;
       saveState();
       goTo(3);
