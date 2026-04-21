@@ -1,4 +1,4 @@
-const CACHE = "pokebinder-v1";
+const CACHE = "pokebinder-v2";
 
 const PRECACHE = [
   "/",
