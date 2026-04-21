@@ -27,6 +27,11 @@ body::before {
 a { color: inherit; text-decoration: none; }
 .hidden { display: none !important; }
 
+/* Hide the Sign Up tab in the Netlify Identity Widget — signup goes through /create */
+[data-netlify-identity-widget] .tabs a:first-child,
+.netlify-identity-widget .tabs a:first-child,
+#netlify-identity-widget .tabs li:first-child { display: none !important; }
+
 /* ── Login Screen ──────────────────────────────────────────── */
 
 #login-screen {

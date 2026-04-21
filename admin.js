@@ -9,6 +9,8 @@ let pendingImage = null;
 netlifyIdentity.on("init",   user => user ? showAdmin(user) : showLogin());
 netlifyIdentity.on("login",  user => { netlifyIdentity.close(); showAdmin(user); });
 netlifyIdentity.on("logout", ()   => showLogin());
+// Redirect anyone who signs up via the widget to the binder creation wizard instead
+netlifyIdentity.on("signup", () => { netlifyIdentity.close(); window.location.href = "/create"; });
 
 document.getElementById("login-btn").addEventListener("click",
   () => netlifyIdentity.open("login"));
