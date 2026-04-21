@@ -154,14 +154,27 @@
   });
 
   function readPhotoFile(file) {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const [, data] = ev.target.result.split(",");
-      pendingPhoto = { data, mediaType: file.type };
-      preview.src = ev.target.result;
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      // Resize to max 1024px on longest side before encoding — camera photos can be 5–8 MB
+      const MAX = 1024;
+      let { width, height } = img;
+      if (width > MAX || height > MAX) {
+        if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
+        else                { width  = Math.round(width  * MAX / height); height = MAX; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      const [, data] = dataUrl.split(",");
+      pendingPhoto = { data, mediaType: "image/jpeg" };
+      preview.src = dataUrl;
       previewWrap.classList.remove("hidden");
     };
-    reader.readAsDataURL(file);
+    img.src = objectUrl;
   }
 
   // ── Step management ───────────────────────────────────────
