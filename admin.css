@@ -713,7 +713,14 @@ a.binder-card { cursor: pointer; }
   }
   .sidebar-close { display: none; }
   .mobile-header { display: none; }
-  .main-content { margin-left: var(--sidebar-w); overflow-y: auto; }
+  /* Keep overflow hidden so flex: 1 chain works for the iframe */
+  .main-content { margin-left: var(--sidebar-w); overflow: hidden; }
+  /* Views that aren't the binder iframe need their own scroll */
+  #view-shared, #view-favorites, #view-trades, #view-offers, #view-profile, #view-assistant {
+    overflow-y: auto;
+  }
+  /* Ensure iframe always fills the visible area on mobile */
+  #binder-iframe { height: calc(100vh - 44px); }
 
   .chat-popup { width: calc(100vw - 32px); right: 16px; bottom: 76px; }
   .chat-bubble span { display: none; }
