@@ -68,6 +68,7 @@ async function initBinder() {
     }));
 
     // Show owner chat bubble whenever the owner views their own binder
+    window.IS_OWNER = !!data.isOwner;
     const inAdminFrame = window.self !== window.top;
     if (data.isOwner) {
       initOwnerBubble(slug, data.owner);

@@ -666,7 +666,7 @@ async function loadCollection() {
     emptyMsg.innerHTML = `
       <div class="empty-state-icon">📭</div>
       <p class="empty-state-title">No cards yet</p>
-      <p class="empty-state-sub">Use the <strong>Update Binder</strong> button to add your first card.</p>
+      ${window.IS_OWNER ? '<p class="empty-state-sub">Use the <strong>Update Binder</strong> button to add your first card.</p>' : ''}
     `;
     document.getElementById("card-grid").appendChild(emptyMsg);
   }
