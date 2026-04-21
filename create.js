@@ -629,6 +629,143 @@ function addCard(card) {
 searchInput.addEventListener("keydown", e => { if (e.key === "Enter") doSearch(); });
 searchBtn.addEventListener("click", doSearch);
 
+// ── Step 3: Tabs ────────────────────────────────────────────
+
+let activeWizTab = "name";
+document.querySelectorAll(".wiz-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    activeWizTab = tab.dataset.tab;
+    document.querySelectorAll(".wiz-tab").forEach(t => t.classList.toggle("active", t === tab));
+    document.querySelectorAll(".wiz-tab-panel").forEach(p =>
+      p.classList.toggle("active", p.id === `wiz-tab-${activeWizTab}`)
+    );
+    resultsEl.classList.add("hidden");
+    resultsGrid.innerHTML = "";
+  });
+});
+
+// ── Step 3: Photo tab ───────────────────────────────────────
+
+function resizeAndIdentify(file) {
+  const statusEl = document.getElementById("wiz-photo-status");
+  statusEl.textContent = "Identifying card…";
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = async () => {
+      const MAX = 1024;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if (w > MAX || h > MAX) {
+        if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
+        else        { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      const b64 = canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
+      try {
+        const token = wizardData.token;
+        const res = await fetch("/.netlify/functions/identify-card", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ imageData: b64, mediaType: "image/jpeg" }),
+        });
+        const data = await res.json();
+        const cards = data.cards || [];
+        if (!cards.length) {
+          statusEl.textContent = "Couldn't identify the card. Try the Search tab.";
+          return;
+        }
+        statusEl.textContent = "";
+        resultsGrid.innerHTML = "";
+        cards.forEach(card => {
+          const imgSrc = card.cardId ? cardImgUrl(card.cardId) : "";
+          const btn = document.createElement("button");
+          btn.className = "result-item";
+          btn.innerHTML = `
+            ${imgSrc ? `<img src="${imgSrc}" alt="${card.query}" loading="lazy" onerror="this.style.opacity='.25'" />` : ""}
+            <div class="result-name">${card.query}</div>
+            <div class="result-set">${card.setName || ""}</div>
+            ${card.marketPrice ? `<div class="result-price">$${Number(card.marketPrice).toFixed(2)}</div>` : ""}`;
+          btn.addEventListener("click", () => addIdentifiedCard(card));
+          resultsGrid.appendChild(btn);
+        });
+        resultsEl.classList.remove("hidden");
+      } catch {
+        statusEl.textContent = "Identification failed. Please try again.";
+      }
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function addIdentifiedCard(card) {
+  if (card.cardId && wizardData.cards.some(c => c.cardId === card.cardId)) {
+    document.getElementById("wiz-photo-status").textContent = "That card is already in your binder.";
+    return;
+  }
+  wizardData.cards.push({
+    query:         card.query,
+    cardId:        card.cardId || "",
+    setName:       card.setName || "",
+    tcgUrl:        card.tcgUrl || "",
+    fallbackPrice: card.marketPrice || undefined,
+  });
+  saveState();
+  updateTray();
+  resultsEl.classList.add("hidden");
+  resultsGrid.innerHTML = "";
+  document.getElementById("wiz-photo-status").textContent = `✓ Added ${card.query}`;
+}
+
+document.getElementById("wiz-camera-input").addEventListener("change", e => {
+  if (e.target.files[0]) resizeAndIdentify(e.target.files[0]);
+});
+document.getElementById("wiz-upload-input").addEventListener("change", e => {
+  if (e.target.files[0]) resizeAndIdentify(e.target.files[0]);
+});
+
+// ── Step 3: TCG Link tab ────────────────────────────────────
+
+function parseTcgLink(link) {
+  try {
+    const parts = new URL(link).pathname.split("/").filter(Boolean);
+    const slug  = parts[parts.length - 1] || "";
+    let cleaned = slug.replace(/^pokemon-/, "");
+    const numMatch = cleaned.match(/-(\d+)$/);
+    const numStr   = numMatch ? parseInt(numMatch[1], 10).toString() : null;
+    if (numMatch) cleaned = cleaned.slice(0, numMatch.index);
+    const suffixes  = new Set(["ex", "gx", "v", "vmax", "vstar", "mega", "break", "prime"]);
+    const slugParts = cleaned.split("-");
+    let nameWords   = [slugParts[slugParts.length - 1]];
+    if (slugParts.length >= 2 && suffixes.has(slugParts[slugParts.length - 1])) {
+      nameWords = [slugParts[slugParts.length - 2], slugParts[slugParts.length - 1]];
+    }
+    return numStr ? `${nameWords.join(" ")} ${numStr}` : nameWords.join(" ");
+  } catch { return null; }
+}
+
+document.getElementById("wiz-link-btn").addEventListener("click", () => {
+  const link      = document.getElementById("wiz-link-input").value.trim();
+  const statusEl  = document.getElementById("wiz-link-status");
+  if (!link || !link.includes("tcgplayer.com")) {
+    statusEl.textContent = "Please paste a valid TCGPlayer URL.";
+    return;
+  }
+  const q = parseTcgLink(link);
+  if (!q) { statusEl.textContent = "Couldn't parse that URL."; return; }
+  statusEl.textContent = "";
+  searchInput.value = q;
+  activeWizTab = "name";
+  document.querySelectorAll(".wiz-tab").forEach(t => t.classList.toggle("active", t.dataset.tab === "name"));
+  document.querySelectorAll(".wiz-tab-panel").forEach(p => p.classList.toggle("active", p.id === "wiz-tab-name"));
+  doSearch();
+});
+document.getElementById("wiz-link-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("wiz-link-btn").click();
+});
+
 step3NextBtn.addEventListener("click", createBinder);
 document.getElementById("skip-cards").addEventListener("click", createBinder);
 
