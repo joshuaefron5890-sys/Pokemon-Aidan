@@ -160,14 +160,23 @@
         }
       }).catch(() => {});
 
-    if (window.netlifyIdentity) {
-      window.netlifyIdentity.on("init", user => {
-        const btn = document.getElementById("login-btn");
-        const isOwner = user?.email === "joshuaefron5890@gmail.com";
-        if (user) {
+    // Nav login button — always go to /admin; show "My Account" if session exists
+    (function () {
+      const btn = document.getElementById("login-btn");
+      if (!btn) return;
+      try {
+        const s = JSON.parse(localStorage.getItem("pokebinder.admin.session") || "null");
+        if (s?.access_token && (s.expires_at || 0) > Math.round(Date.now() / 1000)) {
           btn.textContent = "My Account";
-          btn.addEventListener("click", () => { document.location.href = "/admin"; });
-          if (!isOwner) window.initFavorites?.(user, "aidan", "Aidan");
+        }
+      } catch {}
+      btn.addEventListener("click", () => { document.location.href = "/admin"; });
+      // Favorites still get the widget user via netlifyIdentity on init
+      if (window.netlifyIdentity) {
+        window.netlifyIdentity.on("init", user => {
+          const isOwner = user?.email === "joshuaefron5890@gmail.com";
+          if (user && !isOwner) window.initFavorites?.(user, "aidan", "Aidan");
+          if (!user) window.initFavorites?.(null, "aidan", "Aidan");
           if (isOwner) {
             const ptg = document.getElementById("price-toggle-group");
             const pt  = document.getElementById("price-toggle");
@@ -183,25 +192,9 @@
               });
             }
           }
-        } else {
-          // Show hearts to guests too; login modal on first click
-          window.initFavorites?.(null, "aidan", "Aidan");
-          btn.addEventListener("click", () => { window.netlifyIdentity.open("login"); });
-          window.netlifyIdentity.on("login", () => {
-            // Skip redirect when login was triggered by the favorites signup modal
-            if (window._netlifyFavLogin) return;
-            const wizardState = localStorage.getItem("wizard_state_v1");
-            if (wizardState) {
-              try {
-                const s = JSON.parse(wizardState);
-                if (s.owner && s.slug) { document.location.href = "/create"; return; }
-              } catch {}
-            }
-            document.location.href = "/admin";
-          });
-        }
-      });
-    }
+        });
+      }
+    })();
   </script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");</script>
 </body>

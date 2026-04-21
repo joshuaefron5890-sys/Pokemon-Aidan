@@ -177,22 +177,18 @@
       window.netlifyIdentity.on("close", () => _niw()?.classList.remove("nf-open"));
     }
 
-    if (window.netlifyIdentity) {
-      window.netlifyIdentity.on("init", user => {
-        const btn = document.getElementById("login-btn");
-        if (user) {
+    // Nav login button — always go to /admin; show "My Account" if session exists
+    (function () {
+      const btn = document.getElementById("login-btn");
+      if (!btn) return;
+      try {
+        const s = JSON.parse(localStorage.getItem("pokebinder.admin.session") || "null");
+        if (s?.access_token && (s.expires_at || 0) > Math.round(Date.now() / 1000)) {
           btn.textContent = "My Account";
-          btn.addEventListener("click", () => { document.location.href = "/admin"; });
-        } else {
-          btn.addEventListener("click", () => { window.netlifyIdentity.open("login"); });
-          window.netlifyIdentity.on("login", () => {
-            // Skip redirect when login was triggered by the favorites signup modal
-            if (window._netlifyFavLogin) return;
-            document.location.href = "/admin";
-          });
         }
-      });
-    }
+      } catch {}
+      btn.addEventListener("click", () => { document.location.href = "/admin"; });
+    })();
   </script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");</script>
 </body>
