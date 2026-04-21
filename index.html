@@ -421,17 +421,7 @@
           btn.textContent = "My Binder";
           btn.addEventListener("click", () => { document.location.href = "/admin"; });
         } else {
-          btn.addEventListener("click", () => { window.netlifyIdentity.open("login"); });
-          window.netlifyIdentity.on("login", () => {
-            const wizardState = localStorage.getItem("wizard_state_v1");
-            if (wizardState) {
-              try {
-                const s = JSON.parse(wizardState);
-                if (s.owner && s.slug) { document.location.href = "/create"; return; }
-              } catch {}
-            }
-            document.location.href = "/admin";
-          });
+          btn.addEventListener("click", () => { document.location.href = "/admin"; });
         }
       });
     }
