@@ -6,7 +6,18 @@ let pendingImage = null;
 
 // ── Auth ────────────────────────────────────────────────────
 
-netlifyIdentity.on("init",   user => user ? showAdmin(user) : showLogin());
+netlifyIdentity.on("init", user => {
+  if (user) { showAdmin(user); return; }
+  // Widget sometimes misses a valid stored session — check localStorage directly
+  try {
+    const stored = JSON.parse(localStorage.getItem("gotrue.user") || "null");
+    if (stored?.access_token && stored.user && (stored.expires_at || 0) > Math.round(Date.now() / 1000)) {
+      showAdmin(stored.user);
+      return;
+    }
+  } catch {}
+  showLogin();
+});
 netlifyIdentity.on("login",  user => { netlifyIdentity.close(); showAdmin(user); });
 netlifyIdentity.on("logout", ()   => showLogin());
 
@@ -34,7 +45,7 @@ document.getElementById("login-btn").addEventListener("click", async () => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error_description || data.msg || "Invalid email or password.");
 
-    // Sync into Identity Widget's localStorage so currentUser() works
+    // Sync into Identity Widget's localStorage so future page loads work
     try {
       localStorage.setItem("gotrue.user", JSON.stringify({
         ...data,
@@ -42,13 +53,12 @@ document.getElementById("login-btn").addEventListener("click", async () => {
       }));
     } catch {}
 
-    // Re-init the widget to pick up the stored session, then show admin
-    netlifyIdentity.init();
-    const user = netlifyIdentity.currentUser();
+    // Use the user object returned directly by the token endpoint — no reload needed
+    const user = data.user || netlifyIdentity.currentUser();
     if (user) {
       showAdmin(user);
     } else {
-      // Fallback: reload so init fires with the stored session
+      // Last resort: reload (init handler will pick up localStorage)
       window.location.reload();
     }
   } catch (err) {
