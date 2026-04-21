@@ -46,8 +46,9 @@ netlifyIdentity.currentUser = () => {
 
 netlifyIdentity.on("init", user => {
   if (user) { showAdmin(user); return; }
-  const session = getStoredSession();
-  if (session) { showAdmin(session.user); return; }
+  // Use patched currentUser() so the user object has jwt()
+  const patchedUser = netlifyIdentity.currentUser();
+  if (patchedUser) { showAdmin(patchedUser); return; }
   showLogin();
 });
 netlifyIdentity.on("login", user => { netlifyIdentity.close(); showAdmin(user); });
@@ -79,7 +80,8 @@ document.getElementById("login-btn").addEventListener("click", async () => {
     if (!res.ok) throw new Error(data.error_description || data.msg || "Invalid email or password.");
 
     saveSession(data);
-    showAdmin(data.user);
+    // Use patched currentUser() so showAdmin receives a user object with jwt()
+    showAdmin(netlifyIdentity.currentUser());
   } catch (err) {
     errorEl.textContent = err.message;
     document.getElementById("login-btn").disabled = false;
