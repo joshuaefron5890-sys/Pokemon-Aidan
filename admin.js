@@ -42,18 +42,26 @@ netlifyIdentity.currentUser = () => {
   return { ...session.user, jwt: async () => session.access_token };
 };
 
-// ── Auth event handlers ─────────────────────────────────────
+// Build a user object that always has jwt() — safe to call showAdmin() with
+function makeUserFromSession(session) {
+  return { ...session.user, jwt: async () => session.access_token };
+}
+
+// ── Auth: check stored session immediately (don't rely on widget init timing) ──
+const _earlySession = getStoredSession();
+if (_earlySession) {
+  // Already logged in — show admin before the widget even initialises
+  document.addEventListener("DOMContentLoaded", () => showAdmin(makeUserFromSession(_earlySession)));
+}
 
 netlifyIdentity.on("init", user => {
+  if (_earlySession) return; // already handled above
   if (user) { showAdmin(user); return; }
-  // Use patched currentUser() so the user object has jwt()
   const patchedUser = netlifyIdentity.currentUser();
   if (patchedUser) { showAdmin(patchedUser); return; }
   showLogin();
 });
 netlifyIdentity.on("login", user => { netlifyIdentity.close(); showAdmin(user); });
-// Do NOT listen to netlifyIdentity "logout" for UI — it fires spuriously
-// when the widget sees our session key. Logout is handled explicitly below.
 
 // ── Custom inline login ─────────────────────────────────────
 document.getElementById("login-btn").addEventListener("click", async () => {
@@ -80,8 +88,8 @@ document.getElementById("login-btn").addEventListener("click", async () => {
     if (!res.ok) throw new Error(data.error_description || data.msg || "Invalid email or password.");
 
     saveSession(data);
-    // Use patched currentUser() so showAdmin receives a user object with jwt()
-    showAdmin(netlifyIdentity.currentUser());
+    // Use patched currentUser(); fall back to data directly if localStorage unavailable
+    showAdmin(netlifyIdentity.currentUser() || makeUserFromSession({ user: data.user, access_token: data.access_token }));
   } catch (err) {
     errorEl.textContent = err.message;
     document.getElementById("login-btn").disabled = false;
@@ -125,6 +133,7 @@ function isAidan(user) {
 }
 
 async function showAdmin(user) {
+  if (!user) { showLogin(); return; }
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("admin-app").classList.remove("hidden");
   document.getElementById("user-email").textContent = user.email;
