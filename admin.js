@@ -4,24 +4,57 @@
 let history = [];
 let pendingImage = null;
 
-// ── Auth ────────────────────────────────────────────────────
+// ── Session management ──────────────────────────────────────
+// We manage our own session under a separate key so netlifyIdentity's
+// internal storage listener never fires spurious logout events.
+
+const SESSION_KEY = "pokebinder.admin.session";
+
+function getStoredSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+    if (s?.access_token && s?.user && (s.expires_at || 0) > Math.round(Date.now() / 1000)) return s;
+  } catch {}
+  return null;
+}
+
+function saveSession(data) {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      ...data,
+      expires_at: Math.round(Date.now() / 1000) + (data.expires_in || 3600),
+    }));
+  } catch {}
+}
+
+function clearSession() {
+  try { localStorage.removeItem(SESSION_KEY); } catch {}
+}
+
+// Patch netlifyIdentity.currentUser() so all existing API call code works
+// even when the user logged in via our custom form (widget returns null).
+const _widgetCurrentUser = netlifyIdentity.currentUser.bind(netlifyIdentity);
+netlifyIdentity.currentUser = () => {
+  const widgetUser = _widgetCurrentUser();
+  if (widgetUser) return widgetUser;
+  const session = getStoredSession();
+  if (!session) return null;
+  return { ...session.user, jwt: async () => session.access_token };
+};
+
+// ── Auth event handlers ─────────────────────────────────────
 
 netlifyIdentity.on("init", user => {
   if (user) { showAdmin(user); return; }
-  // Widget sometimes misses a valid stored session — check localStorage directly
-  try {
-    const stored = JSON.parse(localStorage.getItem("gotrue.user") || "null");
-    if (stored?.access_token && stored.user && (stored.expires_at || 0) > Math.round(Date.now() / 1000)) {
-      showAdmin(stored.user);
-      return;
-    }
-  } catch {}
+  const session = getStoredSession();
+  if (session) { showAdmin(session.user); return; }
   showLogin();
 });
-netlifyIdentity.on("login",  user => { netlifyIdentity.close(); showAdmin(user); });
-netlifyIdentity.on("logout", ()   => showLogin());
+netlifyIdentity.on("login", user => { netlifyIdentity.close(); showAdmin(user); });
+// Do NOT listen to netlifyIdentity "logout" for UI — it fires spuriously
+// when the widget sees our session key. Logout is handled explicitly below.
 
-// Custom inline login — bypasses the Identity Widget popup entirely
+// ── Custom inline login ─────────────────────────────────────
 document.getElementById("login-btn").addEventListener("click", async () => {
   const email    = document.getElementById("login-email").value.trim();
   const password = document.getElementById("login-password").value;
@@ -45,22 +78,8 @@ document.getElementById("login-btn").addEventListener("click", async () => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error_description || data.msg || "Invalid email or password.");
 
-    // Sync into Identity Widget's localStorage so future page loads work
-    try {
-      localStorage.setItem("gotrue.user", JSON.stringify({
-        ...data,
-        expires_at: Math.round(Date.now() / 1000) + (data.expires_in || 3600),
-      }));
-    } catch {}
-
-    // Use the user object returned directly by the token endpoint — no reload needed
-    const user = data.user || netlifyIdentity.currentUser();
-    if (user) {
-      showAdmin(user);
-    } else {
-      // Last resort: reload (init handler will pick up localStorage)
-      window.location.reload();
-    }
+    saveSession(data);
+    showAdmin(data.user);
   } catch (err) {
     errorEl.textContent = err.message;
     document.getElementById("login-btn").disabled = false;
@@ -75,10 +94,14 @@ document.getElementById("login-email")?.addEventListener("keydown", e => {
 document.getElementById("login-password")?.addEventListener("keydown", e => {
   if (e.key === "Enter") document.getElementById("login-btn").click();
 });
-document.getElementById("logout-btn").addEventListener("click",
-  () => netlifyIdentity.logout());
-document.getElementById("profile-logout-btn").addEventListener("click",
-  () => netlifyIdentity.logout());
+
+function doLogout() {
+  clearSession();
+  try { netlifyIdentity.logout(); } catch {}
+  showLogin();
+}
+document.getElementById("logout-btn").addEventListener("click", doLogout);
+document.getElementById("profile-logout-btn").addEventListener("click", doLogout);
 
 // Map known admin emails to their binder URLs.
 // Add entries here as new admins are created.
