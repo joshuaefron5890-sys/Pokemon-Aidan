@@ -23,15 +23,19 @@ exports.handler = async (event, context) => {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "Missing offerId or recipientSlug" }) };
     }
 
-    // Verify current user owns recipientSlug
-    const manifest = await getManifest();
-    const myEntry = manifest.find(b => b.slug === recipientSlug);
-    if (!myEntry || myEntry.email !== user.email) {
+    // Load binder and offers together; verify ownership via binder.email
+    const [binder, receivedOffers, manifest] = await Promise.all([
+      getBinder(recipientSlug),
+      getReceivedOffers(recipientSlug),
+      getManifest(),
+    ]);
+
+    if (!binder) return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: "Binder not found" }) };
+    if (binder.email !== user.email) {
       return { statusCode: 403, headers: CORS, body: JSON.stringify({ error: "You don't own this binder" }) };
     }
 
     // Load offer and validate
-    const receivedOffers = await getReceivedOffers(recipientSlug);
     const offer = receivedOffers.find(o => o.id === offerId);
     if (!offer) return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: "Offer not found" }) };
     if (offer.status !== "accepted") {
@@ -40,10 +44,6 @@ exports.handler = async (event, context) => {
     if (offer.swapExecuted) {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "Already executed" }) };
     }
-
-    // Remove the sold cards from the binder
-    const binder = await getBinder(recipientSlug);
-    if (!binder) return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: "Binder not found" }) };
 
     const cards   = offer.cards || (offer.card ? [offer.card] : []);
     const cardIds = new Set(cards.map(c => c.cardId).filter(Boolean));

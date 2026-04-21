@@ -23,15 +23,20 @@ exports.handler = async (event, context) => {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "Missing tradeId or recipientSlug" }) };
     }
 
-    // Verify current user owns recipientSlug
-    const manifest = await getManifest();
-    const recipientEntry = manifest.find(b => b.slug === recipientSlug);
-    if (!recipientEntry || recipientEntry.email !== user.email) {
+    // Load trade and recipient binder together, verify ownership via binder.email
+    const [receivedTrades, recipientBinder, manifest] = await Promise.all([
+      getReceivedTrades(recipientSlug),
+      getBinder(recipientSlug),
+      getManifest(),
+    ]);
+
+    if (!recipientBinder) {
+      return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: "Recipient binder not found" }) };
+    }
+    if (recipientBinder.email !== user.email) {
       return { statusCode: 403, headers: CORS, body: JSON.stringify({ error: "You don't own this binder" }) };
     }
 
-    // Load trade and validate
-    const receivedTrades = await getReceivedTrades(recipientSlug);
     const trade = receivedTrades.find(t => t.id === tradeId);
     if (!trade) return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: "Trade not found" }) };
     if (trade.status !== "accepted") {
@@ -48,13 +53,10 @@ exports.handler = async (event, context) => {
     }
     const initiatorSlug = initiatorEntry.slug;
 
-    // Load both binders
-    const [recipientBinder, initiatorBinder] = await Promise.all([
-      getBinder(recipientSlug),
-      getBinder(initiatorSlug),
-    ]);
-    if (!recipientBinder || !initiatorBinder) {
-      return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: "One or both binders not found" }) };
+    // Load initiator's binder (recipient's was already loaded above)
+    const initiatorBinder = await getBinder(initiatorSlug);
+    if (!initiatorBinder) {
+      return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: "Initiator binder not found" }) };
     }
 
     // ── Identify cards to move ──────────────────────────────
