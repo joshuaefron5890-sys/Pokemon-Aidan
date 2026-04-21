@@ -874,10 +874,10 @@ function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
   const apiNum    = _apiNumber(card);
   const apiRarity = card?.rarity || "";
 
-  const n = m.querySelector("#cem-name");    n.value = overrides.nameOverride || ""; n.placeholder = apiName   || "API value";
-  const s = m.querySelector("#cem-set-name");s.value = overrides.setDisplayOverride || ""; s.placeholder = apiSet || "API value";
-  const u = m.querySelector("#cem-number");  u.value = overrides.numberOverride || ""; u.placeholder = apiNum    || "API value";
-  const r = m.querySelector("#cem-rarity");  r.value = overrides.rarityOverride  || ""; r.placeholder = apiRarity || "API value";
+  const n = m.querySelector("#cem-name");    n.value = overrides.nameOverride || ""; n.placeholder = apiName  ;
+  const s = m.querySelector("#cem-set-name");s.value = overrides.setDisplayOverride || ""; s.placeholder = apiSet;
+  const u = m.querySelector("#cem-number");  u.value = overrides.numberOverride || ""; u.placeholder = apiNum   ;
+  const r = m.querySelector("#cem-rarity");  r.value = overrides.rarityOverride  || ""; r.placeholder = apiRarity;
 
   m.querySelector("#cem-refresh-btn").disabled = !(overrides.tcgUrl || card?.tcgplayer?.url || "");
   m.querySelector("#cem-refresh-status").textContent = "";
@@ -966,10 +966,10 @@ async function _refreshCardData() {
     const s = m.querySelector("#cem-set-name");
     const u = m.querySelector("#cem-number");
     const r = m.querySelector("#cem-rarity");
-    n.placeholder = card.name        || "API value"; if (!n.value) n.value = "";
-    s.placeholder = card.set?.name   || "API value"; if (!s.value) s.value = "";
-    u.placeholder = _apiNumber(card) || "API value"; if (!u.value) u.value = "";
-    r.placeholder = card.rarity      || "API value"; if (!r.value) r.value = "";
+    n.placeholder = card.name       ; if (!n.value) n.value = "";
+    s.placeholder = card.set?.name  ; if (!s.value) s.value = "";
+    u.placeholder = _apiNumber(card); if (!u.value) u.value = "";
+    r.placeholder = card.rarity     ; if (!r.value) r.value = "";
 
     // Update image preview if not manually overridden
     if (!m.querySelector("#cem-image-url").value) {
