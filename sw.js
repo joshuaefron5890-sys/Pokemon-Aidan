@@ -1,9 +1,7 @@
-const CACHE = "pokebinder-v5";
+const CACHE = "pokebinder-v6";
 
+// Only cache static assets — never HTML pages
 const PRECACHE = [
-  "/",
-  "/admin",
-  "/create",
   "/manifest.json",
   "/icons/icon.svg",
   "/style.css",
@@ -43,7 +41,15 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // Stale-while-revalidate for everything else
+  // HTML navigation requests: always network-first so pages are never stale
+  if (e.request.mode === "navigate" || e.request.headers.get("accept")?.includes("text/html")) {
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Static assets: stale-while-revalidate
   e.respondWith(
     caches.open(CACHE).then(cache =>
       cache.match(e.request).then(cached => {
