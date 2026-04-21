@@ -1,6 +1,6 @@
 // POST /.netlify/functions/update-offer
 // Body: { offerId, action, binderSlug }
-// Actions: withdraw (initiator), accept/reject (recipient), delete (initiator, withdrawn only)
+// Actions: withdraw (initiator), accept/reject (recipient), delete (initiator, withdrawn only), dismiss (accepted/rejected)
 
 const { getSentOffers, putSentOffers, getReceivedOffers, putReceivedOffers } = require("./_blobs");
 
@@ -13,6 +13,27 @@ exports.handler = async (event, context) => {
   try {
     const { offerId, action, binderSlug } = JSON.parse(event.body);
     if (!offerId || !action) return { statusCode: 400, body: JSON.stringify({ error: "Missing fields" }) };
+
+    if (action === "dismiss") {
+      const DISMISSABLE = ["accepted", "rejected"];
+      if (binderSlug) {
+        // Recipient dismissing from their received list
+        const received = await getReceivedOffers(binderSlug);
+        const offer = received.find(o => o.id === offerId);
+        if (!offer) return { statusCode: 404, body: JSON.stringify({ error: "Offer not found" }) };
+        if (!DISMISSABLE.includes(offer.status)) return { statusCode: 400, body: JSON.stringify({ error: "Only accepted or rejected offers can be dismissed" }) };
+        await putReceivedOffers(binderSlug, received.filter(o => o.id !== offerId));
+      } else {
+        // Initiator dismissing from their sent list
+        const sent = await getSentOffers(user.sub);
+        const offer = sent.find(o => o.id === offerId);
+        if (!offer) return { statusCode: 404, body: JSON.stringify({ error: "Offer not found" }) };
+        if (offer.initiatorId !== user.sub) return { statusCode: 403, body: JSON.stringify({ error: "Forbidden" }) };
+        if (!DISMISSABLE.includes(offer.status)) return { statusCode: 400, body: JSON.stringify({ error: "Only accepted or rejected offers can be dismissed" }) };
+        await putSentOffers(user.sub, sent.filter(o => o.id !== offerId));
+      }
+      return { statusCode: 200, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ok: true }) };
+    }
 
     if (action === "withdraw" || action === "delete") {
       const sentOffers = await getSentOffers(user.sub);

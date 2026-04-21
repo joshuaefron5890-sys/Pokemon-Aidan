@@ -801,6 +801,16 @@ function buildTradeCard(trade, direction) {
     actionsEl.appendChild(rmBtn);
   }
 
+  if (["accepted", "rejected"].includes(trade.status)) {
+    const dismissBtn = document.createElement("button");
+    dismissBtn.className = "trade-action-btn trade-action-withdraw";
+    dismissBtn.textContent = "Remove";
+    dismissBtn.addEventListener("click", () =>
+      doTradeAction(trade.id, "dismiss", direction === "received" ? window.BINDER_SLUG : null, el)
+    );
+    actionsEl.appendChild(dismissBtn);
+  }
+
   // Chat section for active trades
   if (["pending", "accepted"].includes(trade.status)) {
     const chatEl = document.createElement("div");
@@ -1274,6 +1284,16 @@ function buildOfferCard(offer, direction) {
     rmBtn.textContent = "Remove";
     rmBtn.addEventListener("click", () => doOfferAction(offer.id, "delete", null, el));
     actionsEl.appendChild(rmBtn);
+  }
+
+  if (["accepted", "rejected"].includes(offer.status)) {
+    const dismissBtn = document.createElement("button");
+    dismissBtn.className = "trade-action-btn trade-action-withdraw";
+    dismissBtn.textContent = "Remove";
+    dismissBtn.addEventListener("click", () =>
+      doOfferAction(offer.id, "dismiss", direction === "received" ? window.BINDER_SLUG : null, el)
+    );
+    actionsEl.appendChild(dismissBtn);
   }
 
   if (["pending", "accepted"].includes(offer.status)) {

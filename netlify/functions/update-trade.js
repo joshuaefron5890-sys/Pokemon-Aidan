@@ -1,5 +1,5 @@
 // POST /.netlify/functions/update-trade
-// Body: { tradeId, action: "withdraw"|"accept"|"reject"|"delete", binderSlug }
+// Body: { tradeId, action: "withdraw"|"accept"|"reject"|"delete"|"dismiss", binderSlug }
 
 const { getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades } = require("./_blobs");
 
@@ -24,6 +24,28 @@ exports.handler = async (event, context) => {
       if (trade.status !== "withdrawn") return { statusCode: 400, body: JSON.stringify({ error: "Only withdrawn trades can be deleted" }) };
 
       await putSentTrades(user.sub, sent.filter(t => t.id !== tradeId));
+      return { statusCode: 200, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ok: true }) };
+    }
+
+    // ── Dismiss a completed trade from the caller's view only ─
+    if (action === "dismiss") {
+      const DISMISSABLE = ["accepted", "rejected"];
+      if (binderSlug) {
+        // Recipient dismissing from their received list
+        const received = await getReceivedTrades(binderSlug);
+        const trade    = received.find(t => t.id === tradeId);
+        if (!trade) return { statusCode: 404, body: JSON.stringify({ error: "Trade not found" }) };
+        if (!DISMISSABLE.includes(trade.status)) return { statusCode: 400, body: JSON.stringify({ error: "Only accepted or rejected trades can be dismissed" }) };
+        await putReceivedTrades(binderSlug, received.filter(t => t.id !== tradeId));
+      } else {
+        // Initiator dismissing from their sent list
+        const sent  = await getSentTrades(user.sub);
+        const trade = sent.find(t => t.id === tradeId);
+        if (!trade) return { statusCode: 404, body: JSON.stringify({ error: "Trade not found" }) };
+        if (trade.initiatorId !== user.sub) return { statusCode: 403, body: JSON.stringify({ error: "Forbidden" }) };
+        if (!DISMISSABLE.includes(trade.status)) return { statusCode: 400, body: JSON.stringify({ error: "Only accepted or rejected trades can be dismissed" }) };
+        await putSentTrades(user.sub, sent.filter(t => t.id !== tradeId));
+      }
       return { statusCode: 200, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ok: true }) };
     }
 
