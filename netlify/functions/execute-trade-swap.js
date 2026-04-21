@@ -78,7 +78,8 @@ exports.handler = async (event, context) => {
     });
 
     // offeredCards: remove from initiator (if binder found), add to recipient
-    const offeredSet = new Set(trade.offeredCards);
+    // Support both legacy string[] and new object[] formats
+    const offeredSet = new Set(trade.offeredCards.map(c => (typeof c === "string" ? c : c.query)));
     const toRecipient = [];
     if (initiatorBinder) {
       initiatorBinder.cards = initiatorBinder.cards.filter(c => {

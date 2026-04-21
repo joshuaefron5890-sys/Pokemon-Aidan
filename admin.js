@@ -403,8 +403,8 @@ async function loadMyCards() {
 }
 
 function normalizeCard(entry) {
-  if (typeof entry === "string") return { query: entry, cardId: "", imageUrl: "" };
-  return { query: entry.query || "", cardId: entry.cardId || "", imageUrl: entry.imageUrl || "" };
+  if (typeof entry === "string") return { query: entry, cardId: "", imageUrl: "", tcgUrl: "" };
+  return { query: entry.query || "", cardId: entry.cardId || "", imageUrl: entry.imageUrl || "", tcgUrl: entry.tcgUrl || "" };
 }
 
 function cardThumb(card) {
@@ -547,7 +547,12 @@ document.getElementById("trade-drawer-close").addEventListener("click", closeTra
 document.getElementById("trade-drawer-backdrop").addEventListener("click", closeTradeDrawer);
 
 document.getElementById("trade-submit-btn").addEventListener("click", async () => {
-  const offeredCards = [...selectedOffers.values()].map(c => c.query);
+  const offeredCards = [...selectedOffers.values()].map(c => ({
+    query:    c.query    || "",
+    cardId:   c.cardId   || "",
+    imageUrl: c.imageUrl || "",
+    tcgUrl:   c.tcgUrl   || "",
+  }));
 
   const errEl = document.getElementById("trade-error");
   if (!offeredCards.length) {
@@ -763,7 +768,19 @@ function buildTradeCard(trade, direction) {
     </div>
     <div class="trade-card-offers">
       <span class="trade-offers-label">${direction === "received" ? "They offer:" : "You offered:"}</span>
-      ${trade.offeredCards.map(c => `<span class="trade-offer-pill">${c}</span>`).join("")}
+      ${trade.offeredCards.map(c => {
+        if (typeof c === "string") return `<span class="trade-offer-pill">${c}</span>`;
+        const imgSrc = c.imageUrl || (c.cardId ? (() => {
+          const i = c.cardId.lastIndexOf("-");
+          return i < 0 ? "" : `https://images.pokemontcg.io/${c.cardId.slice(0, i)}/${c.cardId.slice(i + 1)}.png`;
+        })() : "");
+        const inner = imgSrc
+          ? `<img src="${imgSrc}" alt="${c.query}" class="trade-offer-thumb" loading="lazy" /><span class="trade-offer-pill-name">${c.query}</span>`
+          : `<span class="trade-offer-pill-name">${c.query}</span>`;
+        return c.tcgUrl
+          ? `<a href="${c.tcgUrl}" target="_blank" rel="noopener" class="trade-offer-card">${inner}</a>`
+          : `<span class="trade-offer-card">${inner}</span>`;
+      }).join("")}
     </div>
     ${trade.message ? `<div class="trade-card-message">"${trade.message}"</div>` : ""}
     <div class="trade-card-actions"></div>`;
