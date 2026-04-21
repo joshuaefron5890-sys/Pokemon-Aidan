@@ -1091,6 +1091,13 @@ footer a {
 .acm-drop-icon { font-size: 2rem; margin-bottom: .5rem; }
 .acm-drop-label { font-size: .9rem; font-weight: 600; color: #fff; margin-bottom: .25rem; }
 .acm-drop-sub { font-size: .78rem; color: rgba(255,255,255,.5); margin-bottom: .6rem; }
+/* Mobile/desktop photo prompt visibility */
+.acm-photo-mobile  { display: none; }
+.acm-photo-desktop { display: block; }
+@media (max-width: 600px) {
+  .acm-photo-mobile  { display: block; }
+  .acm-photo-desktop { display: none; }
+}
 .acm-file-btn {
   display: inline-block; padding: .4rem .9rem;
   background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;

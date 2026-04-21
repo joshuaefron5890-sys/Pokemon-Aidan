@@ -127,13 +127,19 @@
 
   let pendingPhoto = null;
 
-  const dropzone    = document.getElementById("acm-dropzone");
-  const photoInput  = document.getElementById("acm-photo-input");
-  const preview     = document.getElementById("acm-photo-preview");
-  const previewWrap = document.getElementById("acm-photo-preview-wrap");
-  const photoClear  = document.getElementById("acm-photo-clear");
+  const dropzone         = document.getElementById("acm-dropzone");
+  const photoInput       = document.getElementById("acm-photo-input");         // mobile camera
+  const photoInputDesk   = document.getElementById("acm-photo-input-desktop"); // desktop file
+  const preview          = document.getElementById("acm-photo-preview");
+  const previewWrap      = document.getElementById("acm-photo-preview-wrap");
+  const photoClear       = document.getElementById("acm-photo-clear");
 
   photoInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (file) readPhotoFile(file);
+  });
+
+  photoInputDesk.addEventListener("change", e => {
     const file = e.target.files[0];
     if (file) readPhotoFile(file);
   });

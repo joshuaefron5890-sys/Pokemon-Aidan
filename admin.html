@@ -450,13 +450,25 @@
 
         <div class="acm-tab-panel" id="tab-photo">
           <div class="acm-dropzone" id="acm-dropzone">
-            <div class="acm-drop-icon">📷</div>
-            <p class="acm-drop-label">Take or upload a photo</p>
-            <p class="acm-drop-sub">or</p>
-            <label class="acm-file-btn">
-              Choose Photo
-              <input type="file" id="acm-photo-input" accept="image/*" capture="environment" />
-            </label>
+            <!-- Mobile: camera prompt -->
+            <div class="acm-photo-mobile">
+              <div class="acm-drop-icon">📷</div>
+              <p class="acm-drop-label">Take a photo of your card</p>
+              <label class="acm-file-btn">
+                Open Camera
+                <input type="file" id="acm-photo-input" accept="image/*" capture="environment" />
+              </label>
+            </div>
+            <!-- Desktop: drag & drop prompt -->
+            <div class="acm-photo-desktop">
+              <div class="acm-drop-icon">🖼️</div>
+              <p class="acm-drop-label">Drag &amp; drop a card photo here</p>
+              <p class="acm-drop-sub">or</p>
+              <label class="acm-file-btn">
+                Select from computer
+                <input type="file" id="acm-photo-input-desktop" accept="image/*" />
+              </label>
+            </div>
             <div id="acm-photo-preview-wrap" class="hidden">
               <img id="acm-photo-preview" alt="Card photo" />
               <button id="acm-photo-clear" class="acm-photo-clear">Remove</button>
