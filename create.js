@@ -460,7 +460,30 @@ step2Btn.addEventListener("click", async () => {
       saveState();
       goTo(3);
     } else {
-      // Email confirmation required
+      // No token yet — try logging in immediately (works when email confirmation is disabled
+      // but the signup response omits the token)
+      try {
+        const loginRes = await fetch("/.netlify/identity/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `grant_type=password&username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+        });
+        const loginData = await loginRes.json();
+        if (loginRes.ok && loginData.access_token) {
+          try {
+            localStorage.setItem("gotrue.user", JSON.stringify({
+              ...loginData,
+              expires_at: Math.round(Date.now() / 1000) + (loginData.expires_in || 3600),
+            }));
+          } catch {}
+          wizardData.token = loginData.access_token;
+          saveState();
+          goTo(3);
+          return;
+        }
+      } catch {}
+
+      // Email confirmation still required — tell the user
       step2Spinner.classList.add("hidden");
       step2Label.textContent = "Create Account";
       step2Btn.disabled = false;
