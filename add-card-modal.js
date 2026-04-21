@@ -430,23 +430,24 @@
     addAllLabel.textContent = "Adding…";
 
     try {
-      // Build one message listing all cards so the AI can add them in a single pass
-      const cardLines = cardQueue.map((c, i) =>
-        `${i + 1}. cardId="${c.cardId}", query="${c.query}", setName="${c.setName || ""}"` +
-        `${c.marketPrice ? `, fallbackPrice=${c.marketPrice}` : ""}` +
-        `${c.tcgUrl ? `, tcgUrl="${c.tcgUrl}"` : ""}`
-      ).join("\n");
+      const user  = window.netlifyIdentity?.currentUser();
+      if (!user) throw new Error("Please log in first.");
+      const token = await user.jwt();
+      const slug  = await resolveBinderSlug(user, token);
 
-      await callChat([{
-        role: "user",
-        content: `Add these ${cardQueue.length} card${cardQueue.length !== 1 ? "s" : ""} to the collection:\n${cardLines}`,
-      }]);
+      const res = await fetch("/.netlify/functions/add-cards-batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ slug, cards: cardQueue }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
 
       const names = cardQueue.map(c => c.query).join(", ");
       document.getElementById("acm-success-msg").textContent =
         cardQueue.length === 1
-          ? `"${cardQueue[0].query}" added! The page will update in ~1 minute.`
-          : `${cardQueue.length} cards added (${names}). The page will update in ~1 minute.`;
+          ? `"${cardQueue[0].query}" added!`
+          : `${data.added} card${data.added !== 1 ? "s" : ""} added (${names}).`;
 
       cardQueue = [];
       resetToStep("done");
