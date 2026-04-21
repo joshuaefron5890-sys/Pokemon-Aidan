@@ -31,15 +31,13 @@ function clearSession() {
   try { localStorage.removeItem(SESSION_KEY); } catch {}
 }
 
-// Patch netlifyIdentity.currentUser() so all existing API call code works
-// even when the user logged in via our custom form (widget returns null).
-const _widgetCurrentUser = netlifyIdentity.currentUser.bind(netlifyIdentity);
+// Patch netlifyIdentity.currentUser() so all existing API call code works.
+// We own the session entirely — ignore the widget's stored state.
 netlifyIdentity.currentUser = () => {
-  const widgetUser = _widgetCurrentUser();
-  if (widgetUser) return widgetUser;
   const session = getStoredSession();
   if (!session) return null;
-  return { ...session.user, jwt: async () => session.access_token };
+  // Re-read the token fresh inside jwt() in case storage was updated
+  return { ...session.user, jwt: async () => getStoredSession()?.access_token || null };
 };
 
 // Build a user object that always has jwt() — safe to call showAdmin() with
