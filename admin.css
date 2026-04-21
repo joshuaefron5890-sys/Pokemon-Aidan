@@ -315,6 +315,13 @@ a { color: inherit; text-decoration: none; }
 }
 .acm-file-btn:hover { border-color: #6366f1; background: rgba(99,102,241,.12); }
 .acm-file-btn input { display: none; }
+/* Mobile shows camera UI; desktop shows drag-and-drop UI */
+.acm-photo-mobile  { display: none; }
+.acm-photo-desktop { display: block; }
+@media (max-width: 600px) {
+  .acm-photo-mobile  { display: block; }
+  .acm-photo-desktop { display: none; }
+}
 #acm-photo-preview-wrap { margin-top: .85rem; }
 #acm-photo-preview { max-height: 140px; border-radius: 8px; border: 1px solid rgba(255,255,255,.2); }
 .acm-photo-clear { display: block; margin: .4rem auto 0; background: none; border: none; color: rgba(255,255,255,.5); font-size: .75rem; cursor: pointer; }
@@ -1272,6 +1279,12 @@ a.binder-card { cursor: pointer; }
 .trade-action-accept { background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.3); color: #10b981; }
 .trade-action-reject { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.3); color: #ef4444; }
 .trade-action-withdraw { background: rgba(107,114,128,.1); border-color: rgba(107,114,128,.3); color: #9ca3af; }
+.trade-action-secondary { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.15); color: rgba(255,255,255,.6); }
+
+/* ── Binder swap prompt ─────────────────────────────────────── */
+.swap-prompt { display: flex; flex-direction: column; gap: .5rem; }
+.swap-prompt-text { font-size: .85rem; color: rgba(255,255,255,.8); margin: 0 0 .25rem; font-weight: 500; }
+.swap-prompt .trade-action-btn { width: 100%; text-align: center; }
 
 /* ── Trade chat ──────────────────────────────────────────────── */
 .trade-chat {

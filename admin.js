@@ -829,6 +829,33 @@ function buildTradeCard(trade, direction) {
   return el;
 }
 
+function showSwapPrompt(el, message, onYes, onNo) {
+  const actionsEl = el.querySelector(".trade-card-actions");
+  if (!actionsEl) return;
+  actionsEl.innerHTML = "";
+  const wrap = document.createElement("div");
+  wrap.className = "swap-prompt";
+  wrap.innerHTML = `<p class="swap-prompt-text">${message}</p>`;
+
+  const yesBtn = document.createElement("button");
+  yesBtn.className = "trade-action-btn trade-action-accept";
+  yesBtn.textContent = "Yes, update binders";
+  yesBtn.addEventListener("click", async () => {
+    yesBtn.disabled = true; noBtn.disabled = true;
+    yesBtn.textContent = "Updating…";
+    await onYes();
+  });
+
+  const noBtn = document.createElement("button");
+  noBtn.className = "trade-action-btn trade-action-secondary";
+  noBtn.textContent = "Not now";
+  noBtn.addEventListener("click", onNo);
+
+  wrap.appendChild(yesBtn);
+  wrap.appendChild(noBtn);
+  actionsEl.appendChild(wrap);
+}
+
 async function doTradeAction(tradeId, action, binderSlug, el) {
   el.style.opacity = ".5";
   try {
@@ -840,8 +867,28 @@ async function doTradeAction(tradeId, action, binderSlug, el) {
       body: JSON.stringify({ tradeId, action, binderSlug }),
     });
     if (!res.ok) throw new Error("Failed");
+    el.style.opacity = "1";
     if (action === "delete") {
       el.remove();
+    } else if (action === "accept") {
+      showSwapPrompt(
+        el,
+        "Update binders to reflect the trade?",
+        async () => {
+          const freshToken = await netlifyIdentity.currentUser()?.jwt();
+          const swapRes = await fetch("/.netlify/functions/execute-trade-swap", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}` },
+            body: JSON.stringify({ tradeId, recipientSlug: binderSlug }),
+          });
+          const swapData = await swapRes.json();
+          if (!swapRes.ok) {
+            alert(swapData.error || "Swap failed. You can update your binder manually.");
+          }
+          loadTradeProposals();
+        },
+        () => loadTradeProposals()
+      );
     } else {
       loadTradeProposals();
     }
@@ -1260,7 +1307,31 @@ async function doOfferAction(offerId, action, binderSlug, el) {
       body: JSON.stringify({ offerId, action, binderSlug }),
     });
     if (!res.ok) throw new Error("Failed");
-    if (action === "delete") { el.remove(); } else { loadOffersView(); }
+    el.style.opacity = "1";
+    if (action === "delete") {
+      el.remove();
+    } else if (action === "accept") {
+      showSwapPrompt(
+        el,
+        "Remove these cards from your binder to reflect the sale?",
+        async () => {
+          const freshToken = await netlifyIdentity.currentUser()?.jwt();
+          const swapRes = await fetch("/.netlify/functions/execute-offer-swap", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}` },
+            body: JSON.stringify({ offerId, recipientSlug: binderSlug }),
+          });
+          const swapData = await swapRes.json();
+          if (!swapRes.ok) {
+            alert(swapData.error || "Could not update binder. You can remove the cards manually.");
+          }
+          loadOffersView();
+        },
+        () => loadOffersView()
+      );
+    } else {
+      loadOffersView();
+    }
   } catch {
     el.style.opacity = "1";
   }
