@@ -2,7 +2,7 @@
 // Body: { wantedCards: card[], offeredCards: string[], message }
 // (also accepts legacy wantedCard: card — wrapped to array)
 
-const { getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades } = require("./_blobs");
+const { getSentTrades, putSentTrades, getReceivedTrades, putReceivedTrades, getManifest } = require("./_blobs");
 
 exports.handler = async (event, context) => {
   if (event.httpMethod !== "POST") return { statusCode: 405 };
@@ -19,6 +19,19 @@ exports.handler = async (event, context) => {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing wantedCards or offeredCards" }) };
     }
 
+    // Resolve initiator's binder slug so the swap function can find it later.
+    // Prefer user_metadata.binder_url (set at binder creation), fall back to manifest.
+    let initiatorSlug = null;
+    const metaUrl = user.user_metadata?.binder_url; // e.g. "/binder/josh-efron"
+    if (metaUrl) {
+      initiatorSlug = metaUrl.replace(/^\/binder\//, "").trim() || null;
+    }
+    if (!initiatorSlug) {
+      const manifest = await getManifest();
+      const entry = manifest.find(b => b.email && b.email.toLowerCase() === user.email.toLowerCase());
+      if (entry) initiatorSlug = entry.slug;
+    }
+
     const binderSlug = wantedCards[0].binderSlug;
     const trade = {
       id: `tr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -27,6 +40,7 @@ exports.handler = async (event, context) => {
       initiatorId: user.sub,
       initiatorEmail: user.email,
       initiatorName: user.user_metadata?.full_name || user.email.split("@")[0],
+      initiatorSlug,
       wantedCards,
       offeredCards,
       message: message || "",

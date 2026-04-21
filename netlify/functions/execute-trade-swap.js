@@ -46,23 +46,29 @@ exports.handler = async (event, context) => {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "Swap already executed" }) };
     }
 
-    // Find initiator's binder slug via manifest
-    const initiatorEntry = manifest.find(b => b.email === trade.initiatorEmail);
-    if (!initiatorEntry) {
-      return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: "Could not find the other trader's binder" }) };
+    // Find initiator's binder slug — prefer value stored on the trade (new trades),
+    // fall back to manifest email match (case-insensitive), then owner name match.
+    let initiatorSlug = trade.initiatorSlug || null;
+    if (!initiatorSlug) {
+      const byEmail = manifest.find(b =>
+        b.email && b.email.toLowerCase() === trade.initiatorEmail.toLowerCase()
+      );
+      if (byEmail) initiatorSlug = byEmail.slug;
     }
-    const initiatorSlug = initiatorEntry.slug;
+    if (!initiatorSlug && trade.initiatorName) {
+      const byName = manifest.find(b =>
+        b.owner && b.owner.toLowerCase() === trade.initiatorName.toLowerCase()
+      );
+      if (byName) initiatorSlug = byName.slug;
+    }
 
-    // Load initiator's binder (recipient's was already loaded above)
-    const initiatorBinder = await getBinder(initiatorSlug);
-    if (!initiatorBinder) {
-      return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: "Initiator binder not found" }) };
-    }
+    // Load initiator's binder; if not found do a one-sided swap (recipient only)
+    const initiatorBinder = initiatorSlug ? await getBinder(initiatorSlug) : null;
 
     // ── Identify cards to move ──────────────────────────────
-    // wantedCards: leave recipient, go to initiator
-    const wantedIds  = new Set(trade.wantedCards.map(c => c.cardId).filter(Boolean));
-    const wantedQs   = new Set(trade.wantedCards.map(c => c.query).filter(Boolean));
+    // wantedCards: remove from recipient, add to initiator
+    const wantedIds = new Set(trade.wantedCards.map(c => c.cardId).filter(Boolean));
+    const wantedQs  = new Set(trade.wantedCards.map(c => c.query).filter(Boolean));
 
     const toInitiator = [];
     recipientBinder.cards = recipientBinder.cards.filter(c => {
@@ -71,21 +77,27 @@ exports.handler = async (event, context) => {
       return !match;
     });
 
-    // offeredCards: leave initiator, go to recipient
-    // offeredCards is stored as query strings; look up full card objects in initiator's binder
+    // offeredCards: remove from initiator (if binder found), add to recipient
     const offeredSet = new Set(trade.offeredCards);
     const toRecipient = [];
-    initiatorBinder.cards = initiatorBinder.cards.filter(c => {
-      if (offeredSet.has(c.query)) { toRecipient.push(c); return false; }
-      return true;
-    });
+    if (initiatorBinder) {
+      initiatorBinder.cards = initiatorBinder.cards.filter(c => {
+        if (offeredSet.has(c.query)) { toRecipient.push(c); return false; }
+        return true;
+      });
+    } else {
+      // Initiator's binder not found — synthesise minimal card entries from trade data
+      trade.offeredCards.forEach(q => toRecipient.push({ query: q }));
+    }
 
     // ── Add cards (skip exact duplicates) ──────────────────
-    const initiatorIds = new Set(initiatorBinder.cards.map(c => c.cardId).filter(Boolean));
-    for (const card of toInitiator) {
-      if (!card.cardId || !initiatorIds.has(card.cardId)) {
-        initiatorBinder.cards.push(card);
-        if (card.cardId) initiatorIds.add(card.cardId);
+    if (initiatorBinder) {
+      const initiatorIds = new Set(initiatorBinder.cards.map(c => c.cardId).filter(Boolean));
+      for (const card of toInitiator) {
+        if (!card.cardId || !initiatorIds.has(card.cardId)) {
+          initiatorBinder.cards.push(card);
+          if (card.cardId) initiatorIds.add(card.cardId);
+        }
       }
     }
 
@@ -101,18 +113,21 @@ exports.handler = async (event, context) => {
     const markSwapped = t => t.id === tradeId ? { ...t, swapExecuted: true } : t;
     const sentTrades  = await getSentTrades(trade.initiatorId);
 
-    await Promise.all([
+    const writes = [
       putBinder(recipientSlug, recipientBinder),
-      putBinder(initiatorSlug, initiatorBinder),
       putReceivedTrades(recipientSlug, receivedTrades.map(markSwapped)),
       putSentTrades(trade.initiatorId, sentTrades.map(markSwapped)),
-    ]);
+    ];
+    if (initiatorBinder && initiatorSlug) {
+      writes.push(putBinder(initiatorSlug, initiatorBinder));
+    }
+    await Promise.all(writes);
 
     // Update manifest card counts (non-fatal)
     try {
       await putManifest(manifest.map(b => {
         if (b.slug === recipientSlug) return { ...b, cardCount: recipientBinder.cards.length };
-        if (b.slug === initiatorSlug) return { ...b, cardCount: initiatorBinder.cards.length };
+        if (initiatorBinder && b.slug === initiatorSlug) return { ...b, cardCount: initiatorBinder.cards.length };
         return b;
       }));
     } catch {}
@@ -120,7 +135,12 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers: CORS,
-      body: JSON.stringify({ ok: true, addedToYou: toRecipient.length, sentFromYou: toInitiator.length }),
+      body: JSON.stringify({
+        ok: true,
+        addedToYou: toRecipient.length,
+        sentFromYou: toInitiator.length,
+        initiatorBinderUpdated: !!initiatorBinder,
+      }),
     };
   } catch (err) {
     console.error("execute-trade-swap error:", err);
