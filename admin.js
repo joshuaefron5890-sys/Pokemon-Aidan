@@ -9,11 +9,62 @@ let pendingImage = null;
 netlifyIdentity.on("init",   user => user ? showAdmin(user) : showLogin());
 netlifyIdentity.on("login",  user => { netlifyIdentity.close(); showAdmin(user); });
 netlifyIdentity.on("logout", ()   => showLogin());
-// Redirect anyone who signs up via the widget to the binder creation wizard instead
-netlifyIdentity.on("signup", () => { netlifyIdentity.close(); window.location.href = "/create"; });
 
-document.getElementById("login-btn").addEventListener("click",
-  () => netlifyIdentity.open("login"));
+// Custom inline login — bypasses the Identity Widget popup entirely
+document.getElementById("login-btn").addEventListener("click", async () => {
+  const email    = document.getElementById("login-email").value.trim();
+  const password = document.getElementById("login-password").value;
+  const errorEl  = document.getElementById("login-error");
+  const label    = document.getElementById("login-label");
+  const spinner  = document.getElementById("login-spinner");
+
+  errorEl.textContent = "";
+  if (!email || !password) { errorEl.textContent = "Please enter your email and password."; return; }
+
+  document.getElementById("login-btn").disabled = true;
+  label.classList.add("hidden");
+  spinner.classList.remove("hidden");
+
+  try {
+    const res  = await fetch("/.netlify/identity/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `grant_type=password&username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.msg || "Invalid email or password.");
+
+    // Sync into Identity Widget's localStorage so currentUser() works
+    try {
+      localStorage.setItem("gotrue.user", JSON.stringify({
+        ...data,
+        expires_at: Math.round(Date.now() / 1000) + (data.expires_in || 3600),
+      }));
+    } catch {}
+
+    // Re-init the widget to pick up the stored session, then show admin
+    netlifyIdentity.init();
+    const user = netlifyIdentity.currentUser();
+    if (user) {
+      showAdmin(user);
+    } else {
+      // Fallback: reload so init fires with the stored session
+      window.location.reload();
+    }
+  } catch (err) {
+    errorEl.textContent = err.message;
+    document.getElementById("login-btn").disabled = false;
+    label.classList.remove("hidden");
+    spinner.classList.add("hidden");
+  }
+});
+
+document.getElementById("login-email")?.addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("login-password").focus();
+});
+document.getElementById("login-password")?.addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("login-btn").click();
+});
 document.getElementById("logout-btn").addEventListener("click",
   () => netlifyIdentity.logout());
 document.getElementById("profile-logout-btn").addEventListener("click",

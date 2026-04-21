@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" />
-  <link rel="stylesheet" href="admin.css?v=16" />
+  <link rel="stylesheet" href="admin.css?v=17" />
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
@@ -33,7 +33,19 @@
       </div>
       <h1>Admin Portal</h1>
       <p>Sign in to manage the collection</p>
-      <button id="login-btn" class="btn-primary">Sign In</button>
+      <div class="login-form">
+        <div class="login-field">
+          <input type="email" id="login-email" placeholder="Email" autocomplete="email" />
+        </div>
+        <div class="login-field">
+          <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
+        </div>
+        <div id="login-error" style="color:#f87171;font-size:.82rem;text-align:center;min-height:1.1rem"></div>
+        <button id="login-btn" class="btn-primary">
+          <span id="login-label">Sign In</span>
+          <div class="spinner hidden" id="login-spinner"></div>
+        </button>
+      </div>
       <a href="/create" class="back-link">Don't have an account? Create one →</a>
     </div>
   </div>
@@ -595,7 +607,7 @@
     </div>
   </div>
 
-  <script src="admin.js?v=13"></script>
+  <script src="admin.js?v=14"></script>
   <script src="add-card-modal.js"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");</script>
 </body>

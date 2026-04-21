@@ -51,7 +51,16 @@ a { color: inherit; text-decoration: none; }
   background: linear-gradient(135deg, var(--accent) 0%, #fff 55%, var(--accent2) 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.login-card p { color: var(--text-muted); font-size: .9rem; margin-bottom: 1.75rem; }
+.login-card p { color: var(--text-muted); font-size: .9rem; margin-bottom: 1.25rem; }
+.login-form { display: flex; flex-direction: column; gap: .65rem; margin-bottom: .75rem; text-align: left; }
+.login-field input {
+  width: 100%; padding: .7rem .9rem; box-sizing: border-box;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px; color: #fff; font-family: inherit; font-size: .95rem; outline: none;
+  transition: border-color .2s;
+}
+.login-field input:focus { border-color: rgba(0,217,255,.5); }
+.login-field input::placeholder { color: rgba(255,255,255,.35); }
 .btn-primary {
   display: block; width: 100%; padding: .75rem 1.5rem;
   background: rgba(0,217,255,.1); color: var(--accent);
