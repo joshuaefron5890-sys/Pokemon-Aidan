@@ -95,6 +95,10 @@
     cardQueue = [];
     renderQueue();
     resetToStep("input");
+    // Reset submit button in case it was left in loading state from a previous session
+    addAllBtn.disabled = false;
+    document.getElementById("acm-add-all-spinner").classList.add("hidden");
+    document.getElementById("acm-add-all-label").textContent = "Add to Collection";
     // Default to photo tab on mobile
     const defaultTab = window.matchMedia("(max-width: 600px)").matches ? "photo" : "name";
     activeTab = defaultTab;
@@ -281,8 +285,23 @@
       if (!link || !link.includes("tcgplayer.com")) { errEl.textContent = "Please paste a valid TCGPlayer URL."; return; }
       let cardQuery = link;
       try {
-        const slug = new URL(link).pathname.split("/").filter(Boolean).pop();
-        cardQuery = slug.replace(/^pokemon-/, "").replace(/-/g, " ").trim();
+        const parts = new URL(link).pathname.split("/").filter(Boolean);
+        // URL format: /product/{id}/pokemon-{set-slug}-{card-name}-{number}
+        const slug = parts[parts.length - 1] || "";
+        let cleaned = slug.replace(/^pokemon-/, "");
+        // Extract trailing number and strip leading zeros: "070" → "70"
+        const numMatch = cleaned.match(/-(\d+)$/);
+        const numStr = numMatch ? parseInt(numMatch[1], 10).toString() : null;
+        if (numMatch) cleaned = cleaned.slice(0, numMatch.index);
+        // Card name = last word(s); handle multi-word names like "charizard-ex", "pikachu-vmax"
+        const nameSuffixes = new Set(["ex", "gx", "v", "vmax", "vstar", "mega", "break", "prime"]);
+        const slugParts = cleaned.split("-");
+        let nameWords = [slugParts[slugParts.length - 1]];
+        if (slugParts.length >= 2 && nameSuffixes.has(slugParts[slugParts.length - 1])) {
+          nameWords = [slugParts[slugParts.length - 2], slugParts[slugParts.length - 1]];
+        }
+        const cardName = nameWords.join(" ");
+        cardQuery = numStr ? `${cardName} ${numStr}` : cardName;
       } catch {}
       userMessage = { role: "user", content: `Look up this Pokémon card: "${cardQuery}". ${jsonArrayInstruction}` };
     } else {
@@ -336,7 +355,10 @@
       if (!arrayMatch) throw new Error("Could not parse results. Please try again.");
 
       const cards = JSON.parse(arrayMatch[0]).filter(c => c && c.cardId);
-      if (!cards.length) throw new Error("No cards found. Try a different name or include the card number.");
+      if (!cards.length) {
+        if (activeTab === "link") throw new Error("Card not found in the Pokémon TCG database — it may be a Japanese-only or regional promo. Try the Card Name tab and search for the Pokémon's name instead.");
+        throw new Error("No cards found. Try a different name or include the card number.");
+      }
 
       if (cards.length === 1) {
         foundCard = cards[0];
