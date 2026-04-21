@@ -11,7 +11,8 @@ exports.handler = async (event, context) => {
 
   try {
     const manifest = await getManifest();
-    const entry    = manifest.find(b => b.email === user.email);
+    const email    = user.email.toLowerCase();
+    const entry    = manifest.find(b => b.email?.toLowerCase() === email);
     if (!entry) return { statusCode: 404, body: JSON.stringify({ error: "No binder found" }) };
 
     return {

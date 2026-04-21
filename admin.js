@@ -384,10 +384,6 @@ let selectedOffers   = new Map(); // key: cardId||query → card object
 // ── Load the current user's binder cards ──────────────────────
 
 async function loadMyCards() {
-  // Try iframe CARD_LIST first (fast path when My Binder view was visited)
-  const iframeWin = document.getElementById("binder-iframe")?.contentWindow;
-  if (iframeWin?.CARD_LIST?.length) return iframeWin.CARD_LIST.map(normalizeCard);
-
   const slug = window.BINDER_SLUG;
   if (!slug) return [];
   try {
