@@ -138,12 +138,20 @@ async function showAdmin(user) {
   const profileEmail = document.getElementById("profile-user-email");
   if (profileEmail) profileEmail.textContent = user.email;
 
+  const aidan = isAidan(user);
+  window.IS_AIDAN_ADMIN = aidan;
+
   let binderUrl = binderUrlForUser(user);
   const iframe  = document.getElementById("binder-iframe");
   const pubLink = document.getElementById("view-public-link");
 
+  // Show the binder view immediately — don't wait for the async server lookup
+  showView("binder");
+
   // If metadata/map lookup missed, query the server for a binder linked to this email
-  if (!binderUrl && !isAidan(user)) {
+  if (!binderUrl && !aidan) {
+    // Dark loading placeholder while we fetch
+    iframe.srcdoc = `<!doctype html><html><head><meta charset="UTF-8"><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#4a5680;font-family:system-ui,sans-serif;font-size:.9rem}</style></head><body>Loading binder…</body></html>`;
     try {
       const token = await user.jwt().catch(() => null);
       const res   = await fetch("/.netlify/functions/get-my-binder", {
@@ -153,7 +161,6 @@ async function showAdmin(user) {
         const data = await res.json();
         binderUrl = data.binderUrl;
         window.BINDER_SLUG = data.slug;
-        // Persist to metadata so we don't need to re-query next time
         try { await user.update({ data: { binder_url: binderUrl } }); } catch {}
       }
     } catch {}
@@ -176,17 +183,11 @@ async function showAdmin(user) {
     if (pubLink) pubLink.href = "/create";
   }
 
-  // Card Assistant (chat-bubble) is only for Aidan.
-  // Add Card button is for all binder owners — modal routes to the right endpoint.
-  const aidan = isAidan(user);
-  window.IS_AIDAN_ADMIN = aidan;
   if (!window.BINDER_SLUG) {
     window.BINDER_SLUG = aidan ? "aidan"
       : binderUrl?.startsWith("/binder/") ? binderUrl.replace("/binder/", "")
       : null;
   }
-
-  showView("binder");
 }
 
 function showLogin() {

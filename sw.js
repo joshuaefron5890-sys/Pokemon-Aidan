@@ -1,4 +1,4 @@
-const CACHE = "pokebinder-v6";
+const CACHE = "pokebinder-v7";
 
 // Only cache static assets — never HTML pages
 const PRECACHE = [

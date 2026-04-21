@@ -233,10 +233,23 @@ function getRarityClass(card) {
 
 // ── Card rendering ─────────────────────────────────────────
 
+async function getCardAuthToken() {
+  const user = window.netlifyIdentity?.currentUser();
+  if (user) {
+    const token = await user.jwt().catch(() => null);
+    if (token) return token;
+  }
+  try {
+    const s = JSON.parse(localStorage.getItem("pokebinder.admin.session") || "null");
+    if (s?.access_token && (s.expires_at || 0) > Math.round(Date.now() / 1000)) return s.access_token;
+  } catch {}
+  return null;
+}
+
 async function deleteCard(cardId, query, element) {
   if (!confirm("Remove this card from the binder?")) return;
   const slug = window.BINDER_SLUG;
-  const token = await window.netlifyIdentity?.currentUser()?.jwt();
+  const token = await getCardAuthToken();
   try {
     const res = await fetch("/.netlify/functions/remove-card", {
       method: "POST",

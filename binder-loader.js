@@ -3,14 +3,27 @@ window.BINDER_LOADER = true;
 
 // ── Binder initialization ──────────────────────────────────
 
+async function getBinderAuthToken() {
+  const currentUser = window.netlifyIdentity?.currentUser();
+  if (currentUser) {
+    const token = await currentUser.jwt().catch(() => null);
+    if (token) return token;
+  }
+  // Fallback: read admin session from localStorage (works when embedded in the admin iframe)
+  try {
+    const s = JSON.parse(localStorage.getItem("pokebinder.admin.session") || "null");
+    if (s?.access_token && (s.expires_at || 0) > Math.round(Date.now() / 1000)) return s.access_token;
+  } catch {}
+  return null;
+}
+
 async function initBinder() {
   // Extract slug from path: /binder/slug or /binder/slug/
   const slug = location.pathname.replace(/^\/binder\//, "").replace(/\/$/, "").split("/")[0];
   if (!slug) { showError("No binder specified."); return; }
   window.BINDER_SLUG = slug;
 
-  const currentUser = window.netlifyIdentity?.currentUser();
-  const token = currentUser ? await currentUser.jwt().catch(() => null) : null;
+  const token = await getBinderAuthToken();
 
   // Blobs storage is instant — no retry needed
   let res, data;
@@ -202,7 +215,7 @@ async function sendBinderMsg(slug) {
   const typing = appendBinderTyping(msgs);
 
   try {
-    const token = await window.netlifyIdentity?.currentUser()?.jwt().catch(() => null);
+    const token = await getBinderAuthToken();
     const res = await fetch("/.netlify/functions/binder-chat", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
