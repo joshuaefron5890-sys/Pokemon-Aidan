@@ -315,6 +315,47 @@ function createCardElement(query, card, price, overrides = {}, isStaticPrice = f
     editBtn.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); openEditModal(query, card, price, overrides, isStaticPrice, wrapper); });
     wrapper.appendChild(editBtn);
 
+    const saleBtn = document.createElement("button");
+    saleBtn.className = "card-sale-btn" + (overrides.available ? " active" : "");
+    saleBtn.title = overrides.available ? "Mark as not for sale" : "Mark as for sale";
+    saleBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`;
+    saleBtn.addEventListener("click", async e => {
+      e.preventDefault(); e.stopPropagation();
+      const nowAvailable = !overrides.available;
+      saleBtn.disabled = true;
+      try {
+        const token = await getCardAuthToken();
+        const res = await fetch("/.netlify/functions/update-card", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ slug: window.BINDER_SLUG, cardId: overrides.cardId, query, updates: { available: nowAvailable || null } }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || `Error ${res.status}`);
+        overrides.available = nowAvailable || undefined;
+        saleBtn.classList.toggle("active", nowAvailable);
+        saleBtn.title = nowAvailable ? "Mark as not for sale" : "Mark as for sale";
+        // Update badge visibility
+        const badge = wrapper.querySelector(".card-available-badge");
+        if (nowAvailable && !badge) {
+          const wrap = wrapper.querySelector(".card-image-wrap");
+          if (wrap) {
+            const b = document.createElement("div");
+            b.className = "card-available-badge";
+            b.title = "Available for trade or sale";
+            b.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>For Sale`;
+            wrap.appendChild(b);
+          }
+        } else if (!nowAvailable && badge) {
+          badge.remove();
+        }
+      } catch (err) {
+        alert("Failed to update: " + err.message);
+      } finally {
+        saleBtn.disabled = false;
+      }
+    });
+    wrapper.appendChild(saleBtn);
+
     const deleteBtn = document.createElement("button");
     deleteBtn.className = "card-delete-btn";
     deleteBtn.title = "Remove from binder";

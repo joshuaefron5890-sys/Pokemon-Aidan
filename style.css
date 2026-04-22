@@ -488,6 +488,7 @@ header h1 {
   box-shadow: 0 0 0 2px #fbbf24, 0 16px 40px rgba(245,158,11,.55);
 }
 .card-delete-btn,
+.card-sale-btn,
 .card-edit-btn {
   position: absolute;
   width: 28px;
@@ -507,15 +508,23 @@ header h1 {
   top: 6px; right: 6px;
   background: rgba(220,38,38,.85);
 }
-.card-edit-btn {
+.card-sale-btn {
   top: 6px; right: 40px;
+  background: rgba(15,118,110,.85);
+}
+.card-edit-btn {
+  top: 6px; right: 74px;
   background: rgba(30,80,140,.9);
 }
 .card-item:hover .card-delete-btn,
-.card-item:hover .card-edit-btn { opacity: 1; }
+.card-item:hover .card-sale-btn,
+.card-item:hover .card-edit-btn  { opacity: 1; }
 body.is-owner .card-delete-btn,
-body.is-owner .card-edit-btn    { opacity: 1; }
+body.is-owner .card-sale-btn,
+body.is-owner .card-edit-btn     { opacity: 1; }
 .card-delete-btn:hover { background: rgba(185,28,28,1); }
+.card-sale-btn:hover,
+.card-sale-btn.active  { background: rgba(5,150,105,1); }
 .card-edit-btn:hover   { background: rgba(37,99,235,1); }
 
 /* ── Card Edit Modal ─────────────────────────────────────── */
