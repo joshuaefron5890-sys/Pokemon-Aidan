@@ -1,4 +1,4 @@
-const CACHE = "pokebinder-v7";
+const CACHE = "pokebinder-v9";
 
 // Only cache static assets — never HTML pages
 const PRECACHE = [
@@ -32,20 +32,15 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
 
-  // Always go to the network for API calls, auth, and non-GET requests
+  // Pass through: non-GET, API calls, auth, cross-origin, and HTML navigation
+  // HTML pages are never cached so there's no benefit to intercepting them
   if (
     e.request.method !== "GET" ||
     url.pathname.startsWith("/.netlify/") ||
-    url.hostname !== self.location.hostname
+    url.hostname !== self.location.hostname ||
+    e.request.mode === "navigate" ||
+    e.request.headers.get("accept")?.includes("text/html")
   ) {
-    return;
-  }
-
-  // HTML navigation requests: always network-first so pages are never stale
-  if (e.request.mode === "navigate" || e.request.headers.get("accept")?.includes("text/html")) {
-    e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request))
-    );
     return;
   }
 
@@ -56,7 +51,7 @@ self.addEventListener("fetch", e => {
         const fresh = fetch(e.request).then(res => {
           if (res.ok) cache.put(e.request, res.clone());
           return res;
-        }).catch(() => null);
+        }).catch(() => Response.error());
         return cached || fresh;
       })
     )

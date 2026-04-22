@@ -131,7 +131,7 @@
   </footer>
 
   <script src="cards.js?v=44"></script>
-  <script src="app.js?v=60"></script>
+  <script src="app.js?v=61"></script>
   <script src="background.js?v=44"></script>
   <script src="favorites.js?v=6"></script>
 
@@ -171,12 +171,21 @@
         }
       } catch {}
       btn.addEventListener("click", () => { document.location.href = "/admin"; });
-      // Favorites still get the widget user via netlifyIdentity on init
+      // Favorites: check Netlify Identity then custom admin session
       if (window.netlifyIdentity) {
         window.netlifyIdentity.on("init", user => {
-          const isOwner = user?.email === "joshuaefron5890@gmail.com";
-          if (user && !isOwner) window.initFavorites?.(user, "aidan", "Aidan");
-          if (!user) window.initFavorites?.(null, "aidan", "Aidan");
+          let favUser = user || null;
+          if (!favUser) {
+            try {
+              const s = JSON.parse(localStorage.getItem("pokebinder.admin.session") || "null");
+              if (s?.access_token && (s.expires_at || 0) > Math.round(Date.now() / 1000)) {
+                favUser = { ...(s.user || {}), jwt: async () => s.access_token };
+              }
+            } catch {}
+          }
+          const ownerEmail = "joshuaefron5890@gmail.com";
+          const isOwner = (favUser?.email || "").toLowerCase() === ownerEmail;
+          if (!isOwner) window.initFavorites?.(favUser, "aidan", "Aidan");
           if (isOwner) {
             const ptg = document.getElementById("price-toggle-group");
             const pt  = document.getElementById("price-toggle");
