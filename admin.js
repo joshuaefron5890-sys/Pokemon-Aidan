@@ -36,17 +36,17 @@ function jwtClaims(token) {
   } catch { return null; }
 }
 
-function saveSession(data) {
+function saveSession(data, knownEmail = null) {
   try {
     let user = data.user;
-    // GoTrue token endpoint sometimes omits the user object — decode JWT claims as fallback
-    if (!user?.email && data.access_token) {
-      const claims = jwtClaims(data.access_token);
-      if (claims?.email) user = { id: claims.sub, email: claims.email, ...(user || {}) };
+    // Ensure email is captured — try data.user, then JWT claims, then the typed email
+    if (!user?.email) {
+      const claims = data.access_token ? jwtClaims(data.access_token) : null;
+      const email = claims?.email || knownEmail;
+      if (email) user = { id: claims?.sub || user?.id, email, ...(user || {}) };
     }
     localStorage.setItem(SESSION_KEY, JSON.stringify({
-      ...data,
-      user,
+      ...data, user,
       expires_at: Math.round(Date.now() / 1000) + (data.expires_in || 3600),
     }));
   } catch {}
@@ -64,9 +64,9 @@ netlifyIdentity.currentUser = () => {
   return { ...(session.user || {}), jwt: async () => getStoredSession()?.access_token || null };
 };
 
-// Build a user object that always has jwt() — safe to call showAdmin() with
+// Build a user object that always has jwt() — reads token fresh from storage
 function makeUserFromSession(session) {
-  return { ...session.user, jwt: async () => session.access_token };
+  return { ...(session.user || {}), jwt: async () => getStoredSession()?.access_token || null };
 }
 
 // ── Auth: check stored session immediately (don't rely on widget init timing) ──
@@ -109,8 +109,7 @@ document.getElementById("login-btn").addEventListener("click", async () => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error_description || data.msg || "Invalid email or password.");
 
-    saveSession(data);
-    // Use patched currentUser(); fall back to data directly if localStorage unavailable
+    saveSession(data, email); // pass typed email as fallback if GoTrue omits user.email
     showAdmin(netlifyIdentity.currentUser() || makeUserFromSession({ user: data.user, access_token: data.access_token }));
   } catch (err) {
     errorEl.textContent = err.message;
@@ -143,15 +142,14 @@ const ADMIN_BINDER_MAP = {
 
 function binderUrlForUser(user) {
   if (!user) return null;
-  // 1. Explicit binder_url in Netlify Identity user metadata
   if (user.user_metadata?.binder_url) return user.user_metadata.binder_url;
-  // 2. Known email mapping
-  if (ADMIN_BINDER_MAP[user.email]) return ADMIN_BINDER_MAP[user.email];
+  const emailLow = user.email?.toLowerCase();
+  if (emailLow && ADMIN_BINDER_MAP[emailLow]) return ADMIN_BINDER_MAP[emailLow];
   return null;
 }
 
 function isAidan(user) {
-  return user?.email === "joshuaefron5890@gmail.com";
+  return user?.email?.toLowerCase() === "joshuaefron5890@gmail.com";
 }
 
 async function showAdmin(user) {
