@@ -188,6 +188,13 @@
         }
       } catch {}
       btn.addEventListener("click", () => { document.location.href = "/admin"; });
+      // Also update button when Netlify Identity user is logged in (e.g. via favorites flow)
+      window.netlifyIdentity?.on("init", user => {
+        if (user) btn.textContent = "My Account";
+      });
+      window.netlifyIdentity?.on("login", user => {
+        if (user) btn.textContent = "My Account";
+      });
     })();
   </script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");</script>

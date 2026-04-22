@@ -185,6 +185,7 @@
           }
           const ownerEmail = "joshuaefron5890@gmail.com";
           const isOwner = (favUser?.email || "").toLowerCase() === ownerEmail;
+          if (favUser && !isOwner) btn.textContent = "My Account";
           if (!isOwner) window.initFavorites?.(favUser, "aidan", "Aidan");
           if (isOwner) {
             const ptg = document.getElementById("price-toggle-group");
