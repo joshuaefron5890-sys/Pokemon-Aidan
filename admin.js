@@ -551,28 +551,28 @@ async function loadForSale() {
       const el = document.createElement("div");
       const heartSvg = filled => `<svg width="12" height="12" viewBox="0 0 24 24" fill="${filled ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
 
-      el.className = "fav-item forsale-item";
+      el.className = "forsale-tile";
       el.innerHTML = `
-        <div class="fav-item-img-wrap">
+        <div class="forsale-tile-img-wrap">
           ${imgSrc
-            ? `<img class="fav-item-img" src="${imgSrc}" alt="${card.name}" loading="lazy"
-                onerror="this.outerHTML='<div class=\\'fav-item-img-placeholder\\'>${card.name}</div>'" />`
-            : `<div class="fav-item-img-placeholder">${card.name}</div>`}
+            ? `<img class="forsale-tile-img" src="${imgSrc}" alt="${card.name}" loading="lazy"
+                onerror="this.style.display='none'" />`
+            : `<div class="forsale-tile-img-placeholder">${card.name}</div>`}
           <button class="forsale-heart-btn" title="Add to favorites">${heartSvg(false)}</button>
         </div>
-        <div class="fav-item-info">
-          <div class="fav-item-name">${card.name}${card.grade ? ` <span class="forsale-grade">${card.grade}</span>` : ""}</div>
-          ${card.setName ? `<div class="fav-item-binder" style="color:var(--text-muted);font-size:.78rem">${card.setName}</div>` : ""}
-          <div class="fav-item-binder">From: <a href="${binderUrl}" target="_blank" rel="noopener">${card.binderOwner}'s Binder</a></div>
+        <div class="forsale-tile-info">
+          <div class="forsale-tile-name">${card.name}${card.grade ? ` <span class="forsale-grade">${card.grade}</span>` : ""}</div>
+          ${card.setName ? `<div class="forsale-tile-meta">${card.setName}</div>` : ""}
+          <div class="forsale-tile-meta">From: <a href="${binderUrl}" target="_blank" rel="noopener">${card.binderOwner}'s Binder</a></div>
         </div>
-        <div class="fav-item-actions">
+        <div class="forsale-tile-actions">
           <button class="fav-trade-btn forsale-contact-btn" title="Propose a trade">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-            <span>Propose Trade</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            <span>Trade</span>
           </button>
           <button class="fav-offer-btn forsale-contact-btn" title="Make a price offer">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            <span>Make an Offer</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <span>Offer</span>
           </button>
         </div>`;
 
