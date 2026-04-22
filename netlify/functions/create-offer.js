@@ -28,6 +28,7 @@ exports.handler = async (event, context) => {
       message:        (message || "").trim(),
       initiatorId:    user.sub,
       initiatorEmail: user.email,
+      initiatorName:  user.user_metadata?.full_name || user.email.split("@")[0],
       createdAt:      new Date().toISOString(),
     };
 

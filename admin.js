@@ -1581,7 +1581,7 @@ function buildOfferCard(offer, direction) {
   const card = cards[0] || {};
 
   const heading = direction === "received"
-    ? `<strong>${offer.initiatorEmail}</strong> wants ${cards.length > 1 ? `${cards.length} cards` : "your card"}:`
+    ? `<strong>${offer.initiatorName || offer.initiatorEmail?.split("@")[0] || "Someone"}</strong> wants ${cards.length > 1 ? `${cards.length} cards` : "your card"}:`
     : `You offered on${cards.length > 1 ? ` (${cards.length} cards)` : ""}:`;
 
   const cardsHtml = cards.map(c => {
