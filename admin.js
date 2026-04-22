@@ -549,12 +549,17 @@ async function loadForSale() {
       const binderUrl = card.binderSlug === "aidan" ? "/AidanEfron" : `/binder/${card.binderSlug}`;
 
       const el = document.createElement("div");
+      const heartSvg = filled => `<svg width="12" height="12" viewBox="0 0 24 24" fill="${filled ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+
       el.className = "fav-item forsale-item";
       el.innerHTML = `
-        ${imgSrc
-          ? `<img class="fav-item-img" src="${imgSrc}" alt="${card.name}" loading="lazy"
-              onerror="this.outerHTML='<div class=\\'fav-item-img-placeholder\\'>${card.name}</div>'" />`
-          : `<div class="fav-item-img-placeholder">${card.name}</div>`}
+        <div class="fav-item-img-wrap">
+          ${imgSrc
+            ? `<img class="fav-item-img" src="${imgSrc}" alt="${card.name}" loading="lazy"
+                onerror="this.outerHTML='<div class=\\'fav-item-img-placeholder\\'>${card.name}</div>'" />`
+            : `<div class="fav-item-img-placeholder">${card.name}</div>`}
+          <button class="forsale-heart-btn" title="Add to favorites">${heartSvg(false)}</button>
+        </div>
         <div class="fav-item-info">
           <div class="fav-item-name">${card.name}${card.grade ? ` <span class="forsale-grade">${card.grade}</span>` : ""}</div>
           ${card.setName ? `<div class="fav-item-binder" style="color:var(--text-muted);font-size:.78rem">${card.setName}</div>` : ""}
@@ -569,31 +574,31 @@ async function loadForSale() {
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             <span>Make an Offer</span>
           </button>
-          <button class="forsale-fav-btn forsale-contact-btn" title="Add to favorites">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            <span>Favorite</span>
-          </button>
         </div>`;
 
       el.querySelector(".fav-trade-btn").addEventListener("click", () => openTradeDrawer([card]));
       el.querySelector(".fav-offer-btn").addEventListener("click", () => openOfferModal([card]));
-      el.querySelector(".forsale-fav-btn").addEventListener("click", async () => {
-        const btn = el.querySelector(".forsale-fav-btn");
-        btn.disabled = true;
+      const heartBtn = el.querySelector(".forsale-heart-btn");
+      heartBtn.addEventListener("click", async () => {
+        if (heartBtn.disabled) return;
+        const isFaved = heartBtn.classList.contains("faved");
+        heartBtn.disabled = true;
         try {
           const user  = netlifyIdentity.currentUser();
           const token = user ? await user.jwt() : null;
           const res   = await fetch("/.netlify/functions/update-favorites", {
             method:  "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body:    JSON.stringify({ action: "add", card }),
+            body:    JSON.stringify({ action: isFaved ? "remove" : "add", card }),
           });
           if (!res.ok) throw new Error("Failed");
-          btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>Favorited</span>`;
-          btn.classList.add("forsale-fav-btn--saved");
-        } catch {
-          btn.disabled = false;
-        }
+          heartBtn.classList.toggle("faved", !isFaved);
+          heartBtn.innerHTML = heartSvg(!isFaved);
+          heartBtn.title = !isFaved ? "Remove from favorites" : "Add to favorites";
+          heartBtn.classList.add("fav-pulse");
+          heartBtn.addEventListener("animationend", () => heartBtn.classList.remove("fav-pulse"), { once: true });
+        } catch { /* leave state unchanged */ }
+        heartBtn.disabled = false;
       });
       grid.appendChild(el);
     });

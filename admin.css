@@ -925,11 +925,33 @@ a.binder-card { cursor: pointer; }
   gap: .75rem;
 }
 .forsale-item { cursor: default; }
-.forsale-fav-btn--saved {
-  color: #f43f5e !important;
-  border-color: #f43f5e !important;
-  opacity: 1 !important;
+.fav-item-img-wrap {
+  position: relative;
+  flex-shrink: 0;
 }
+.forsale-heart-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(15,15,25,.7);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .15s, background .15s, color .15s;
+  z-index: 5;
+}
+.fav-item:hover .forsale-heart-btn { opacity: 1; }
+.forsale-heart-btn.faved { opacity: 1; color: #f43f5e; background: #fff; }
+.forsale-heart-btn:hover { background: #fff !important; color: #e11d48 !important; }
+.forsale-heart-btn.fav-pulse { animation: fav-pop .35s ease; }
 .forsale-grade {
   display: inline-block;
   background: rgba(247,201,72,.15);
