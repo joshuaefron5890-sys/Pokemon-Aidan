@@ -18,10 +18,24 @@ function getStoredSession() {
   return null;
 }
 
+function jwtClaims(token) {
+  try {
+    const b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(b64));
+  } catch { return null; }
+}
+
 function saveSession(data) {
   try {
+    let user = data.user;
+    // GoTrue token endpoint sometimes omits the user object — decode JWT claims as fallback
+    if (!user?.email && data.access_token) {
+      const claims = jwtClaims(data.access_token);
+      if (claims?.email) user = { id: claims.sub, email: claims.email, ...(user || {}) };
+    }
     localStorage.setItem(SESSION_KEY, JSON.stringify({
       ...data,
+      user,
       expires_at: Math.round(Date.now() / 1000) + (data.expires_in || 3600),
     }));
   } catch {}
