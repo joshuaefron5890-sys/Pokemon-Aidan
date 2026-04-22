@@ -22,7 +22,7 @@ function getStoredSession() {
         try { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); } catch {}
       }
     }
-    if (!s.user?.email) return null;
+    // Don't gate on email presence — showAdmin() will recover it from the JWT
     return s;
   } catch {}
   return null;
@@ -30,7 +30,8 @@ function getStoredSession() {
 
 function jwtClaims(token) {
   try {
-    const b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    let b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    b64 += "=".repeat((4 - b64.length % 4) % 4);
     return JSON.parse(atob(b64));
   } catch { return null; }
 }
@@ -60,8 +61,7 @@ function clearSession() {
 netlifyIdentity.currentUser = () => {
   const session = getStoredSession();
   if (!session) return null;
-  // Re-read the token fresh inside jwt() in case storage was updated
-  return { ...session.user, jwt: async () => getStoredSession()?.access_token || null };
+  return { ...(session.user || {}), jwt: async () => getStoredSession()?.access_token || null };
 };
 
 // Build a user object that always has jwt() — safe to call showAdmin() with
