@@ -13,7 +13,17 @@ const SESSION_KEY = "pokebinder.admin.session";
 function getStoredSession() {
   try {
     const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
-    if (s?.access_token && s?.user && (s.expires_at || 0) > Math.round(Date.now() / 1000)) return s;
+    if (!s?.access_token || (s.expires_at || 0) <= Math.round(Date.now() / 1000)) return null;
+    // Self-heal: old sessions may have been saved without user.email — decode JWT as fix
+    if (!s.user?.email && s.access_token) {
+      const claims = jwtClaims(s.access_token);
+      if (claims?.email) {
+        s.user = { id: claims.sub, email: claims.email, ...(s.user || {}) };
+        try { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); } catch {}
+      }
+    }
+    if (!s.user?.email) return null;
+    return s;
   } catch {}
   return null;
 }
@@ -146,9 +156,23 @@ function isAidan(user) {
 
 async function showAdmin(user) {
   if (!user) { showLogin(); return; }
+
+  // If the user object has no email, decode it from the JWT access token as a last resort.
+  // This handles the case where GoTrue omits user data in the token response or where
+  // the netlifyIdentity widget overrides our currentUser() patch.
+  if (!user.email && user.jwt) {
+    try {
+      const token = await user.jwt().catch(() => null);
+      if (token) {
+        const claims = jwtClaims(token);
+        if (claims?.email) user = { ...user, email: claims.email, id: claims.sub || user.id };
+      }
+    } catch {}
+  }
+
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("admin-app").classList.remove("hidden");
-  document.getElementById("user-email").textContent = user.email;
+  document.getElementById("user-email").textContent = user.email || "";
   const profileEmail = document.getElementById("profile-user-email");
   if (profileEmail) profileEmail.textContent = user.email;
 
