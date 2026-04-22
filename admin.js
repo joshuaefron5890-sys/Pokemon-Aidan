@@ -319,24 +319,12 @@ async function loadSharedBinders() {
   const grid = document.querySelector(".binders-grid");
   if (!grid) return;
 
-  // Update location for static binder cards
-  fetch(`/.netlify/functions/get-location?slug=aidan`)
-    .then(r => r.ok ? r.json() : {})
-    .then(loc => {
-      if (loc.city) {
-        const el = document.getElementById("aidan-shared-meta");
-        if (el) el.textContent = `📍 ${loc.city}, ${loc.state}`;
-      }
-    }).catch(() => {});
-
   try {
     const res  = await fetch("/.netlify/functions/list-binders");
     const list = await res.json();
     if (!Array.isArray(list)) return;
 
     list.forEach(b => {
-      // Skip slugs already shown as static cards
-      if (grid.querySelector(`[href="/binder/${b.slug}"]`)) return;
 
       const initial = b.owner.charAt(0).toUpperCase();
       const colors  = ["#6366f1,#8b5cf6", "#f59e0b,#ef4444", "#10b981,#059669", "#3b82f6,#2563eb"];
@@ -344,7 +332,7 @@ async function loadSharedBinders() {
 
       const card = document.createElement("a");
       card.className = "binder-card";
-      card.href = `/binder/${b.slug}`;
+      card.href = b.slug === "aidan" ? "/AidanEfron" : `/binder/${b.slug}`;
       card.target = "_blank";
       card.rel = "noopener";
       card.innerHTML = `
