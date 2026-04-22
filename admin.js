@@ -518,7 +518,11 @@ async function loadForSale() {
   try {
     const res  = await fetch("/.netlify/functions/list-for-sale");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const { cards } = await res.json();
+    let { cards } = await res.json();
+
+    // Exclude the logged-in user's own cards
+    const mySlug = getBinderSlug(netlifyIdentity.currentUser());
+    if (mySlug) cards = cards.filter(c => c.binderSlug !== mySlug);
 
     if (!cards.length) {
       grid.innerHTML = `
