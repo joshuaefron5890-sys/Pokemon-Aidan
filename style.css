@@ -523,8 +523,11 @@ body.is-owner .card-delete-btn,
 body.is-owner .card-sale-btn,
 body.is-owner .card-edit-btn     { opacity: 1; }
 .card-delete-btn:hover { background: rgba(185,28,28,1); }
-.card-sale-btn:hover,
-.card-sale-btn.active  { background: rgba(5,150,105,1); }
+.card-sale-btn:hover   { background: rgba(5,150,105,1); }
+.card-sale-btn.active  { opacity: 1; background: #fff; color: #059669; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+.card-sale-btn.active:hover { background: #fff; color: #047857; }
+@keyframes sale-pop { 0%,100% { transform: scale(1); } 50% { transform: scale(1.4); } }
+.card-sale-btn.sale-pulse  { animation: sale-pop .35s ease; }
 .card-edit-btn:hover   { background: rgba(37,99,235,1); }
 
 /* ── Card Edit Modal ─────────────────────────────────────── */
