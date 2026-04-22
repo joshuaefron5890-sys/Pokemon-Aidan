@@ -92,6 +92,16 @@ function isAidan(user) {
   return user?.email?.toLowerCase() === "joshuaefron5890@gmail.com";
 }
 
+// ── Navigation labels — must be declared before showAdmin is called ──────────
+const VIEW_LABELS = {
+  binder:    "My Binder",
+  shared:    "Shared Binders",
+  favorites: "My Favorites",
+  trades:    "Trade Proposals",
+  offers:    "Offers Made",
+  profile:   "My Profile",
+};
+
 // ── Auth: check stored session immediately (don't rely on widget init timing) ──
 const _earlySession = getStoredSession();
 if (_earlySession) {
@@ -267,15 +277,6 @@ function showLogin() {
 }
 
 // ── Navigation ──────────────────────────────────────────────
-
-const VIEW_LABELS = {
-  binder:    "My Binder",
-  shared:    "Shared Binders",
-  favorites: "My Favorites",
-  trades:    "Trade Proposals",
-  offers:    "Offers Made",
-  profile:   "My Profile",
-};
 
 function showView(id) {
   // Hide all views
