@@ -89,9 +89,18 @@ async function initBinder() {
     }
 
     // Enable favorites for all non-owner viewers (guests see hearts too; login modal on first click)
-    const currentUser = window.netlifyIdentity?.currentUser();
+    // Check Netlify Identity first, then fall back to the custom admin session
+    let favUser = window.netlifyIdentity?.currentUser() || null;
+    if (!favUser) {
+      try {
+        const s = JSON.parse(localStorage.getItem("pokebinder.admin.session") || "null");
+        if (s?.access_token && (s.expires_at || 0) > Math.round(Date.now() / 1000)) {
+          favUser = { ...(s.user || {}), jwt: async () => s.access_token };
+        }
+      } catch {}
+    }
     if (!data.isOwner && !inAdminFrame) {
-      window.initFavorites?.(currentUser || null, slug, data.owner);
+      window.initFavorites?.(favUser, slug, data.owner);
     }
 
     // Kick off the card grid
