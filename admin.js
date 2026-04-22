@@ -209,9 +209,10 @@ async function showAdmin(user) {
   showView("binder");
 
   // If metadata/map lookup missed, query the server for a binder linked to this email
+  const binderLoadingOverlay = document.getElementById("binder-loading-overlay");
   let noBinderReason = "";
   if (!binderUrl && !aidan) {
-    iframe.srcdoc = `<!doctype html><html><head><meta charset="UTF-8"><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#4a5680;font-family:system-ui,sans-serif;font-size:.9rem}</style></head><body>Loading binder…</body></html>`;
+    if (binderLoadingOverlay) binderLoadingOverlay.style.display = "flex";
 
     const tryFetch = async (tok) => fetch("/.netlify/functions/get-my-binder", {
       headers: tok ? { Authorization: `Bearer ${tok}` } : {},
@@ -242,16 +243,16 @@ async function showAdmin(user) {
   const createLink  = document.getElementById("create-binder-link");
   const noBinder    = document.getElementById("no-binder-panel");
 
+  if (binderLoadingOverlay) binderLoadingOverlay.style.display = "none";
+
   if (binderUrl) {
     if (noBinder)   { noBinder.style.display = "none"; noBinder.classList.add("hidden"); }
     if (createLink) createLink.classList.add("hidden");
     iframe.style.display = "";
-    iframe.srcdoc = "";
     iframe.src = binderUrl;
     if (pubLink) pubLink.href = binderUrl;
   } else {
     iframe.style.display = "none";
-    iframe.srcdoc = "";
     if (createLink) createLink.classList.toggle("hidden", noBinderReason === "auth");
     if (pubLink)    pubLink.href = "/create";
 

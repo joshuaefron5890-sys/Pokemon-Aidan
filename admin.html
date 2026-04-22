@@ -178,7 +178,10 @@
             Create Your Binder
           </a>
         </div>
-        <iframe src="" title="My Binder" id="binder-iframe"></iframe>
+        <div style="position:relative;flex:1;overflow:hidden;display:flex;flex-direction:column;">
+          <div id="binder-loading-overlay" style="display:none;position:absolute;inset:0;background:#0f172a;color:#4a5680;font-family:system-ui,sans-serif;font-size:.9rem;align-items:center;justify-content:center;z-index:2;">Loading binder…</div>
+          <iframe src="" title="My Binder" id="binder-iframe" style="flex:1;"></iframe>
+        </div>
       </div>
 
       <!-- View: Digital Binder Community -->
@@ -630,7 +633,7 @@
     </div>
   </div>
 
-  <script src="admin.js?v=36"></script>
+  <script src="admin.js?v=37"></script>
   <script src="add-card-modal.js"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");</script>
 </body>
