@@ -1,4 +1,4 @@
-const CACHE = "pokebinder-v7";
+const CACHE = "pokebinder-v8";
 
 // Only cache static assets — never HTML pages
 const PRECACHE = [
@@ -56,7 +56,7 @@ self.addEventListener("fetch", e => {
         const fresh = fetch(e.request).then(res => {
           if (res.ok) cache.put(e.request, res.clone());
           return res;
-        }).catch(() => null);
+        }).catch(() => Response.error());
         return cached || fresh;
       })
     )
