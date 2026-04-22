@@ -143,12 +143,12 @@ document.getElementById("login-btn").addEventListener("click", async () => {
     if (!res.ok) throw new Error(data.error_description || data.msg || "Invalid email or password.");
 
     saveSession(data, email); // pass typed email as fallback if GoTrue omits user.email
-    // Build user directly from response so jwt() has the token even before
-    // getStoredSession() settles.
+    // Spread full data.user so user_metadata.binder_url is preserved, then
+    // override jwt() so it always reads a fresh token from storage.
     const freshToken = data.access_token;
     const loginUser = {
+      ...(data.user || {}),
       email: data.user?.email || email,
-      id:    data.user?.id,
       jwt:   async () => getStoredSession()?.access_token || freshToken || null,
     };
     showAdmin(loginUser);
