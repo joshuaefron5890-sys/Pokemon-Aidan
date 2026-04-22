@@ -21,13 +21,23 @@ exports.handler = async (event, context) => {
     binder.public = !!isPublic;
     await putBinder(slug, binder);
 
-    // Keep manifest in sync
+    // Keep manifest in sync — upsert so legacy binders migrated via get-binder are covered
     const manifest = await getManifest();
     const entry = manifest.find(b => b.slug === slug);
     if (entry) {
       entry.public = binder.public;
-      await putManifest(manifest);
+    } else {
+      manifest.unshift({
+        slug,
+        owner:     binder.owner,
+        email:     binder.email,
+        public:    binder.public,
+        hasPhoto:  binder.hasPhoto  || false,
+        cardCount: (binder.cards || []).length,
+        createdAt: binder.createdAt || new Date().toISOString(),
+      });
     }
+    await putManifest(manifest);
 
     return {
       statusCode: 200,
