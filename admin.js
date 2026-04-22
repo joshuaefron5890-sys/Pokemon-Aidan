@@ -211,26 +211,30 @@ async function showAdmin(user) {
   // If metadata/map lookup missed, query the server for a binder linked to this email
   let noBinderReason = "";
   if (!binderUrl && !aidan) {
-    // Dark loading placeholder while we fetch
     iframe.srcdoc = `<!doctype html><html><head><meta charset="UTF-8"><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#4a5680;font-family:system-ui,sans-serif;font-size:.9rem}</style></head><body>Loading binder…</body></html>`;
+
+    const tryFetch = async (tok) => fetch("/.netlify/functions/get-my-binder", {
+      headers: tok ? { Authorization: `Bearer ${tok}` } : {},
+    });
+
     try {
-      const token = await user.jwt().catch(() => null);
-      console.log("[admin] get-my-binder token present:", !!token, "email:", user.email);
-      const res   = await fetch("/.netlify/functions/get-my-binder", {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      console.log("[admin] get-my-binder status:", res.status);
+      let token = await user.jwt().catch(() => null);
+      let res   = await tryFetch(token);
+
+      // If token expired, try once more with a fresh token from the identity widget
+      if (res.status === 401) {
+        token = await netlifyIdentity.currentUser()?.jwt().catch(() => null);
+        if (token) res = await tryFetch(token);
+      }
+
       if (res.ok) {
         const data = await res.json();
         binderUrl = data.binderUrl;
         window.BINDER_SLUG = data.slug;
       } else {
-        const errData = await res.json().catch(() => ({}));
-        console.warn("[admin] get-my-binder error:", errData);
         noBinderReason = res.status === 401 ? "auth" : "notfound";
       }
-    } catch (err) {
-      console.error("[admin] get-my-binder exception:", err);
+    } catch {
       noBinderReason = "error";
     }
   }
@@ -245,12 +249,24 @@ async function showAdmin(user) {
     iframe.src = binderUrl;
     if (pubLink) pubLink.href = binderUrl;
   } else {
-    // Hide iframe, show the native "Create Your Binder" panel
     iframe.style.display = "none";
     iframe.srcdoc = "";
-    if (noBinder)   { noBinder.style.display = "flex"; noBinder.classList.remove("hidden"); }
-    if (createLink) createLink.classList.remove("hidden");
+    if (createLink) createLink.classList.toggle("hidden", noBinderReason === "auth");
     if (pubLink)    pubLink.href = "/create";
+
+    // Show contextual message based on why we couldn't load the binder
+    if (noBinder) {
+      const isAuth = noBinderReason === "auth";
+      noBinder.querySelector("h2").textContent = isAuth ? "Session expired" : "No binder found";
+      noBinder.querySelector("p").innerHTML    = isAuth
+        ? "Your session has expired. Please log in again to view your binder."
+        : "Your account doesn't have a binder set up yet.<br>Create one to start showcasing your Pokémon collection.";
+      const cta = noBinder.querySelector("a");
+      if (isAuth) { cta.href = "/admin"; cta.textContent = "Log In Again"; }
+      else        { cta.href = "/create"; cta.textContent = "Create Your Binder"; }
+      noBinder.style.display = "flex";
+      noBinder.classList.remove("hidden");
+    }
   }
 
   if (!window.BINDER_SLUG) {
