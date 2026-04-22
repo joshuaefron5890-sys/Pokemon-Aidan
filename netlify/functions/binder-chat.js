@@ -30,10 +30,14 @@ async function writeBinder(slug, binder) {
 // ── Tool implementations ───────────────────────────────────
 
 function cardSummary(c) {
+  // prices.pokemontcg.io URLs are internal redirect URLs, not consumer TCGPlayer links;
+  // omit them so they don't get stored as tcgUrl overrides in the binder
+  const url = c.tcgplayer?.url;
+  const tcgUrl = (url && !url.startsWith("https://prices.pokemontcg.io")) ? url : undefined;
   return {
     id: c.id, name: c.name, number: c.number,
     set: { name: c.set?.name, series: c.set?.series },
-    rarity: c.rarity, tcgUrl: c.tcgplayer?.url,
+    rarity: c.rarity, tcgUrl,
     marketPrice: c.tcgplayer?.prices?.holofoil?.market ?? c.tcgplayer?.prices?.normal?.market ?? null,
   };
 }
