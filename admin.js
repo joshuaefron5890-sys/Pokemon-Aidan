@@ -64,9 +64,32 @@ netlifyIdentity.currentUser = () => {
   return { ...(session.user || {}), jwt: async () => getStoredSession()?.access_token || null };
 };
 
-// Build a user object that always has jwt() — reads token fresh from storage
+// Build a user object that always has jwt() — reads token fresh from storage,
+// falls back to the token captured at creation time.
 function makeUserFromSession(session) {
-  return { ...(session.user || {}), jwt: async () => getStoredSession()?.access_token || null };
+  const captured = session.access_token || null;
+  return {
+    ...(session.user || {}),
+    jwt: async () => getStoredSession()?.access_token || captured || null,
+  };
+}
+
+// ── Binder URL map — must be declared before showAdmin is called ────────────
+// Map known admin emails to their hardcoded binder URLs (legacy static binders).
+const ADMIN_BINDER_MAP = {
+  "joshuaefron5890@gmail.com": "/AidanEfron",
+};
+
+function binderUrlForUser(user) {
+  if (!user) return null;
+  if (user.user_metadata?.binder_url) return user.user_metadata.binder_url;
+  const emailLow = user.email?.toLowerCase();
+  if (emailLow && ADMIN_BINDER_MAP[emailLow]) return ADMIN_BINDER_MAP[emailLow];
+  return null;
+}
+
+function isAidan(user) {
+  return user?.email?.toLowerCase() === "joshuaefron5890@gmail.com";
 }
 
 // ── Auth: check stored session immediately (don't rely on widget init timing) ──
@@ -110,7 +133,15 @@ document.getElementById("login-btn").addEventListener("click", async () => {
     if (!res.ok) throw new Error(data.error_description || data.msg || "Invalid email or password.");
 
     saveSession(data, email); // pass typed email as fallback if GoTrue omits user.email
-    showAdmin(netlifyIdentity.currentUser() || makeUserFromSession({ user: data.user, access_token: data.access_token }));
+    // Build user directly from response so jwt() has the token even before
+    // getStoredSession() settles.
+    const freshToken = data.access_token;
+    const loginUser = {
+      email: data.user?.email || email,
+      id:    data.user?.id,
+      jwt:   async () => getStoredSession()?.access_token || freshToken || null,
+    };
+    showAdmin(loginUser);
   } catch (err) {
     errorEl.textContent = err.message;
     document.getElementById("login-btn").disabled = false;
@@ -133,24 +164,6 @@ function doLogout() {
 }
 document.getElementById("logout-btn").addEventListener("click", doLogout);
 document.getElementById("profile-logout-btn").addEventListener("click", doLogout);
-
-// Map known admin emails to their binder URLs.
-// Add entries here as new admins are created.
-const ADMIN_BINDER_MAP = {
-  "joshuaefron5890@gmail.com": "/AidanEfron",
-};
-
-function binderUrlForUser(user) {
-  if (!user) return null;
-  if (user.user_metadata?.binder_url) return user.user_metadata.binder_url;
-  const emailLow = user.email?.toLowerCase();
-  if (emailLow && ADMIN_BINDER_MAP[emailLow]) return ADMIN_BINDER_MAP[emailLow];
-  return null;
-}
-
-function isAidan(user) {
-  return user?.email?.toLowerCase() === "joshuaefron5890@gmail.com";
-}
 
 async function showAdmin(user) {
   if (!user) { showLogin(); return; }
@@ -185,38 +198,60 @@ async function showAdmin(user) {
   showView("binder");
 
   // If metadata/map lookup missed, query the server for a binder linked to this email
+  let noBinderReason = "";
   if (!binderUrl && !aidan) {
     // Dark loading placeholder while we fetch
     iframe.srcdoc = `<!doctype html><html><head><meta charset="UTF-8"><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#4a5680;font-family:system-ui,sans-serif;font-size:.9rem}</style></head><body>Loading binder…</body></html>`;
     try {
       const token = await user.jwt().catch(() => null);
+      console.log("[admin] get-my-binder token present:", !!token, "email:", user.email);
       const res   = await fetch("/.netlify/functions/get-my-binder", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+      console.log("[admin] get-my-binder status:", res.status);
       if (res.ok) {
         const data = await res.json();
         binderUrl = data.binderUrl;
         window.BINDER_SLUG = data.slug;
-        try { await user.update({ data: { binder_url: binderUrl } }); } catch {}
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        console.warn("[admin] get-my-binder error:", errData);
+        noBinderReason = res.status === 401 ? "auth" : "notfound";
       }
-    } catch {}
+    } catch (err) {
+      console.error("[admin] get-my-binder exception:", err);
+      noBinderReason = "error";
+    }
   }
+
+  const createLink = document.getElementById("create-binder-link");
 
   if (binderUrl) {
     iframe.src = binderUrl;
     if (pubLink) pubLink.href = binderUrl;
+    if (createLink) createLink.classList.add("hidden");
   } else {
-    // No binder yet — show a prompt inside the iframe area
+    // Show sidebar "Create a New Binder" link
+    if (createLink) createLink.classList.remove("hidden");
+    if (pubLink) pubLink.href = "/create";
+
+    const authErr = noBinderReason === "auth";
     iframe.srcdoc = `<!doctype html><html><head><meta charset="UTF-8">
       <style>body{margin:0;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;color:#e2e8f0;text-align:center}
-      .box{max-width:380px;padding:2rem}.h{font-size:1.4rem;font-weight:700;margin-bottom:.75rem}
-      .p{color:#94a3b8;margin-bottom:1.5rem;line-height:1.6}
-      button{display:inline-block;padding:.65rem 1.5rem;background:#6366f1;color:#fff;border:none;border-radius:.5rem;font-size:1rem;font-weight:600;cursor:pointer}
-      button:hover{background:#4f46e5}</style></head>
-      <body><div class="box"><div class="h">No binder found</div>
-      <p class="p">It looks like your binder wasn't created yet. Add cards to get started.</p>
-      <button onclick="window.parent.document.getElementById('add-card-btn').click()">Add New Cards →</button></div></body></html>`;
-    if (pubLink) pubLink.href = "/create";
+      .box{max-width:420px;padding:2rem}.h{font-size:1.4rem;font-weight:700;margin-bottom:.75rem}
+      .p{color:#94a3b8;margin-bottom:1.5rem;line-height:1.6;font-size:.95rem}
+      a{display:inline-block;padding:.65rem 1.5rem;background:#6366f1;color:#fff;border-radius:.5rem;font-size:1rem;font-weight:600;text-decoration:none}
+      a:hover{background:#4f46e5}</style></head>
+      <body><div class="box">
+        <div class="h">${authErr ? "Session expired" : "No binder found"}</div>
+        <p class="p">${authErr
+          ? "Your session could not be verified. Please sign out and sign back in."
+          : "You don't have a binder yet. Create one to start showcasing your collection."
+        }</p>
+        <a href="${authErr ? "/admin" : "/create"}" target="_parent">
+          ${authErr ? "Back to Sign In" : "Create Your Binder →"}
+        </a>
+      </div></body></html>`;
   }
 
   if (!window.BINDER_SLUG) {
