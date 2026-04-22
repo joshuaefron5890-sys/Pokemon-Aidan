@@ -434,7 +434,7 @@ async function loadFavorites() {
       el.innerHTML = `
         <div class="forsale-tile-img-wrap">
           ${imgSrc
-            ? `<img class="forsale-tile-img" src="${imgSrc}" alt="${card.name || card.query}" loading="lazy"
+            ? `<img class="forsale-tile-img" src="${imgSrc}" alt="${card.name || card.query}" loading="lazy" data-pin-nopin="true"
                 onerror="this.style.display='none'" />`
             : `<div class="forsale-tile-img-placeholder">${card.name || card.query}</div>`}
           <div class="fav-select-overlay" aria-hidden="true">
@@ -558,7 +558,7 @@ async function loadForSale() {
       el.innerHTML = `
         <div class="forsale-tile-img-wrap">
           ${imgSrc
-            ? `<img class="forsale-tile-img" src="${imgSrc}" alt="${card.name}" loading="lazy"
+            ? `<img class="forsale-tile-img" src="${imgSrc}" alt="${card.name}" loading="lazy" data-pin-nopin="true"
                 onerror="this.style.display='none'" />`
             : `<div class="forsale-tile-img-placeholder">${card.name}</div>`}
           <button class="forsale-heart-btn" title="Add to favorites">${heartSvg(false)}</button>
