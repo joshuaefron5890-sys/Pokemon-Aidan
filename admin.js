@@ -521,10 +521,14 @@ async function loadForSale() {
     let { cards } = await res.json();
 
     // Exclude the logged-in user's own cards
-    const mySlug = getBinderSlug(netlifyIdentity.currentUser());
+    // getBinderSlug returns a URL path like "/binder/josh-efron" or "/AidanEfron";
+    // extract just the slug portion that matches binderSlug in the results
+    const myPath = getBinderSlug(netlifyIdentity.currentUser()) || "";
+    const mySlug = myPath.startsWith("/binder/") ? myPath.slice("/binder/".length) : null;
     if (mySlug) cards = cards.filter(c => c.binderSlug !== mySlug);
 
     if (!cards.length) {
+      forSaleLoaded = false; // allow retry in case cards get added
       grid.innerHTML = `
         <div class="favorites-empty">
           <div class="favorites-empty-icon">🏷️</div>
