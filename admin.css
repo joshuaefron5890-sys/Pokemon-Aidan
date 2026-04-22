@@ -543,6 +543,22 @@ a { color: inherit; text-decoration: none; }
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 1rem;
 }
+.binder-card-wrap { display: flex; flex-direction: column; gap: .4rem; }
+.binder-delete-btn {
+  width: 100%;
+  padding: .35rem;
+  border: 1px solid rgba(220,38,38,.35);
+  border-radius: 8px;
+  background: rgba(220,38,38,.08);
+  color: #f87171;
+  font-size: .75rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.binder-delete-btn:hover:not(:disabled) { background: rgba(220,38,38,.22); border-color: rgba(220,38,38,.6); }
+.binder-delete-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 .binder-card {
   background: linear-gradient(135deg, rgba(14,32,64,.8) 0%, rgba(10,22,40,.8) 100%);

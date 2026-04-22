@@ -320,16 +320,20 @@ async function loadSharedBinders() {
   const grid = document.querySelector(".binders-grid");
   if (!grid) return;
 
+  const admin = isAidan(netlifyIdentity.currentUser());
+
   try {
     const res  = await fetch("/.netlify/functions/list-binders");
     const list = await res.json();
     if (!Array.isArray(list)) return;
 
     list.forEach(b => {
-
       const initial = b.owner.charAt(0).toUpperCase();
       const colors  = ["#6366f1,#8b5cf6", "#f59e0b,#ef4444", "#10b981,#059669", "#3b82f6,#2563eb"];
       const grad    = colors[b.slug.charCodeAt(0) % colors.length];
+
+      const wrap = document.createElement("div");
+      wrap.className = "binder-card-wrap";
 
       const card = document.createElement("a");
       card.className = "binder-card";
@@ -346,7 +350,36 @@ async function loadSharedBinders() {
           <div class="binder-card-meta">${b.location?.city ? `📍 ${b.location.city}, ${b.location.state}` : 'Public collection'}</div>
         </div>
         <div class="binder-card-badge">View</div>`;
-      grid.appendChild(card);
+      wrap.appendChild(card);
+
+      if (admin) {
+        const del = document.createElement("button");
+        del.className = "binder-delete-btn";
+        del.title = `Delete ${b.owner}'s binder`;
+        del.textContent = "Delete";
+        del.addEventListener("click", async () => {
+          if (!confirm(`Permanently delete ${b.owner}'s binder? This cannot be undone.`)) return;
+          del.disabled = true;
+          del.textContent = "Deleting…";
+          try {
+            const token = await netlifyIdentity.currentUser().jwt();
+            const r = await fetch("/.netlify/functions/delete-binder", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ slug: b.slug }),
+            });
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            wrap.remove();
+          } catch (err) {
+            del.disabled = false;
+            del.textContent = "Delete";
+            alert(`Failed to delete: ${err.message}`);
+          }
+        });
+        wrap.appendChild(del);
+      }
+
+      grid.appendChild(wrap);
     });
   } catch {}
 }
