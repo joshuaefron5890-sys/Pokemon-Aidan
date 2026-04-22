@@ -78,6 +78,7 @@ function makeUserFromSession(session) {
 // Map known admin emails to their hardcoded binder URLs (legacy static binders).
 const ADMIN_BINDER_MAP = {
   "joshuaefron5890@gmail.com": "/AidanEfron",
+  "joshuaefron@yahoo.com":     "/binder/josh-efron",
 };
 
 function binderUrlForUser(user) {
