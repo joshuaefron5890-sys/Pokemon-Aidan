@@ -72,8 +72,8 @@ function makeUserFromSession(session) {
 // ── Auth: check stored session immediately (don't rely on widget init timing) ──
 const _earlySession = getStoredSession();
 if (_earlySession) {
-  // Already logged in — show admin before the widget even initialises
-  document.addEventListener("DOMContentLoaded", () => showAdmin(makeUserFromSession(_earlySession)));
+  // admin.js loads at end of <body> so DOM is already ready — call directly
+  showAdmin(makeUserFromSession(_earlySession));
 }
 
 netlifyIdentity.on("init", user => {
