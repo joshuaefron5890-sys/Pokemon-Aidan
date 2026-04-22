@@ -13,15 +13,40 @@ const SESSION_KEY = "pokebinder.admin.session";
 function getStoredSession() {
   try {
     const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
-    if (s?.access_token && s?.user && (s.expires_at || 0) > Math.round(Date.now() / 1000)) return s;
+    if (!s?.access_token || (s.expires_at || 0) <= Math.round(Date.now() / 1000)) return null;
+    // Self-heal: old sessions may have been saved without user.email — decode JWT as fix
+    if (!s.user?.email && s.access_token) {
+      const claims = jwtClaims(s.access_token);
+      if (claims?.email) {
+        s.user = { id: claims.sub, email: claims.email, ...(s.user || {}) };
+        try { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); } catch {}
+      }
+    }
+    // Don't gate on email presence — showAdmin() will recover it from the JWT
+    return s;
   } catch {}
   return null;
 }
 
-function saveSession(data) {
+function jwtClaims(token) {
   try {
+    let b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    b64 += "=".repeat((4 - b64.length % 4) % 4);
+    return JSON.parse(atob(b64));
+  } catch { return null; }
+}
+
+function saveSession(data, knownEmail = null) {
+  try {
+    let user = data.user;
+    // Ensure email is captured — try data.user, then JWT claims, then the typed email
+    if (!user?.email) {
+      const claims = data.access_token ? jwtClaims(data.access_token) : null;
+      const email = claims?.email || knownEmail;
+      if (email) user = { id: claims?.sub || user?.id, email, ...(user || {}) };
+    }
     localStorage.setItem(SESSION_KEY, JSON.stringify({
-      ...data,
+      ...data, user,
       expires_at: Math.round(Date.now() / 1000) + (data.expires_in || 3600),
     }));
   } catch {}
@@ -36,20 +61,42 @@ function clearSession() {
 netlifyIdentity.currentUser = () => {
   const session = getStoredSession();
   if (!session) return null;
-  // Re-read the token fresh inside jwt() in case storage was updated
-  return { ...session.user, jwt: async () => getStoredSession()?.access_token || null };
+  return { ...(session.user || {}), jwt: async () => getStoredSession()?.access_token || null };
 };
 
-// Build a user object that always has jwt() — safe to call showAdmin() with
+// Build a user object that always has jwt() — reads token fresh from storage,
+// falls back to the token captured at creation time.
 function makeUserFromSession(session) {
-  return { ...session.user, jwt: async () => session.access_token };
+  const captured = session.access_token || null;
+  return {
+    ...(session.user || {}),
+    jwt: async () => getStoredSession()?.access_token || captured || null,
+  };
+}
+
+// ── Binder URL map — must be declared before showAdmin is called ────────────
+// Map known admin emails to their hardcoded binder URLs (legacy static binders).
+const ADMIN_BINDER_MAP = {
+  "joshuaefron5890@gmail.com": "/AidanEfron",
+};
+
+function binderUrlForUser(user) {
+  if (!user) return null;
+  if (user.user_metadata?.binder_url) return user.user_metadata.binder_url;
+  const emailLow = user.email?.toLowerCase();
+  if (emailLow && ADMIN_BINDER_MAP[emailLow]) return ADMIN_BINDER_MAP[emailLow];
+  return null;
+}
+
+function isAidan(user) {
+  return user?.email?.toLowerCase() === "joshuaefron5890@gmail.com";
 }
 
 // ── Auth: check stored session immediately (don't rely on widget init timing) ──
 const _earlySession = getStoredSession();
 if (_earlySession) {
-  // Already logged in — show admin before the widget even initialises
-  document.addEventListener("DOMContentLoaded", () => showAdmin(makeUserFromSession(_earlySession)));
+  // admin.js loads at end of <body> so DOM is already ready — call directly
+  showAdmin(makeUserFromSession(_earlySession));
 }
 
 netlifyIdentity.on("init", user => {
@@ -85,9 +132,16 @@ document.getElementById("login-btn").addEventListener("click", async () => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error_description || data.msg || "Invalid email or password.");
 
-    saveSession(data);
-    // Use patched currentUser(); fall back to data directly if localStorage unavailable
-    showAdmin(netlifyIdentity.currentUser() || makeUserFromSession({ user: data.user, access_token: data.access_token }));
+    saveSession(data, email); // pass typed email as fallback if GoTrue omits user.email
+    // Build user directly from response so jwt() has the token even before
+    // getStoredSession() settles.
+    const freshToken = data.access_token;
+    const loginUser = {
+      email: data.user?.email || email,
+      id:    data.user?.id,
+      jwt:   async () => getStoredSession()?.access_token || freshToken || null,
+    };
+    showAdmin(loginUser);
   } catch (err) {
     errorEl.textContent = err.message;
     document.getElementById("login-btn").disabled = false;
@@ -111,30 +165,25 @@ function doLogout() {
 document.getElementById("logout-btn").addEventListener("click", doLogout);
 document.getElementById("profile-logout-btn").addEventListener("click", doLogout);
 
-// Map known admin emails to their binder URLs.
-// Add entries here as new admins are created.
-const ADMIN_BINDER_MAP = {
-  "joshuaefron5890@gmail.com": "/AidanEfron",
-};
-
-function binderUrlForUser(user) {
-  if (!user) return null;
-  // 1. Explicit binder_url in Netlify Identity user metadata
-  if (user.user_metadata?.binder_url) return user.user_metadata.binder_url;
-  // 2. Known email mapping
-  if (ADMIN_BINDER_MAP[user.email]) return ADMIN_BINDER_MAP[user.email];
-  return null;
-}
-
-function isAidan(user) {
-  return user?.email === "joshuaefron5890@gmail.com";
-}
-
 async function showAdmin(user) {
   if (!user) { showLogin(); return; }
+
+  // If the user object has no email, decode it from the JWT access token as a last resort.
+  // This handles the case where GoTrue omits user data in the token response or where
+  // the netlifyIdentity widget overrides our currentUser() patch.
+  if (!user.email && user.jwt) {
+    try {
+      const token = await user.jwt().catch(() => null);
+      if (token) {
+        const claims = jwtClaims(token);
+        if (claims?.email) user = { ...user, email: claims.email, id: claims.sub || user.id };
+      }
+    } catch {}
+  }
+
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("admin-app").classList.remove("hidden");
-  document.getElementById("user-email").textContent = user.email;
+  document.getElementById("user-email").textContent = user.email || "";
   const profileEmail = document.getElementById("profile-user-email");
   if (profileEmail) profileEmail.textContent = user.email;
 
@@ -149,38 +198,60 @@ async function showAdmin(user) {
   showView("binder");
 
   // If metadata/map lookup missed, query the server for a binder linked to this email
+  let noBinderReason = "";
   if (!binderUrl && !aidan) {
     // Dark loading placeholder while we fetch
     iframe.srcdoc = `<!doctype html><html><head><meta charset="UTF-8"><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#4a5680;font-family:system-ui,sans-serif;font-size:.9rem}</style></head><body>Loading binder…</body></html>`;
     try {
       const token = await user.jwt().catch(() => null);
+      console.log("[admin] get-my-binder token present:", !!token, "email:", user.email);
       const res   = await fetch("/.netlify/functions/get-my-binder", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+      console.log("[admin] get-my-binder status:", res.status);
       if (res.ok) {
         const data = await res.json();
         binderUrl = data.binderUrl;
         window.BINDER_SLUG = data.slug;
-        try { await user.update({ data: { binder_url: binderUrl } }); } catch {}
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        console.warn("[admin] get-my-binder error:", errData);
+        noBinderReason = res.status === 401 ? "auth" : "notfound";
       }
-    } catch {}
+    } catch (err) {
+      console.error("[admin] get-my-binder exception:", err);
+      noBinderReason = "error";
+    }
   }
+
+  const createLink = document.getElementById("create-binder-link");
 
   if (binderUrl) {
     iframe.src = binderUrl;
     if (pubLink) pubLink.href = binderUrl;
+    if (createLink) createLink.classList.add("hidden");
   } else {
-    // No binder yet — show a prompt inside the iframe area
+    // Show sidebar "Create a New Binder" link
+    if (createLink) createLink.classList.remove("hidden");
+    if (pubLink) pubLink.href = "/create";
+
+    const authErr = noBinderReason === "auth";
     iframe.srcdoc = `<!doctype html><html><head><meta charset="UTF-8">
       <style>body{margin:0;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;color:#e2e8f0;text-align:center}
-      .box{max-width:380px;padding:2rem}.h{font-size:1.4rem;font-weight:700;margin-bottom:.75rem}
-      .p{color:#94a3b8;margin-bottom:1.5rem;line-height:1.6}
-      button{display:inline-block;padding:.65rem 1.5rem;background:#6366f1;color:#fff;border:none;border-radius:.5rem;font-size:1rem;font-weight:600;cursor:pointer}
-      button:hover{background:#4f46e5}</style></head>
-      <body><div class="box"><div class="h">No binder found</div>
-      <p class="p">It looks like your binder wasn't created yet. Add cards to get started.</p>
-      <button onclick="window.parent.document.getElementById('add-card-btn').click()">Add New Cards →</button></div></body></html>`;
-    if (pubLink) pubLink.href = "/create";
+      .box{max-width:420px;padding:2rem}.h{font-size:1.4rem;font-weight:700;margin-bottom:.75rem}
+      .p{color:#94a3b8;margin-bottom:1.5rem;line-height:1.6;font-size:.95rem}
+      a{display:inline-block;padding:.65rem 1.5rem;background:#6366f1;color:#fff;border-radius:.5rem;font-size:1rem;font-weight:600;text-decoration:none}
+      a:hover{background:#4f46e5}</style></head>
+      <body><div class="box">
+        <div class="h">${authErr ? "Session expired" : "No binder found"}</div>
+        <p class="p">${authErr
+          ? "Your session could not be verified. Please sign out and sign back in."
+          : "You don't have a binder yet. Create one to start showcasing your collection."
+        }</p>
+        <a href="${authErr ? "/admin" : "/create"}" target="_parent">
+          ${authErr ? "Back to Sign In" : "Create Your Binder →"}
+        </a>
+      </div></body></html>`;
   }
 
   if (!window.BINDER_SLUG) {
