@@ -304,6 +304,7 @@ document.querySelectorAll(".community-tab").forEach(tab => {
     document.querySelectorAll(".community-tab-panel").forEach(p => p.classList.add("hidden"));
     tab.classList.add("active");
     document.getElementById(`community-panel-${tab.dataset.communityTab}`)?.classList.remove("hidden");
+    if (tab.dataset.communityTab === "forsale") loadForSale();
   });
 });
 
@@ -499,6 +500,76 @@ async function removeFavorite(card, el) {
     }
   } catch {
     el.style.opacity = "1";
+  }
+}
+
+// ── Cards for Sale/Trade ────────────────────────────────────
+
+let forSaleLoaded = false;
+
+async function loadForSale() {
+  if (forSaleLoaded) return;
+  forSaleLoaded = true;
+
+  const grid = document.getElementById("forsale-grid");
+  if (!grid) return;
+  grid.innerHTML = `<p style="padding:1.5rem;color:var(--text-muted)">Loading…</p>`;
+
+  try {
+    const res  = await fetch("/.netlify/functions/list-for-sale");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { cards } = await res.json();
+
+    if (!cards.length) {
+      grid.innerHTML = `
+        <div class="favorites-empty">
+          <div class="favorites-empty-icon">🏷️</div>
+          <div class="favorites-empty-title">No cards listed yet</div>
+          <p style="font-size:.85rem;color:var(--text-muted)">Cards marked for sale or trade will appear here.</p>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = "";
+    cards.forEach(card => {
+      const imgSrc = card.imageUrl || (() => {
+        if (!card.cardId) return "";
+        const i = card.cardId.lastIndexOf("-");
+        return i < 0 ? "" : `https://images.pokemontcg.io/${card.cardId.slice(0, i)}/${card.cardId.slice(i + 1)}.png`;
+      })();
+
+      const binderUrl = card.binderSlug === "aidan" ? "/AidanEfron" : `/binder/${card.binderSlug}`;
+
+      const el = document.createElement("div");
+      el.className = "fav-item forsale-item";
+      el.innerHTML = `
+        ${imgSrc
+          ? `<img class="fav-item-img" src="${imgSrc}" alt="${card.name}" loading="lazy"
+              onerror="this.outerHTML='<div class=\\'fav-item-img-placeholder\\'>${card.name}</div>'" />`
+          : `<div class="fav-item-img-placeholder">${card.name}</div>`}
+        <div class="fav-item-info">
+          <div class="fav-item-name">${card.name}${card.grade ? ` <span class="forsale-grade">${card.grade}</span>` : ""}</div>
+          ${card.setName ? `<div class="fav-item-binder" style="color:var(--text-muted);font-size:.78rem">${card.setName}</div>` : ""}
+          <div class="fav-item-binder">From: <a href="${binderUrl}" target="_blank" rel="noopener">${card.binderOwner}'s Binder</a></div>
+        </div>
+        <div class="fav-item-actions">
+          <button class="fav-trade-btn forsale-contact-btn" title="Propose a trade">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            <span>Propose Trade</span>
+          </button>
+          <button class="fav-offer-btn forsale-contact-btn" title="Make a price offer">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <span>Make an Offer</span>
+          </button>
+        </div>`;
+
+      el.querySelector(".fav-trade-btn").addEventListener("click", () => openTradeDrawer([card]));
+      el.querySelector(".fav-offer-btn").addEventListener("click", () => openOfferModal([card]));
+      grid.appendChild(el);
+    });
+  } catch (err) {
+    grid.innerHTML = `<p style="padding:1.5rem;color:var(--text-muted)">Failed to load: ${err.message}</p>`;
+    forSaleLoaded = false;
   }
 }
 
