@@ -246,6 +246,7 @@ async function showAdmin(user) {
     if (noBinder)   { noBinder.style.display = "none"; noBinder.classList.add("hidden"); }
     if (createLink) createLink.classList.add("hidden");
     iframe.style.display = "";
+    iframe.srcdoc = "";
     iframe.src = binderUrl;
     if (pubLink) pubLink.href = binderUrl;
   } else {

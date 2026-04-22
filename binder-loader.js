@@ -4,16 +4,22 @@ window.BINDER_LOADER = true;
 // ── Binder initialization ──────────────────────────────────
 
 async function getBinderAuthToken() {
-  const currentUser = window.netlifyIdentity?.currentUser();
-  if (currentUser) {
-    const token = await currentUser.jwt().catch(() => null);
-    if (token) return token;
-  }
-  // Fallback: read admin session from localStorage (works when embedded in the admin iframe)
+  // Read stored admin session first — fast and reliable when embedded in the admin iframe
   try {
     const s = JSON.parse(localStorage.getItem("pokebinder.admin.session") || "null");
     if (s?.access_token && (s.expires_at || 0) > Math.round(Date.now() / 1000)) return s.access_token;
   } catch {}
+
+  // Fall back to identity widget with a hard timeout so a hung jwt() call never blocks the page
+  const currentUser = window.netlifyIdentity?.currentUser();
+  if (currentUser) {
+    const token = await Promise.race([
+      currentUser.jwt().catch(() => null),
+      new Promise(resolve => setTimeout(() => resolve(null), 3000)),
+    ]);
+    if (token) return token;
+  }
+
   return null;
 }
 
