@@ -37,7 +37,7 @@ exports.handler = async (event, context) => {
     }
 
     const user    = context.clientContext?.user;
-    const isOwner = user?.email === binder.email;
+    const isOwner = !!user?.email && user.email.toLowerCase() === binder.email?.toLowerCase();
 
     if (!binder.public && !isOwner) {
       return {
