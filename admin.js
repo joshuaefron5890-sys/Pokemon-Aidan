@@ -437,8 +437,9 @@ async function loadFavorites() {
             ? `<img class="forsale-tile-img" src="${imgSrc}" alt="${card.name || card.query}" loading="lazy" data-pin-nopin="true"
                 onerror="this.style.display='none'" />`
             : `<div class="forsale-tile-img-placeholder">${card.name || card.query}</div>`}
-          <div class="fav-select-overlay" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <div class="fav-select-overlay" aria-hidden="true"></div>
+          <div class="fav-tile-checkbox" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <button class="fav-tile-remove-btn" title="Remove from favorites">✕</button>
         </div>

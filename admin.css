@@ -767,7 +767,7 @@ a.binder-card { cursor: pointer; }
 .fav-tile-remove-btn {
   position: absolute;
   top: 6px;
-  left: 6px;
+  right: 6px;
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -786,6 +786,31 @@ a.binder-card { cursor: pointer; }
 }
 .forsale-tile:hover .fav-tile-remove-btn { opacity: 1; }
 .fav-tile-remove-btn:hover { background: rgba(220,38,38,.85) !important; }
+.fav-select-active .fav-tile-remove-btn { display: none; }
+.fav-tile-checkbox {
+  display: none;
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.8);
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: background .15s, border-color .15s, color .15s;
+  z-index: 5;
+  pointer-events: none;
+}
+.fav-select-active .fav-tile-checkbox { display: flex; }
+.fav-tile.fav-selected .fav-tile-checkbox {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
 .favorites-empty {
   text-align: center;
   padding: 4rem 1rem;
@@ -859,19 +884,13 @@ a.binder-card { cursor: pointer; }
   position: absolute;
   inset: 0;
   background: rgba(0,217,255,.18);
-  align-items: center;
-  justify-content: center;
-  color: transparent;
-  transition: background .15s, color .15s;
+  transition: background .15s;
   z-index: 4;
 }
-.fav-select-active .fav-select-overlay { display: flex; }
+.fav-select-active .fav-select-overlay { display: block; }
 .fav-select-active .fav-tile { cursor: pointer; }
 .fav-tile.fav-selected { border-color: var(--accent); }
-.fav-tile.fav-selected .fav-select-overlay {
-  background: rgba(0,217,255,.35);
-  color: #fff;
-}
+.fav-tile.fav-selected .fav-select-overlay { background: rgba(0,217,255,.38); }
 .fav-select-active .forsale-tile-actions { pointer-events: none; opacity: .35; }
 
 /* ── For Sale/Trade tile grid ────────────────────────────── */
