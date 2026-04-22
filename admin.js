@@ -234,34 +234,22 @@ async function showAdmin(user) {
     }
   }
 
-  const createLink = document.getElementById("create-binder-link");
+  const createLink  = document.getElementById("create-binder-link");
+  const noBinder    = document.getElementById("no-binder-panel");
 
   if (binderUrl) {
+    if (noBinder)   { noBinder.style.display = "none"; noBinder.classList.add("hidden"); }
+    if (createLink) createLink.classList.add("hidden");
+    iframe.style.display = "";
     iframe.src = binderUrl;
     if (pubLink) pubLink.href = binderUrl;
-    if (createLink) createLink.classList.add("hidden");
   } else {
-    // Show sidebar "Create a New Binder" link
+    // Hide iframe, show the native "Create Your Binder" panel
+    iframe.style.display = "none";
+    iframe.srcdoc = "";
+    if (noBinder)   { noBinder.style.display = "flex"; noBinder.classList.remove("hidden"); }
     if (createLink) createLink.classList.remove("hidden");
-    if (pubLink) pubLink.href = "/create";
-
-    const authErr = noBinderReason === "auth";
-    iframe.srcdoc = `<!doctype html><html><head><meta charset="UTF-8">
-      <style>body{margin:0;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;color:#e2e8f0;text-align:center}
-      .box{max-width:420px;padding:2rem}.h{font-size:1.4rem;font-weight:700;margin-bottom:.75rem}
-      .p{color:#94a3b8;margin-bottom:1.5rem;line-height:1.6;font-size:.95rem}
-      a{display:inline-block;padding:.65rem 1.5rem;background:#6366f1;color:#fff;border-radius:.5rem;font-size:1rem;font-weight:600;text-decoration:none}
-      a:hover{background:#4f46e5}</style></head>
-      <body><div class="box">
-        <div class="h">${authErr ? "Session expired" : "No binder found"}</div>
-        <p class="p">${authErr
-          ? "Your session could not be verified. Please sign out and sign back in."
-          : "You don't have a binder yet. Create one to start showcasing your collection."
-        }</p>
-        <a href="${authErr ? "/admin" : "/create"}" target="_parent">
-          ${authErr ? "Back to Sign In" : "Create Your Binder →"}
-        </a>
-      </div></body></html>`;
+    if (pubLink)    pubLink.href = "/create";
   }
 
   if (!window.BINDER_SLUG) {
