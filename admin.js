@@ -569,10 +569,32 @@ async function loadForSale() {
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             <span>Make an Offer</span>
           </button>
+          <button class="forsale-fav-btn forsale-contact-btn" title="Add to favorites">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span>Favorite</span>
+          </button>
         </div>`;
 
       el.querySelector(".fav-trade-btn").addEventListener("click", () => openTradeDrawer([card]));
       el.querySelector(".fav-offer-btn").addEventListener("click", () => openOfferModal([card]));
+      el.querySelector(".forsale-fav-btn").addEventListener("click", async () => {
+        const btn = el.querySelector(".forsale-fav-btn");
+        btn.disabled = true;
+        try {
+          const user  = netlifyIdentity.currentUser();
+          const token = user ? await user.jwt() : null;
+          const res   = await fetch("/.netlify/functions/update-favorites", {
+            method:  "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body:    JSON.stringify({ action: "add", card }),
+          });
+          if (!res.ok) throw new Error("Failed");
+          btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>Favorited</span>`;
+          btn.classList.add("forsale-fav-btn--saved");
+        } catch {
+          btn.disabled = false;
+        }
+      });
       grid.appendChild(el);
     });
   } catch (err) {

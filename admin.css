@@ -925,6 +925,11 @@ a.binder-card { cursor: pointer; }
   gap: .75rem;
 }
 .forsale-item { cursor: default; }
+.forsale-fav-btn--saved {
+  color: #f43f5e !important;
+  border-color: #f43f5e !important;
+  opacity: 1 !important;
+}
 .forsale-grade {
   display: inline-block;
   background: rgba(247,201,72,.15);
