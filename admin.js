@@ -79,6 +79,7 @@ function makeUserFromSession(session) {
 const ADMIN_BINDER_MAP = {
   "joshuaefron5890@gmail.com": "/AidanEfron",
   "joshuaefron@yahoo.com":     "/binder/josh-efron",
+  "callie.m.frisch@gmail.com": "/binder/callie-efron",
 };
 
 function binderUrlForUser(user) {
