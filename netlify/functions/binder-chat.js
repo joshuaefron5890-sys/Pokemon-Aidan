@@ -252,7 +252,7 @@ exports.handler = async (event, context) => {
     if (!Array.isArray(messages) || !messages.length) return { statusCode: 400, body: JSON.stringify({ error: "No messages" }) };
 
     const binder = await readBinder(slug);
-    if (binder.email !== user.email) {
+    if (binder.email?.toLowerCase() !== user.email?.toLowerCase()) {
       return { statusCode: 403, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: "Forbidden" }) };
     }
 
