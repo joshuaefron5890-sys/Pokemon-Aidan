@@ -521,9 +521,9 @@ async function loadForSale() {
     let { cards } = await res.json();
 
     // Exclude the logged-in user's own cards
-    // getBinderSlug returns a URL path like "/binder/josh-efron" or "/AidanEfron";
+    // binderUrlForUser returns a URL path like "/binder/josh-efron" or "/AidanEfron";
     // extract just the slug portion that matches binderSlug in the results
-    const myPath = getBinderSlug(netlifyIdentity.currentUser()) || "";
+    const myPath = binderUrlForUser(netlifyIdentity.currentUser()) || "";
     const mySlug = myPath.startsWith("/binder/") ? myPath.slice("/binder/".length) : null;
     if (mySlug) cards = cards.filter(c => c.binderSlug !== mySlug);
 
