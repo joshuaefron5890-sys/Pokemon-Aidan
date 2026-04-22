@@ -17,14 +17,13 @@ exports.handler = async (event, context) => {
     const { slug } = JSON.parse(event.body);
     if (!slug) return { statusCode: 400, body: JSON.stringify({ error: "Missing slug" }) };
 
-    const binder = await getBinder(slug);
-    if (!binder) return { statusCode: 404, body: JSON.stringify({ error: "Binder not found" }) };
+    // Delete the blob if it exists (ignore if already gone)
+    await deleteBinder(slug).catch(() => {});
 
-    await deleteBinder(slug);
-
+    // Always purge from manifest regardless of whether blob existed
     const manifest = await getManifest();
     const updated  = manifest.filter(b => b.slug !== slug);
-    if (updated.length !== manifest.length) await putManifest(updated);
+    await putManifest(updated);
 
     return {
       statusCode: 200,
