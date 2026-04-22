@@ -430,33 +430,36 @@ async function loadFavorites() {
       })();
 
       const el = document.createElement("div");
-      el.className = "fav-item";
+      el.className = "forsale-tile fav-tile";
       el.innerHTML = `
-        <div class="fav-select-overlay" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-        ${imgSrc
-          ? `<img class="fav-item-img" src="${imgSrc}" alt="${card.name || card.query}" loading="lazy"
-              onerror="this.outerHTML='<div class=\\'fav-item-img-placeholder\\'>${card.name || card.query}</div>'" />`
-          : `<div class="fav-item-img-placeholder">${card.name || card.query}</div>`}
-        <div class="fav-item-info">
-          <div class="fav-item-name">${card.name || card.query}</div>
-          <div class="fav-item-binder">From: <a href="${binderPageUrl(card.binderSlug)}" target="_blank" rel="noopener">${card.binderOwner || card.binderSlug}'s Binder</a></div>
+        <div class="forsale-tile-img-wrap">
+          ${imgSrc
+            ? `<img class="forsale-tile-img" src="${imgSrc}" alt="${card.name || card.query}" loading="lazy"
+                onerror="this.style.display='none'" />`
+            : `<div class="forsale-tile-img-placeholder">${card.name || card.query}</div>`}
+          <div class="fav-select-overlay" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <button class="fav-tile-remove-btn" title="Remove from favorites">✕</button>
         </div>
-        <div class="fav-item-actions">
-          <button class="fav-trade-btn" title="Propose a trade">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-            <span>Propose Trade</span>
+        <div class="forsale-tile-info">
+          <div class="forsale-tile-name">${card.name || card.query}</div>
+          <div class="forsale-tile-meta">From: <a href="${binderPageUrl(card.binderSlug)}" target="_blank" rel="noopener">${card.binderOwner || card.binderSlug}'s Binder</a></div>
+        </div>
+        <div class="forsale-tile-actions">
+          <button class="fav-trade-btn forsale-contact-btn" title="Propose a trade">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            <span>Trade</span>
           </button>
-          <button class="fav-offer-btn" title="Make a price offer">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            <span>Make an Offer</span>
+          <button class="fav-offer-btn forsale-contact-btn" title="Make a price offer">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <span>Offer</span>
           </button>
-          <button class="fav-remove-btn" title="Remove from favorites">✕</button>
         </div>`;
 
-      // In select mode, clicking the card toggles selection; otherwise use action buttons
       el.addEventListener("click", e => {
         if (!favSelectMode) return;
-        if (e.target.closest(".fav-item-actions")) return;
+        if (e.target.closest(".forsale-tile-actions") || e.target.closest(".fav-tile-remove-btn")) return;
         if (selectedFavs.has(key)) {
           selectedFavs.delete(key);
           el.classList.remove("fav-selected");
@@ -469,7 +472,7 @@ async function loadFavorites() {
 
       el.querySelector(".fav-trade-btn").addEventListener("click", () => openTradeDrawer([card]));
       el.querySelector(".fav-offer-btn").addEventListener("click", () => openOfferModal([card]));
-      el.querySelector(".fav-remove-btn").addEventListener("click", () => removeFavorite(card, el));
+      el.querySelector(".fav-tile-remove-btn").addEventListener("click", () => removeFavorite(card, el));
       grid.appendChild(el);
     });
   } catch (err) {
@@ -634,7 +637,7 @@ function exitFavSelectMode() {
   selectedFavs.clear();
   document.getElementById("fav-select-btn").textContent = "Select Multiple";
   document.getElementById("favorites-grid").classList.remove("fav-select-active");
-  document.querySelectorAll(".fav-item.fav-selected").forEach(el => el.classList.remove("fav-selected"));
+  document.querySelectorAll(".fav-tile.fav-selected").forEach(el => el.classList.remove("fav-selected"));
   renderFavBulkBar();
 }
 
