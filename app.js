@@ -292,6 +292,7 @@ function createCardElement(query, card, price, overrides = {}, isStaticPrice = f
           : `<div class="card-img-placeholder"><span>${cardName}</span></div>`
         }
         ${grade ? `<div class="card-grade-badge">Grade ${grade}</div>` : ""}
+      ${overrides.available ? `<div class="card-available-badge">Available</div>` : ""}
       </div>
       <div class="card-info">
         <div class="card-name">${cardName}</div>
@@ -344,6 +345,7 @@ function createSkeletonCard() {
 let currentFilter = "";
 let currentSeries = "";
 let currentGradeFilter = "";
+let currentAvailableFilter = "";
 
 function normalizeSearch(str) {
   // Lowercase and collapse whitespace — no regex on user input so special chars are safe
@@ -369,6 +371,8 @@ function getFilteredResults() {
     if (currentSeries && (card?.set?.series || "") !== currentSeries) return false;
     if (currentGradeFilter === "graded" && !overrides.grade) return false;
     if (currentGradeFilter === "non-graded" && overrides.grade) return false;
+    if (currentAvailableFilter === "available" && !overrides.available) return false;
+    if (currentAvailableFilter === "not-available" && overrides.available) return false;
     return matchesFilter(query, card, overrides);
   });
 }
@@ -449,6 +453,52 @@ function buildGradeDropdown() {
       if (value === currentGradeFilter) li.classList.add("selected");
       li.addEventListener("click", () => {
         currentGradeFilter = value;
+        labelEl.textContent = label;
+        btn.classList.toggle("active", !!value);
+        panel.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+        resetAndRender();
+      });
+      listEl.appendChild(li);
+    });
+  }
+
+  renderOptions();
+
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    const isOpen = panel.classList.toggle("open");
+    btn.setAttribute("aria-expanded", isOpen);
+    if (isOpen) renderOptions();
+  });
+
+  document.addEventListener("click", () => {
+    panel.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+  });
+}
+
+function buildAvailableDropdown() {
+  const btn     = document.getElementById("available-btn");
+  const panel   = document.getElementById("available-panel");
+  const labelEl = document.getElementById("available-label");
+  if (!btn) return;
+
+  const options = [
+    { label: "All Cards",      value: "" },
+    { label: "Available",      value: "available" },
+    { label: "Not Available",  value: "not-available" },
+  ];
+
+  function renderOptions() {
+    const listEl = document.getElementById("available-options");
+    listEl.innerHTML = "";
+    options.forEach(({ label, value }) => {
+      const li = document.createElement("li");
+      li.textContent = label;
+      if (value === currentAvailableFilter) li.classList.add("selected");
+      li.addEventListener("click", () => {
+        currentAvailableFilter = value;
         labelEl.textContent = label;
         btn.classList.toggle("active", !!value);
         panel.classList.remove("open");
@@ -670,6 +720,7 @@ async function loadCollection() {
   renderNextPage();
   buildSeriesDropdown();
   buildGradeDropdown();
+  buildAvailableDropdown();
 
   loadingEl.textContent = "";
 
@@ -813,6 +864,12 @@ function _buildEditModal() {
           </label>
         </div>
 
+        <div class="cem-section">Availability</div>
+        <label class="cem-toggle-label">
+          <input type="checkbox" id="cem-available" />
+          <span>Mark as available for trade or sale</span>
+        </label>
+
         <div class="cem-section">Metadata overrides</div>
         <div class="cem-row-2">
           <label class="cem-label">Name
@@ -883,7 +940,8 @@ function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
   m.querySelector("#cem-tcg-url").value   = userTcgUrl;
   m.querySelector("#cem-image-url").value = overrides.imageUrl || "";
   m.querySelector("#cem-price").value     = overrides.fallbackPrice != null ? overrides.fallbackPrice : "";
-  m.querySelector("#cem-grade").value     = overrides.grade || "";
+  m.querySelector("#cem-grade").value      = overrides.grade || "";
+  m.querySelector("#cem-available").checked = !!overrides.available;
 
   // Metadata: show stored override; placeholder = current API value
   const apiName   = card?.name  || "";
@@ -1030,6 +1088,7 @@ async function _saveCardEdit() {
     imageUrl:           newImageUrl || null,
     fallbackPrice:      newPriceRaw !== "" ? parseFloat(newPriceRaw) : null,
     grade:              newGrade    || null,
+    available:          m.querySelector("#cem-available").checked ? true : null,
     nameOverride:       newName     || null,
     setDisplayOverride: newSet      || null,
     numberOverride:     newNumber   || null,
