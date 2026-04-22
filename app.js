@@ -875,12 +875,13 @@ function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
   prev.src          = imgSrc;
   prev.style.display = imgSrc ? "" : "none";
 
-  // Only pre-fill tcgUrl with a genuine tcgplayer.com URL — the prices.pokemontcg.io
-  // redirect URLs the API returns are internal and not useful as consumer overrides.
+  // Value = genuine tcgplayer.com override only; placeholder = current API link so user can see it
   const userTcgUrl = overrides.tcgUrl?.includes("tcgplayer.com") ? overrides.tcgUrl : "";
+  const tcgUrlInput = m.querySelector("#cem-tcg-url");
+  tcgUrlInput.value       = userTcgUrl;
+  tcgUrlInput.placeholder = card?.tcgplayer?.url || "https://www.tcgplayer.com/…";
 
   m.querySelector("#cem-card-id").value   = overrides.cardId || "";
-  m.querySelector("#cem-tcg-url").value   = userTcgUrl;
   m.querySelector("#cem-image-url").value = overrides.imageUrl || "";
   m.querySelector("#cem-price").value     = overrides.fallbackPrice != null ? overrides.fallbackPrice : "";
   m.querySelector("#cem-grade").value     = overrides.grade || "";
@@ -896,7 +897,7 @@ function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
   const u = m.querySelector("#cem-number");  u.value = overrides.numberOverride || ""; u.placeholder = apiNum   ;
   const r = m.querySelector("#cem-rarity");  r.value = overrides.rarityOverride  || ""; r.placeholder = apiRarity;
 
-  m.querySelector("#cem-refresh-btn").disabled = !userTcgUrl;
+  m.querySelector("#cem-refresh-btn").disabled = !(userTcgUrl || card?.tcgplayer?.url);
   m.querySelector("#cem-refresh-status").textContent = "";
   m.querySelector("#cem-save").disabled = false;
   m.querySelector("#cem-save").textContent = "Save Changes";
@@ -942,7 +943,8 @@ function _parseTcgUrl(url) {
 
 async function _refreshCardData() {
   const m = _getModal();
-  const tcgUrl = m.querySelector("#cem-tcg-url").value.trim();
+  const input = m.querySelector("#cem-tcg-url");
+  const tcgUrl = input.value.trim() || input.placeholder;
   if (!tcgUrl) return;
 
   const refreshBtn = m.querySelector("#cem-refresh-btn");
