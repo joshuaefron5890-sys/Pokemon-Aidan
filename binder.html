@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PokéBinder" />
-  <link rel="stylesheet" href="/style.css?v=71" />
+  <link rel="stylesheet" href="/style.css?v=72" />
 
   <!-- Netlify Identity for private binder auth + owner tools -->
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
@@ -102,6 +102,18 @@
         </div>
       </div>
     </div>
+    <div class="filter-group">
+      <div class="filter-dropdown" id="available-dropdown">
+        <button class="filter-btn" id="available-btn" aria-haspopup="listbox" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span id="available-label">All Cards</span>
+          <svg class="filter-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="filter-panel" id="available-panel" role="listbox">
+          <ul id="available-options"></ul>
+        </div>
+      </div>
+    </div>
   </div>
   <div id="search-status" class="search-status"></div>
 
@@ -164,7 +176,7 @@
 
   <script src="/favorites.js?v=6"></script>
   <script src="/binder-loader.js?v=6"></script>
-  <script src="/app.js?v=63"></script>
+  <script src="/app.js?v=64"></script>
   <script src="/background.js?v=44"></script>
   <script>
     // Hide nav when embedded in the admin iframe
