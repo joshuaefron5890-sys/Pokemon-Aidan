@@ -304,7 +304,8 @@ document.querySelectorAll(".community-tab").forEach(tab => {
     document.querySelectorAll(".community-tab-panel").forEach(p => p.classList.add("hidden"));
     tab.classList.add("active");
     document.getElementById(`community-panel-${tab.dataset.communityTab}`)?.classList.remove("hidden");
-    if (tab.dataset.communityTab === "forsale") loadForSale();
+    if (tab.dataset.communityTab === "forsale")   loadForSale();
+    if (tab.dataset.communityTab === "favorites") loadFavorites();
   });
 });
 
