@@ -409,7 +409,8 @@ header h1 {
 }
 
 #series-options li,
-#grade-options li {
+#grade-options li,
+#available-options li {
   display: flex;
   align-items: center;
   gap: .5rem;
@@ -420,14 +421,17 @@ header h1 {
   color: var(--text);
 }
 #series-options li:hover,
-#grade-options li:hover { background: var(--surface2); }
+#grade-options li:hover,
+#available-options li:hover { background: var(--surface2); }
 #series-options li.selected,
-#grade-options li.selected {
+#grade-options li.selected,
+#available-options li.selected {
   color: var(--accent);
   background: rgba(247,201,72,.07);
 }
 #series-options li.selected::after,
-#grade-options li.selected::after {
+#grade-options li.selected::after,
+#available-options li.selected::after {
   content: "✓";
   margin-left: auto;
   font-size: .8rem;

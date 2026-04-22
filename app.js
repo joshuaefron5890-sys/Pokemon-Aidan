@@ -530,9 +530,9 @@ function buildAvailableDropdown() {
   if (!btn) return;
 
   const options = [
-    { label: "All Cards",      value: "" },
-    { label: "For Sale",       value: "available" },
-    { label: "Not For Sale",   value: "not-available" },
+    { label: "Availability",         value: "" },
+    { label: "For Sale/Trade",        value: "available" },
+    { label: "Not for Sale/Trade",    value: "not-available" },
   ];
 
   function renderOptions() {
