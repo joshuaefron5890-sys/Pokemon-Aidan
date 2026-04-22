@@ -97,8 +97,7 @@ function isAidan(user) {
 // ── Navigation labels — must be declared before showAdmin is called ──────────
 const VIEW_LABELS = {
   binder:    "My Binder",
-  shared:    "Shared Binders",
-  favorites: "My Favorites",
+  shared:    "Digital Binder Community",
   trades:    "Trade Proposals",
   offers:    "Offers Made",
   profile:   "My Profile",
@@ -291,11 +290,20 @@ function showView(id) {
 document.querySelectorAll(".nav-item[data-view]").forEach(btn => {
   btn.addEventListener("click", () => {
     showView(btn.dataset.view);
-    if (btn.dataset.view === "shared")    loadSharedBinders();
-    if (btn.dataset.view === "favorites") loadFavorites();
+    if (btn.dataset.view === "shared")  { loadSharedBinders(); loadFavorites(); }
     if (btn.dataset.view === "trades")    loadTradeProposals();
     if (btn.dataset.view === "offers")    loadOffersView();
     if (btn.dataset.view === "profile")   loadProfileView();
+  });
+});
+
+// ── Community tab switching ─────────────────────────────────
+document.querySelectorAll(".community-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".community-tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".community-tab-panel").forEach(p => p.classList.add("hidden"));
+    tab.classList.add("active");
+    document.getElementById(`community-panel-${tab.dataset.communityTab}`)?.classList.remove("hidden");
   });
 });
 
