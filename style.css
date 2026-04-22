@@ -513,6 +513,8 @@ header h1 {
 }
 .card-item:hover .card-delete-btn,
 .card-item:hover .card-edit-btn { opacity: 1; }
+body.is-owner .card-delete-btn,
+body.is-owner .card-edit-btn    { opacity: 1; }
 .card-delete-btn:hover { background: rgba(185,28,28,1); }
 .card-edit-btn:hover   { background: rgba(37,99,235,1); }
 

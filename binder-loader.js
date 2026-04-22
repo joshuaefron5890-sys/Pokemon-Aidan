@@ -84,6 +84,7 @@ async function initBinder() {
     window.IS_OWNER = !!data.isOwner;
     const inAdminFrame = window.self !== window.top;
     if (data.isOwner) {
+      document.body.classList.add("is-owner");
       if (!inAdminFrame) initOwnerBubble(slug, data.owner);
       initPriceToggle();
     }

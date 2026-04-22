@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PokéBinder" />
-  <link rel="stylesheet" href="style.css?v=70" />
+  <link rel="stylesheet" href="style.css?v=71" />
 </head>
 <body>
   <canvas id="bg-canvas" aria-hidden="true"></canvas>
@@ -188,6 +188,7 @@
           if (favUser && !isOwner) btn.textContent = "My Account";
           if (!isOwner) window.initFavorites?.(favUser, "aidan", "Aidan");
           if (isOwner) {
+            document.body.classList.add("is-owner");
             const ptg = document.getElementById("price-toggle-group");
             const pt  = document.getElementById("price-toggle");
             if (ptg && pt) {
