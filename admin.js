@@ -518,6 +518,28 @@ async function loadForSale() {
   const grid = document.getElementById("forsale-grid");
   if (!grid) return;
   grid.innerHTML = `<p style="padding:1.5rem;color:var(--text-muted)">Loading…</p>`;
+  exitForsaleSelectMode();
+
+  const selectBtn = document.getElementById("forsale-select-btn");
+  if (selectBtn) {
+    selectBtn.style.display = "none";
+    selectBtn.onclick = () => forsaleSelectMode ? exitForsaleSelectMode() : enterForsaleSelectMode();
+  }
+
+  const bulkCancelBtn = document.getElementById("forsale-bulk-cancel-btn");
+  const bulkTradeBtn  = document.getElementById("forsale-bulk-trade-btn");
+  const bulkOfferBtn  = document.getElementById("forsale-bulk-offer-btn");
+  if (bulkCancelBtn) bulkCancelBtn.onclick = exitForsaleSelectMode;
+  if (bulkTradeBtn) bulkTradeBtn.onclick = () => {
+    if (!selectedForsale.size) return;
+    exitForsaleSelectMode();
+    openTradeDrawer([...selectedForsale.values()]);
+  };
+  if (bulkOfferBtn) bulkOfferBtn.onclick = () => {
+    if (!selectedForsale.size) return;
+    exitForsaleSelectMode();
+    openOfferModal([...selectedForsale.values()]);
+  };
 
   try {
     const res  = await fetch("/.netlify/functions/list-for-sale");
@@ -543,7 +565,12 @@ async function loadForSale() {
     }
 
     grid.innerHTML = "";
+    if (selectBtn) selectBtn.style.display = "";
+
+    const heartSvg = filled => `<svg width="12" height="12" viewBox="0 0 24 24" fill="${filled ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+
     cards.forEach(card => {
+      const key = card.cardId || card.query;
       const imgSrc = card.imageUrl || (() => {
         if (!card.cardId) return "";
         const i = card.cardId.lastIndexOf("-");
@@ -553,8 +580,6 @@ async function loadForSale() {
       const binderUrl = card.binderSlug === "aidan" ? "/AidanEfron" : `/binder/${card.binderSlug}`;
 
       const el = document.createElement("div");
-      const heartSvg = filled => `<svg width="12" height="12" viewBox="0 0 24 24" fill="${filled ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
-
       el.className = "forsale-tile";
       el.innerHTML = `
         <div class="forsale-tile-img-wrap">
@@ -562,6 +587,10 @@ async function loadForSale() {
             ? `<img class="forsale-tile-img" src="${imgSrc}" alt="${card.name}" loading="lazy" data-pin-nopin="true"
                 onerror="this.style.display='none'" />`
             : `<div class="forsale-tile-img-placeholder">${card.name}</div>`}
+          <div class="fav-select-overlay" aria-hidden="true"></div>
+          <div class="fav-tile-checkbox" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
           <button class="forsale-heart-btn" title="Add to favorites">${heartSvg(false)}</button>
         </div>
         <div class="forsale-tile-info">
@@ -580,11 +609,30 @@ async function loadForSale() {
           </button>
         </div>`;
 
-      el.querySelector(".fav-trade-btn").addEventListener("click", () => openTradeDrawer([card]));
-      el.querySelector(".fav-offer-btn").addEventListener("click", () => openOfferModal([card]));
+      el.addEventListener("click", e => {
+        if (!forsaleSelectMode) return;
+        if (e.target.closest(".forsale-tile-actions") || e.target.closest(".forsale-heart-btn")) return;
+        if (selectedForsale.has(key)) {
+          selectedForsale.delete(key);
+          el.classList.remove("forsale-selected");
+        } else {
+          selectedForsale.set(key, card);
+          el.classList.add("forsale-selected");
+        }
+        renderForsaleBulkBar();
+      });
+
+      el.querySelector(".fav-trade-btn").addEventListener("click", () => {
+        if (forsaleSelectMode) return;
+        openTradeDrawer([card]);
+      });
+      el.querySelector(".fav-offer-btn").addEventListener("click", () => {
+        if (forsaleSelectMode) return;
+        openOfferModal([card]);
+      });
       const heartBtn = el.querySelector(".forsale-heart-btn");
       heartBtn.addEventListener("click", async () => {
-        if (heartBtn.disabled) return;
+        if (forsaleSelectMode || heartBtn.disabled) return;
         const isFaved = heartBtn.classList.contains("faved");
         heartBtn.disabled = true;
         try {
@@ -649,6 +697,36 @@ function renderFavBulkBar() {
   if (!favSelectMode || n === 0) { bar.classList.add("hidden"); return; }
   bar.classList.remove("hidden");
   document.getElementById("fav-bulk-count").textContent = `${n} card${n !== 1 ? "s" : ""} selected`;
+}
+
+// ── For Sale/Trade multi-select ───────────────────────────────
+
+let forsaleSelectMode = false;
+const selectedForsale = new Map(); // key: cardId||query → card object
+
+function enterForsaleSelectMode() {
+  forsaleSelectMode = true;
+  document.getElementById("forsale-select-btn").textContent = "Done";
+  document.getElementById("forsale-grid").classList.add("forsale-select-active");
+  renderForsaleBulkBar();
+}
+
+function exitForsaleSelectMode() {
+  forsaleSelectMode = false;
+  selectedForsale.clear();
+  document.getElementById("forsale-select-btn").textContent = "Select Multiple";
+  document.getElementById("forsale-grid").classList.remove("forsale-select-active");
+  document.querySelectorAll(".forsale-tile.forsale-selected").forEach(el => el.classList.remove("forsale-selected"));
+  renderForsaleBulkBar();
+}
+
+function renderForsaleBulkBar() {
+  const bar = document.getElementById("forsale-bulk-bar");
+  if (!bar) return;
+  const n = selectedForsale.size;
+  if (!forsaleSelectMode || n === 0) { bar.classList.add("hidden"); return; }
+  bar.classList.remove("hidden");
+  document.getElementById("forsale-bulk-count").textContent = `${n} card${n !== 1 ? "s" : ""} selected`;
 }
 
 // ── Trade Drawer ─────────────────────────────────────────────

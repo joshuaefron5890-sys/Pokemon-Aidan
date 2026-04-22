@@ -893,6 +893,20 @@ a.binder-card { cursor: pointer; }
 .fav-tile.fav-selected .fav-select-overlay { background: rgba(0,217,255,.38); }
 .fav-select-active .forsale-tile-actions { pointer-events: none; opacity: .35; }
 
+/* ── For Sale/Trade select mode ──────────────────────────── */
+.forsale-select-active .forsale-tile { cursor: pointer; }
+.forsale-select-active .fav-select-overlay { display: block; }
+.forsale-select-active .fav-tile-checkbox { display: flex; }
+.forsale-select-active .forsale-tile-actions { pointer-events: none; opacity: .35; }
+.forsale-select-active .forsale-heart-btn { pointer-events: none; opacity: .35; }
+.forsale-tile.forsale-selected { border-color: var(--accent); }
+.forsale-tile.forsale-selected .fav-select-overlay { background: rgba(0,217,255,.38); }
+.forsale-tile.forsale-selected .fav-tile-checkbox {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 /* ── For Sale/Trade tile grid ────────────────────────────── */
 .forsale-grid {
   display: grid;
@@ -1258,12 +1272,14 @@ a.binder-card { cursor: pointer; }
 
 .trade-wanted-preview {
   display: flex;
-  align-items: center;
-  gap: .85rem;
+  flex-direction: column;
+  gap: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: .75rem;
+  padding: .5rem .75rem;
+  max-height: 260px;
+  overflow-y: auto;
 }
 .trade-wanted-img { width: 42px; height: 58px; object-fit: contain; border-radius: 4px; flex-shrink: 0; }
 .trade-wanted-name { font-weight: 600; font-size: .9rem; }

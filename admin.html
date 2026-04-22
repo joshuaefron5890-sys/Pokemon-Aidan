@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" />
-  <link rel="stylesheet" href="admin.css?v=19" />
+  <link rel="stylesheet" href="admin.css?v=20" />
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
@@ -223,8 +223,26 @@
 
           <!-- Tab panel: Cards for Sale/Trade -->
           <div class="community-tab-panel hidden" id="community-panel-forsale">
+            <div class="shared-header community-panel-header">
+              <div></div>
+              <button id="forsale-select-btn" class="fav-select-toggle-btn" style="display:none">Select Multiple</button>
+            </div>
             <div id="forsale-grid" class="forsale-grid">
               <!-- Populated by admin.js -->
+            </div>
+            <div id="forsale-bulk-bar" class="fav-bulk-bar hidden">
+              <span id="forsale-bulk-count" class="fav-bulk-count"></span>
+              <div class="fav-bulk-actions">
+                <button id="forsale-bulk-trade-btn" class="fav-bulk-btn">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                  Propose Trade
+                </button>
+                <button id="forsale-bulk-offer-btn" class="fav-bulk-btn">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  Make Offer
+                </button>
+                <button id="forsale-bulk-cancel-btn" class="fav-bulk-cancel-btn">Cancel</button>
+              </div>
             </div>
           </div>
 
@@ -623,7 +641,7 @@
     </div>
   </div>
 
-  <script src="admin.js?v=31"></script>
+  <script src="admin.js?v=32"></script>
   <script src="add-card-modal.js"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");</script>
 </body>
