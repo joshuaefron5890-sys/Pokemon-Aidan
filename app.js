@@ -292,7 +292,7 @@ function createCardElement(query, card, price, overrides = {}, isStaticPrice = f
           : `<div class="card-img-placeholder"><span>${cardName}</span></div>`
         }
         ${grade ? `<div class="card-grade-badge">Grade ${grade}</div>` : ""}
-      ${overrides.available ? `<div class="card-available-badge">Available</div>` : ""}
+      ${overrides.available ? `<div class="card-available-badge" title="Available for trade or sale"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>For Sale</div>` : ""}
       </div>
       <div class="card-info">
         <div class="card-name">${cardName}</div>
@@ -486,8 +486,8 @@ function buildAvailableDropdown() {
 
   const options = [
     { label: "All Cards",      value: "" },
-    { label: "Available",      value: "available" },
-    { label: "Not Available",  value: "not-available" },
+    { label: "For Sale",       value: "available" },
+    { label: "Not For Sale",   value: "not-available" },
   ];
 
   function renderOptions() {
@@ -932,8 +932,10 @@ function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
   prev.src          = imgSrc;
   prev.style.display = imgSrc ? "" : "none";
 
-  // Show the URL the card actually links to when clicked
-  const userTcgUrl = getTcgPlayerUrl(card, query, overrides.tcgUrl);
+  // Show the actual TCGPlayer URL — skip prices.pokemontcg.io redirect URLs stored in old cards
+  const storedTcgUrl = overrides.tcgUrl;
+  const isPricesRedirect = storedTcgUrl?.startsWith("https://prices.pokemontcg.io");
+  const userTcgUrl = getTcgPlayerUrl(card, query, isPricesRedirect ? null : storedTcgUrl);
   const tcgUrlInput = m.querySelector("#cem-tcg-url");
   tcgUrlInput.value       = userTcgUrl || "";
   tcgUrlInput.placeholder = "https://www.tcgplayer.com/…";

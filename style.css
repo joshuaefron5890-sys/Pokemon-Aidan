@@ -682,11 +682,14 @@ body.cem-open { overflow: hidden; }
   position: absolute;
   bottom: 8px;
   left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   background: linear-gradient(135deg, #059669, #10b981);
   color: #fff;
-  font-size: .65rem;
+  font-size: .6rem;
   font-weight: 800;
-  padding: .2rem .55rem;
+  padding: .2rem .5rem;
   border-radius: 20px;
   letter-spacing: .06em;
   text-transform: uppercase;
