@@ -979,14 +979,10 @@ function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
   prev.src          = imgSrc;
   prev.style.display = imgSrc ? "" : "none";
 
-  // Only show a real tcgplayer.com URL in the input — never show internal pokemontcg.io redirects.
-  // Fall back to a generated search URL so Refresh always works.
-  const realOverride = [overrides.tcgUrl, card?.tcgplayer?.url]
-    .find(u => u?.includes("tcgplayer.com")) || null;
-  const realTcgUrl = realOverride
-    || `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(query)}&view=grid`;
+  // Show the same URL used when clicking the card — override > API URL > search fallback
+  const displayTcgUrl = getTcgPlayerUrl(card, query, overrides.tcgUrl);
   const tcgUrlInput = m.querySelector("#cem-tcg-url");
-  tcgUrlInput.value       = realTcgUrl;
+  tcgUrlInput.value       = displayTcgUrl;
   tcgUrlInput.placeholder = "https://www.tcgplayer.com/…";
 
   m.querySelector("#cem-card-id").value   = overrides.cardId || "";
@@ -1006,7 +1002,7 @@ function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
   const u = m.querySelector("#cem-number");  u.value = overrides.numberOverride || ""; u.placeholder = apiNum   ;
   const r = m.querySelector("#cem-rarity");  r.value = overrides.rarityOverride  || ""; r.placeholder = apiRarity;
 
-  m.querySelector("#cem-refresh-btn").disabled = !realTcgUrl;
+  m.querySelector("#cem-refresh-btn").disabled = !displayTcgUrl;
   m.querySelector("#cem-refresh-status").textContent = "";
   m.querySelector("#cem-save").disabled = false;
   m.querySelector("#cem-save").textContent = "Save Changes";
@@ -1067,9 +1063,15 @@ async function _refreshCardData() {
     // ── Determine search strategy from URL shape ──────────────
     let nameParts = [], number = "";
     let tcgProductId = null;
+    let directCardId = null;
+
+    // prices.pokemontcg.io/tcgplayer/{cardId} — use the embedded card ID directly
+    const pricesMatch = tcgUrl.match(/prices\.pokemontcg\.io\/tcgplayer\/([a-z0-9]+-[a-z0-9-]+)/i);
 
     const productMatch = tcgUrl.match(/tcgplayer\.com\/product\/(\d+)/i);
-    if (productMatch) {
+    if (pricesMatch) {
+      directCardId = pricesMatch[1];
+    } else if (productMatch) {
       // Product URL: /product/477057/pokemon-crown-zenith-...
       tcgProductId = productMatch[1];
       ({ nameParts, number } = _parseTcgUrl(tcgUrl));
@@ -1106,12 +1108,17 @@ async function _refreshCardData() {
 
     // ── Card lookup via pokemontcg.io ─────────────────────────
     let card = null;
-    const maxSkip = Math.min(nameParts.length - 1, 8);
-    for (let skip = 0; skip <= maxSkip && !card; skip++) {
-      const nameWords = nameParts.slice(skip);
-      if (!nameWords.length) break;
-      const query = number ? `${nameWords.join(" ")} ${number}` : nameWords.join(" ");
-      card = await fetchCard(query, null, null);
+    if (directCardId) {
+      // prices.pokemontcg.io redirect — card ID is embedded in the path
+      card = await fetchCard(directCardId, null, directCardId);
+    } else {
+      const maxSkip = Math.min(nameParts.length - 1, 8);
+      for (let skip = 0; skip <= maxSkip && !card; skip++) {
+        const nameWords = nameParts.slice(skip);
+        if (!nameWords.length) break;
+        const query = number ? `${nameWords.join(" ")} ${number}` : nameWords.join(" ");
+        card = await fetchCard(query, null, null);
+      }
     }
 
     if (!card) {
