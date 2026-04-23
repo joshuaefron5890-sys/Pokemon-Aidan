@@ -979,9 +979,12 @@ function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
   prev.src          = imgSrc;
   prev.style.display = imgSrc ? "" : "none";
 
-  // Only show a real tcgplayer.com URL in the input — never show internal pokemontcg.io redirects
-  const realTcgUrl = [overrides.tcgUrl, card?.tcgplayer?.url]
-    .find(u => u?.includes("tcgplayer.com")) || "";
+  // Only show a real tcgplayer.com URL in the input — never show internal pokemontcg.io redirects.
+  // Fall back to a generated search URL so Refresh always works.
+  const realOverride = [overrides.tcgUrl, card?.tcgplayer?.url]
+    .find(u => u?.includes("tcgplayer.com")) || null;
+  const realTcgUrl = realOverride
+    || `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(query)}&view=grid`;
   const tcgUrlInput = m.querySelector("#cem-tcg-url");
   tcgUrlInput.value       = realTcgUrl;
   tcgUrlInput.placeholder = "https://www.tcgplayer.com/…";
