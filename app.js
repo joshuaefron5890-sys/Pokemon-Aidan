@@ -979,8 +979,11 @@ function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
   prev.src          = imgSrc;
   prev.style.display = imgSrc ? "" : "none";
 
-  // Show the same URL used when clicking the card — override > API URL > search fallback
-  const displayTcgUrl = getTcgPlayerUrl(card, query, overrides.tcgUrl);
+  // Show a real tcgplayer.com URL — stored override takes priority, otherwise
+  // generate a search URL. Never show internal prices.pokemontcg.io redirects.
+  const tcgOverride = overrides.tcgUrl?.includes("tcgplayer.com") ? overrides.tcgUrl : null;
+  const displayTcgUrl = tcgOverride
+    || `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(query)}&view=grid`;
   const tcgUrlInput = m.querySelector("#cem-tcg-url");
   tcgUrlInput.value       = displayTcgUrl;
   tcgUrlInput.placeholder = "https://www.tcgplayer.com/…";
@@ -1002,8 +1005,7 @@ function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
   const u = m.querySelector("#cem-number");  u.value = overrides.numberOverride || ""; u.placeholder = apiNum   ;
   const r = m.querySelector("#cem-rarity");  r.value = overrides.rarityOverride  || ""; r.placeholder = apiRarity;
 
-  m.querySelector("#cem-refresh-btn").disabled = !displayTcgUrl;
-  m.querySelector("#cem-refresh-status").textContent = "";
+  m.querySelector("#cem-refresh-btn").disabled = !displayTcgUrl;  m.querySelector("#cem-refresh-status").textContent = "";
   m.querySelector("#cem-save").disabled = false;
   m.querySelector("#cem-save").textContent = "Save Changes";
 
