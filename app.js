@@ -972,7 +972,8 @@ function closeEditModal() {
 
 function _parseTcgUrl(url) {
   try {
-    const slug = new URL(url).pathname.split("/").filter(Boolean).pop() || "";
+    const normalized = url.includes("://") ? url : `https://${url}`;
+    const slug = new URL(normalized).pathname.split("/").filter(Boolean).pop() || "";
     const clean = slug.startsWith("pokemon-") ? slug.slice(8) : slug;
     const parts = clean.split("-");
 
@@ -1022,7 +1023,8 @@ async function _refreshCardData() {
     } else {
       // Search URL: /search/all/product?q=Meowth%2D106 or similar
       try {
-        const qParam = new URL(tcgUrl).searchParams.get("q") || "";
+        const normalizedSearch = tcgUrl.includes("://") ? tcgUrl : `https://${tcgUrl}`;
+        const qParam = new URL(normalizedSearch).searchParams.get("q") || "";
         // Decode and turn dashes/hyphens into spaces for card search
         const decoded = decodeURIComponent(qParam).replace(/-/g, " ").trim();
         if (decoded) {
