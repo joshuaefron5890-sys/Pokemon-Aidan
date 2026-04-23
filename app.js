@@ -979,12 +979,11 @@ function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
   prev.src          = imgSrc;
   prev.style.display = imgSrc ? "" : "none";
 
-  // Show the actual TCGPlayer URL — skip prices.pokemontcg.io redirect URLs stored in old cards
-  const storedTcgUrl = overrides.tcgUrl;
-  const isPricesRedirect = storedTcgUrl?.startsWith("https://prices.pokemontcg.io");
-  const userTcgUrl = getTcgPlayerUrl(card, query, isPricesRedirect ? null : storedTcgUrl);
+  // Only show a real tcgplayer.com URL in the input — never show internal pokemontcg.io redirects
+  const realTcgUrl = [overrides.tcgUrl, card?.tcgplayer?.url]
+    .find(u => u?.includes("tcgplayer.com")) || "";
   const tcgUrlInput = m.querySelector("#cem-tcg-url");
-  tcgUrlInput.value       = userTcgUrl || "";
+  tcgUrlInput.value       = realTcgUrl;
   tcgUrlInput.placeholder = "https://www.tcgplayer.com/…";
 
   m.querySelector("#cem-card-id").value   = overrides.cardId || "";
@@ -1004,7 +1003,7 @@ function openEditModal(query, card, price, overrides, isStaticPrice, wrapper) {
   const u = m.querySelector("#cem-number");  u.value = overrides.numberOverride || ""; u.placeholder = apiNum   ;
   const r = m.querySelector("#cem-rarity");  r.value = overrides.rarityOverride  || ""; r.placeholder = apiRarity;
 
-  m.querySelector("#cem-refresh-btn").disabled = !userTcgUrl;
+  m.querySelector("#cem-refresh-btn").disabled = !realTcgUrl;
   m.querySelector("#cem-refresh-status").textContent = "";
   m.querySelector("#cem-save").disabled = false;
   m.querySelector("#cem-save").textContent = "Save Changes";
