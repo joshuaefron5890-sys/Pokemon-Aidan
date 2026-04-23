@@ -679,9 +679,9 @@ async function loadCollection() {
       const backupKey = overrides.cardId || (overrides.setName ? `${query}|${overrides.setName}` : query);
       const backup = backupStore[backupKey] || null;
 
-      // Price chain: forced override → live API → explicit fallback → megacache
-      // overrides.price pins a value absolutely (e.g. graded cards) and is never overridden.
-      let price = overrides.price ?? apiPrice ?? overrides.fallbackPrice ?? backup?.price ?? null;
+      // Price chain: forced override → manual fallback (edit modal) → live API → megacache
+      // overrides.fallbackPrice is user-entered and takes priority over the API so edits stick.
+      let price = overrides.price ?? overrides.fallbackPrice ?? apiPrice ?? backup?.price ?? null;
 
       // Save good API data to megacache for future cache misses
       const apiImage = card?.images?.large || card?.images?.small || null;
@@ -718,7 +718,7 @@ async function loadCollection() {
         }
       }
 
-      const isStaticPrice = overrides.price != null || (apiPrice == null && price != null);
+      const isStaticPrice = overrides.price != null || overrides.fallbackPrice != null || (apiPrice == null && price != null);
 
       // Image: explicit override → API → server cache → local megacache
       const needsFallbackImage = !overrides.imageUrl && !apiImage;
