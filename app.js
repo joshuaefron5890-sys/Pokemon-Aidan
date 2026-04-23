@@ -1010,12 +1010,47 @@ async function _refreshCardData() {
   statusEl.className   = "cem-refresh-status";
 
   try {
-    const { nameParts, number } = _parseTcgUrl(tcgUrl);
+    // ── Determine search strategy from URL shape ──────────────
+    let nameParts = [], number = "";
+    let tcgProductId = null;
 
+    const productMatch = tcgUrl.match(/tcgplayer\.com\/product\/(\d+)/i);
+    if (productMatch) {
+      // Product URL: /product/477057/pokemon-crown-zenith-...
+      tcgProductId = productMatch[1];
+      ({ nameParts, number } = _parseTcgUrl(tcgUrl));
+    } else {
+      // Search URL: /search/all/product?q=Meowth%2D106 or similar
+      try {
+        const qParam = new URL(tcgUrl).searchParams.get("q") || "";
+        // Decode and turn dashes/hyphens into spaces for card search
+        const decoded = decodeURIComponent(qParam).replace(/-/g, " ").trim();
+        if (decoded) {
+          nameParts = decoded.split(/\s+/);
+          // Pull trailing number if present
+          if (nameParts.length > 1 && /^\d+$/.test(nameParts[nameParts.length - 1])) {
+            number = nameParts.pop();
+          }
+        }
+      } catch { /* fall through with empty parts */ }
+      // Also try the URL slug as a fallback
+      if (!nameParts.length) ({ nameParts, number } = _parseTcgUrl(tcgUrl));
+    }
+
+    // ── Fetch TCGPlayer price in parallel when we have a product ID ──
+    let tcgPrice = null;
+    if (tcgProductId) {
+      try {
+        const pr = await fetch(`/.netlify/functions/get-tcg-price?url=${encodeURIComponent(tcgUrl)}`);
+        if (pr.ok) {
+          const pd = await pr.json();
+          if (pd.price != null) tcgPrice = pd.price;
+        }
+      } catch { /* non-fatal */ }
+    }
+
+    // ── Card lookup via pokemontcg.io ─────────────────────────
     let card = null;
-
-    // Progressive search: skip 0, 1, 2, … leading slug words (set-name words)
-    // until the remaining words form a valid card name that matches
     const maxSkip = Math.min(nameParts.length - 1, 8);
     for (let skip = 0; skip <= maxSkip && !card; skip++) {
       const nameWords = nameParts.slice(skip);
@@ -1033,10 +1068,17 @@ async function _refreshCardData() {
 
     _cemCard.card = card;
 
-    // Auto-fill Card ID with the resolved card
+    // Auto-fill Card ID
     m.querySelector("#cem-card-id").value = card.id || "";
 
-    // Repopulate metadata placeholders with fresh API data
+    // Pre-fill price from TCGPlayer when available; otherwise use API price
+    const priceInput = m.querySelector("#cem-price");
+    const priceToUse = tcgPrice ?? getMarketPrice(card);
+    if (priceToUse != null && !priceInput.value) {
+      priceInput.value = priceToUse;
+    }
+
+    // Repopulate metadata placeholders
     const n = m.querySelector("#cem-name");
     const s = m.querySelector("#cem-set-name");
     const u = m.querySelector("#cem-number");
@@ -1054,9 +1096,10 @@ async function _refreshCardData() {
       prev.style.display = fresh ? "" : "none";
     }
 
-    statusEl.textContent = `✓ Found: ${card.name} (${card.id})`;
+    const priceNote = tcgPrice != null ? ` · TCGPlayer: $${tcgPrice.toFixed(2)}` : "";
+    statusEl.textContent = `✓ Found: ${card.name} (${card.id})${priceNote}`;
     statusEl.classList.add("cem-ok");
-    setTimeout(() => { statusEl.textContent = ""; statusEl.className = "cem-refresh-status"; }, 4000);
+    setTimeout(() => { statusEl.textContent = ""; statusEl.className = "cem-refresh-status"; }, 5000);
   } catch (err) {
     statusEl.textContent = `Error: ${err.message}`;
     statusEl.classList.add("cem-err");
