@@ -43,7 +43,9 @@ exports.handler = async () => {
               tcgUrl:      c.tcgUrl     || null,
               binderSlug:  slug,
               binderOwner: binder.owner || owner,
-              binderZip:   loc?.zip     || null,
+              binderZip:   loc?.zip   || null,
+              binderCity:  loc?.city  || null,
+              binderState: loc?.state || null,
             }));
         } catch {
           return [];

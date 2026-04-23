@@ -5,21 +5,28 @@ let history = [];
 let pendingImage = null;
 
 // ── Proximity helpers ───────────────────────────────────────
-const _zipCoords = new Map(); // zip → { lat, lng } | null
-let _viewerZip;               // undefined = not fetched, "" = no zip set
+const _geoCache = new Map(); // cache key → { lat, lng } | null
+let _viewerCoordsPromise = null;
 
-async function _geocodeZip(zip) {
-  if (!zip) return null;
-  if (_zipCoords.has(zip)) return _zipCoords.get(zip);
+function _geoKey(zip, city, state) {
+  return zip ? `z:${zip}` : `c:${state}|${city}`;
+}
+
+async function _geocode(zip, city, state) {
+  const key = _geoKey(zip, city, state);
+  if (_geoCache.has(key)) return _geoCache.get(key);
   try {
-    const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
-    if (!res.ok) { _zipCoords.set(zip, null); return null; }
+    const url = zip
+      ? `https://api.zippopotam.us/us/${zip}`
+      : `https://api.zippopotam.us/us/${encodeURIComponent(state)}/${encodeURIComponent(city)}`;
+    const res = await fetch(url);
+    if (!res.ok) { _geoCache.set(key, null); return null; }
     const data = await res.json();
     const p = data.places?.[0];
     const coords = p ? { lat: parseFloat(p.latitude), lng: parseFloat(p.longitude) } : null;
-    _zipCoords.set(zip, coords);
+    _geoCache.set(key, coords);
     return coords;
-  } catch { _zipCoords.set(zip, null); return null; }
+  } catch { _geoCache.set(key, null); return null; }
 }
 
 function _haversineMiles(a, b) {
@@ -29,30 +36,33 @@ function _haversineMiles(a, b) {
   return Math.round(2 * R * Math.asin(Math.sqrt(h)));
 }
 
-async function _getViewerZip() {
-  if (_viewerZip !== undefined) return _viewerZip;
-  try {
-    const user  = netlifyIdentity.currentUser();
-    const token = user ? await user.jwt() : null;
-    if (!token) { _viewerZip = ""; return ""; }
-    const res  = await fetch("/.netlify/functions/get-profile", { headers: { Authorization: `Bearer ${token}` } });
-    const data = res.ok ? await res.json() : {};
-    _viewerZip = data.location?.zip || "";
-  } catch { _viewerZip = ""; }
-  return _viewerZip;
+function _getViewerCoords() {
+  if (_viewerCoordsPromise) return _viewerCoordsPromise;
+  _viewerCoordsPromise = (async () => {
+    try {
+      const user  = netlifyIdentity.currentUser();
+      const token = user ? await user.jwt() : null;
+      if (!token) return null;
+      const res  = await fetch("/.netlify/functions/get-profile", { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) return null;
+      const { location = {} } = await res.json();
+      const { zip = "", city = "", state = "" } = location;
+      if (!zip && !(city && state)) return null;
+      return _geocode(zip, city, state);
+    } catch { return null; }
+  })();
+  return _viewerCoordsPromise;
 }
 
 async function attachDistanceBadges() {
-  const myZip = await _getViewerZip();
-  if (!myZip) return;
-  const spans = document.querySelectorAll(".forsale-dist[data-zip]");
-  if (!spans.length) return;
-  const zips = new Set([myZip, ...[...spans].map(s => s.dataset.zip).filter(Boolean)]);
-  await Promise.all([...zips].map(_geocodeZip));
-  const myCoords = _zipCoords.get(myZip);
+  const myCoords = await _getViewerCoords();
   if (!myCoords) return;
+  const spans = document.querySelectorAll(".forsale-dist[data-loc]");
+  if (!spans.length) return;
+  // Geocode all binder locations in parallel
+  await Promise.all([...spans].map(s => _geocode(s.dataset.zip, s.dataset.city, s.dataset.state)));
   spans.forEach(span => {
-    const coords = _zipCoords.get(span.dataset.zip);
+    const coords = _geoCache.get(_geoKey(span.dataset.zip, span.dataset.city, span.dataset.state));
     if (!coords) return;
     const mi = _haversineMiles(myCoords, coords);
     span.textContent = mi === 0 ? " · Local" : mi < 1 ? " · < 1 mi" : ` · ${mi.toLocaleString()} mi`;
@@ -694,7 +704,7 @@ async function loadForSale() {
         <div class="forsale-tile-info">
           <div class="forsale-tile-name">${card.name}${card.grade ? ` <span class="forsale-grade">${card.grade}</span>` : ""}</div>
           ${card.setName ? `<div class="forsale-tile-meta">${card.setName}</div>` : ""}
-          <div class="forsale-tile-meta">From: <a href="${binderUrl}" target="_blank" rel="noopener">${card.binderOwner}'s Binder</a>${card.binderZip ? `<span class="forsale-dist" data-zip="${card.binderZip}"></span>` : ""}</div>
+          <div class="forsale-tile-meta">From: <a href="${binderUrl}" target="_blank" rel="noopener">${card.binderOwner}'s Binder</a>${(card.binderZip || (card.binderCity && card.binderState)) ? `<span class="forsale-dist" data-loc="1" data-zip="${card.binderZip || ''}" data-city="${card.binderCity || ''}" data-state="${card.binderState || ''}"></span>` : ""}</div>
         </div>
         <div class="forsale-tile-actions">
           <button class="fav-trade-btn forsale-contact-btn" title="Propose a trade">
