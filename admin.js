@@ -587,10 +587,9 @@ async function loadForSale() {
     let { cards } = await res.json();
 
     // Exclude the logged-in user's own cards
-    // binderUrlForUser returns a URL path like "/binder/josh-efron" or "/AidanEfron";
-    // extract just the slug portion that matches binderSlug in the results
     const myPath = binderUrlForUser(netlifyIdentity.currentUser()) || "";
-    const mySlug = myPath.startsWith("/binder/") ? myPath.slice("/binder/".length) : null;
+    const mySlug = (myPath.startsWith("/binder/") ? myPath.slice("/binder/".length) : null)
+                   || window.BINDER_SLUG || null;
     if (mySlug) cards = cards.filter(c => c.binderSlug !== mySlug);
 
     if (!cards.length) {
@@ -694,6 +693,19 @@ async function loadForSale() {
       });
       grid.appendChild(el);
     });
+
+    // Wire search bar to filter visible tiles
+    const searchInput = document.getElementById("forsale-search-input");
+    if (searchInput) {
+      searchInput.value = "";
+      searchInput.addEventListener("input", () => {
+        const q = searchInput.value.trim().toLowerCase();
+        grid.querySelectorAll(".forsale-tile").forEach(tile => {
+          const text = tile.textContent.toLowerCase();
+          tile.style.display = q && !text.includes(q) ? "none" : "";
+        });
+      });
+    }
   } catch (err) {
     grid.innerHTML = `<p style="padding:1.5rem;color:var(--text-muted)">Failed to load: ${err.message}</p>`;
     forSaleLoaded = false;

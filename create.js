@@ -2,6 +2,19 @@
 
 // ── State ──────────────────────────────────────────────────
 const STATE_KEY = "wizard_state_v1";
+const ADMIN_SESSION_KEY = "pokebinder.admin.session";
+
+// Write the admin session so /admin auto-logs the user in after the wizard
+function saveAdminSession(token, user, expiresIn) {
+  try {
+    localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({
+      access_token:  token,
+      refresh_token: user?.token?.refresh_token || null,
+      user:          { email: user?.email || null, id: user?.id || null, user_metadata: user?.user_metadata || {} },
+      expires_at:    Math.round(Date.now() / 1000) + (expiresIn || 3600),
+    }));
+  } catch {}
+}
 
 let wizardData = {
   owner:     "",
@@ -418,7 +431,9 @@ netlifyIdentity.on("init", user => {
 
 netlifyIdentity.on("login", user => {
   netlifyIdentity.close();
-  wizardData.token = user.token?.access_token;
+  const token = user.token?.access_token;
+  saveAdminSession(token, user, user.token?.expires_in);
+  wizardData.token = token;
   saveState();
   goTo(3);
 });
@@ -456,6 +471,7 @@ step2Btn.addEventListener("click", async () => {
           expires_at: Math.round(Date.now() / 1000) + (data.expires_in || 3600),
         }));
       } catch {}
+      saveAdminSession(data.access_token, data.user, data.expires_in);
       wizardData.token = data.access_token;
       saveState();
       goTo(3);
@@ -476,6 +492,7 @@ step2Btn.addEventListener("click", async () => {
               expires_at: Math.round(Date.now() / 1000) + (loginData.expires_in || 3600),
             }));
           } catch {}
+          saveAdminSession(loginData.access_token, loginData.user, loginData.expires_in);
           wizardData.token = loginData.access_token;
           saveState();
           goTo(3);

@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" />
-  <link rel="stylesheet" href="admin.css?v=21" />
+  <link rel="stylesheet" href="admin.css?v=22" />
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
@@ -227,7 +227,10 @@
           <!-- Tab panel: Cards for Sale/Trade -->
           <div class="community-tab-panel hidden" id="community-panel-forsale">
             <div class="shared-header community-panel-header">
-              <div></div>
+              <div class="forsale-search-wrap">
+                <svg class="forsale-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input id="forsale-search-input" class="forsale-search-input" type="text" placeholder="Search cards for sale…" autocomplete="off" spellcheck="false" />
+              </div>
               <button id="forsale-select-btn" class="fav-select-toggle-btn" style="display:none">Select Multiple</button>
             </div>
             <div id="forsale-grid" class="forsale-grid">
@@ -633,7 +636,7 @@
     </div>
   </div>
 
-  <script src="admin.js?v=37"></script>
+  <script src="admin.js?v=38"></script>
   <script src="add-card-modal.js"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");</script>
 </body>
