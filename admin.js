@@ -65,7 +65,8 @@ async function attachDistanceBadges() {
     const coords = _geoCache.get(_geoKey(span.dataset.zip, span.dataset.city, span.dataset.state));
     if (!coords) return;
     const mi = _haversineMiles(myCoords, coords);
-    span.textContent = mi === 0 ? " · Local" : mi < 1 ? " · < 1 mi away" : ` · ${mi.toLocaleString()} miles from you`;
+    const city = span.dataset.city ? ` (${span.dataset.city.toLowerCase()})` : "";
+    span.textContent = mi === 0 ? ` · Local${city}` : mi < 1 ? ` · < 1 mi away${city}` : ` · ${mi.toLocaleString()} miles from you${city}`;
   });
 }
 
