@@ -283,27 +283,68 @@
     } else if (activeTab === "link") {
       const link = document.getElementById("acm-tcg-link").value.trim();
       if (!link || !link.includes("tcgplayer.com")) { errEl.textContent = "Please paste a valid TCGPlayer URL."; return; }
-      let cardQuery = link;
+
+      // Parse slug for card name + number
+      let cardName = "", cardNumber = "";
       try {
         const parts = new URL(link).pathname.split("/").filter(Boolean);
-        // URL format: /product/{id}/pokemon-{set-slug}-{card-name}-{number}
         const slug = parts[parts.length - 1] || "";
         let cleaned = slug.replace(/^pokemon-/, "");
-        // Extract trailing number and strip leading zeros: "070" → "70"
         const numMatch = cleaned.match(/-(\d+)$/);
-        const numStr = numMatch ? parseInt(numMatch[1], 10).toString() : null;
+        cardNumber = numMatch ? parseInt(numMatch[1], 10).toString() : "";
         if (numMatch) cleaned = cleaned.slice(0, numMatch.index);
-        // Card name = last word(s); handle multi-word names like "charizard-ex", "pikachu-vmax"
         const nameSuffixes = new Set(["ex", "gx", "v", "vmax", "vstar", "mega", "break", "prime"]);
         const slugParts = cleaned.split("-");
         let nameWords = [slugParts[slugParts.length - 1]];
         if (slugParts.length >= 2 && nameSuffixes.has(slugParts[slugParts.length - 1])) {
           nameWords = [slugParts[slugParts.length - 2], slugParts[slugParts.length - 1]];
         }
-        const cardName = nameWords.join(" ");
-        cardQuery = numStr ? `${cardName} ${numStr}` : cardName;
+        cardName = nameWords.join(" ");
       } catch {}
-      userMessage = { role: "user", content: `Look up this Pokémon card: "${cardQuery}". ${jsonArrayInstruction}` };
+
+      if (!cardName) { errEl.textContent = "Could not parse card name from URL — try the Card Name tab instead."; return; }
+
+      lookupBtn.disabled = true;
+      lookupSpinner.classList.remove("hidden");
+      lookupLabel.textContent = "Searching…";
+
+      try {
+        const TCG_API = "https://api.pokemontcg.io/v2";
+        let cards = null;
+
+        // Try name + number first
+        if (cardNumber) {
+          const q = encodeURIComponent(`name:"${cardName}" number:"${cardNumber}"`);
+          const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
+          if (r.ok) { const { data } = await r.json(); if (data?.length) cards = data; }
+        }
+        // Fall back to name-only
+        if (!cards) {
+          const q = encodeURIComponent(`name:"${cardName}"`);
+          const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
+          if (!r.ok) throw new Error(`Card lookup failed (${r.status})`);
+          const { data } = await r.json();
+          if (!data?.length) throw new Error("Card not found in the Pokémon TCG database — it may be a regional promo. Try the Card Name tab instead.");
+          cards = data;
+        }
+
+        const formatted = cards.map(c => ({
+          cardId:      c.id,
+          query:       `${c.name} ${c.number || ""}`.trim(),
+          setName:     c.set?.name || "",
+          marketPrice: c.tcgplayer?.prices?.holofoil?.market ?? c.tcgplayer?.prices?.normal?.market ?? null,
+          tcgUrl:      link, // store the real TCGPlayer URL the user pasted
+        }));
+
+        if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
+        else { showPickStep(formatted); }
+      } catch (err) {
+        errEl.textContent = err.message;
+        lookupBtn.disabled = false;
+        lookupSpinner.classList.add("hidden");
+        lookupLabel.textContent = "Find Card";
+      }
+      return;
     } else {
       if (!pendingPhoto) { errEl.textContent = "Please select or drop a card photo first."; return; }
 
