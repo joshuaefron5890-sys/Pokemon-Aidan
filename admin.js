@@ -428,13 +428,15 @@ async function loadFavorites() {
   if (bulkCancelBtn) bulkCancelBtn.onclick = exitFavSelectMode;
   if (bulkTradeBtn) bulkTradeBtn.onclick = () => {
     if (!selectedFavs.size) return;
+    const chosen = [...selectedFavs.values()];
     exitFavSelectMode();
-    openTradeDrawer([...selectedFavs.values()]);
+    openTradeDrawer(chosen);
   };
   if (bulkOfferBtn) bulkOfferBtn.onclick = () => {
     if (!selectedFavs.size) return;
+    const chosen = [...selectedFavs.values()];
     exitFavSelectMode();
-    openOfferModal([...selectedFavs.values()]);
+    openOfferModal(chosen);
   };
 
   try {
@@ -572,13 +574,15 @@ async function loadForSale() {
   if (bulkCancelBtn) bulkCancelBtn.onclick = exitForsaleSelectMode;
   if (bulkTradeBtn) bulkTradeBtn.onclick = () => {
     if (!selectedForsale.size) return;
+    const chosen = [...selectedForsale.values()];
     exitForsaleSelectMode();
-    openTradeDrawer([...selectedForsale.values()]);
+    openTradeDrawer(chosen);
   };
   if (bulkOfferBtn) bulkOfferBtn.onclick = () => {
     if (!selectedForsale.size) return;
+    const chosen = [...selectedForsale.values()];
     exitForsaleSelectMode();
-    openOfferModal([...selectedForsale.values()]);
+    openOfferModal(chosen);
   };
 
   try {
