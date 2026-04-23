@@ -1148,7 +1148,7 @@ async function _saveCardEdit() {
 
   try {
     const slug  = window.BINDER_SLUG;
-    const token = await window.netlifyIdentity?.currentUser()?.jwt();
+    const token = await getCardAuthToken();
     const res   = await fetch("/.netlify/functions/update-card", {
       method:  "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
