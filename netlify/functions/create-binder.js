@@ -71,7 +71,7 @@ exports.handler = async (event, context) => {
     await putManifest(blobsManifest);
 
     if (location?.city && location?.state) {
-      await putLocation(slug, { city: location.city, state: location.state });
+      await putLocation(slug, { city: location.city, state: location.state, zip: location.zip || "" });
       // Also save to user profile so the admin profile page pre-fills the zip
       const existing = await getProfileData(user.sub);
       await putProfileData(user.sub, { ...existing, location: { zip: location.zip || "", city: location.city, state: location.state } });

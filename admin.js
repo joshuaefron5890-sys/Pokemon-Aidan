@@ -4,6 +4,61 @@
 let history = [];
 let pendingImage = null;
 
+// ── Proximity helpers ───────────────────────────────────────
+const _zipCoords = new Map(); // zip → { lat, lng } | null
+let _viewerZip;               // undefined = not fetched, "" = no zip set
+
+async function _geocodeZip(zip) {
+  if (!zip) return null;
+  if (_zipCoords.has(zip)) return _zipCoords.get(zip);
+  try {
+    const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+    if (!res.ok) { _zipCoords.set(zip, null); return null; }
+    const data = await res.json();
+    const p = data.places?.[0];
+    const coords = p ? { lat: parseFloat(p.latitude), lng: parseFloat(p.longitude) } : null;
+    _zipCoords.set(zip, coords);
+    return coords;
+  } catch { _zipCoords.set(zip, null); return null; }
+}
+
+function _haversineMiles(a, b) {
+  const R = 3958.8, toRad = x => x * Math.PI / 180;
+  const dLat = toRad(b.lat - a.lat), dLon = toRad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
+  return Math.round(2 * R * Math.asin(Math.sqrt(h)));
+}
+
+async function _getViewerZip() {
+  if (_viewerZip !== undefined) return _viewerZip;
+  try {
+    const user  = netlifyIdentity.currentUser();
+    const token = user ? await user.jwt() : null;
+    if (!token) { _viewerZip = ""; return ""; }
+    const res  = await fetch("/.netlify/functions/get-profile", { headers: { Authorization: `Bearer ${token}` } });
+    const data = res.ok ? await res.json() : {};
+    _viewerZip = data.location?.zip || "";
+  } catch { _viewerZip = ""; }
+  return _viewerZip;
+}
+
+async function attachDistanceBadges() {
+  const myZip = await _getViewerZip();
+  if (!myZip) return;
+  const spans = document.querySelectorAll(".forsale-dist[data-zip]");
+  if (!spans.length) return;
+  const zips = new Set([myZip, ...[...spans].map(s => s.dataset.zip).filter(Boolean)]);
+  await Promise.all([...zips].map(_geocodeZip));
+  const myCoords = _zipCoords.get(myZip);
+  if (!myCoords) return;
+  spans.forEach(span => {
+    const coords = _zipCoords.get(span.dataset.zip);
+    if (!coords) return;
+    const mi = _haversineMiles(myCoords, coords);
+    span.textContent = mi === 0 ? " · Local" : mi < 1 ? " · < 1 mi" : ` · ${mi.toLocaleString()} mi`;
+  });
+}
+
 // ── Session management ──────────────────────────────────────
 // We manage our own session under a separate key so netlifyIdentity's
 // internal storage listener never fires spurious logout events.
@@ -639,7 +694,7 @@ async function loadForSale() {
         <div class="forsale-tile-info">
           <div class="forsale-tile-name">${card.name}${card.grade ? ` <span class="forsale-grade">${card.grade}</span>` : ""}</div>
           ${card.setName ? `<div class="forsale-tile-meta">${card.setName}</div>` : ""}
-          <div class="forsale-tile-meta">From: <a href="${binderUrl}" target="_blank" rel="noopener">${card.binderOwner}'s Binder</a></div>
+          <div class="forsale-tile-meta">From: <a href="${binderUrl}" target="_blank" rel="noopener">${card.binderOwner}'s Binder</a>${card.binderZip ? `<span class="forsale-dist" data-zip="${card.binderZip}"></span>` : ""}</div>
         </div>
         <div class="forsale-tile-actions">
           <button class="fav-trade-btn forsale-contact-btn" title="Propose a trade">
@@ -697,6 +752,9 @@ async function loadForSale() {
       });
       grid.appendChild(el);
     });
+
+    // Async — fills in "· X mi" badges without blocking the render
+    attachDistanceBadges();
 
     // Wire search bar to filter visible tiles
     const searchInput = document.getElementById("forsale-search-input");

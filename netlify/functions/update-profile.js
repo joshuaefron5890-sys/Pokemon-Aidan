@@ -15,8 +15,8 @@ exports.handler = async (event, context) => {
     await putProfileData(user.sub, { ...existing, ...update });
     // Persist location publicly by slug so binder pages can display it
     if (slug && update.location?.city) {
-      const { city, state } = update.location;
-      await putLocation(slug, { city, state });
+      const { city, state, zip } = update.location;
+      await putLocation(slug, { city, state, zip: zip || "" });
     }
     return {
       statusCode: 200,

@@ -2,7 +2,7 @@
 // GET /.netlify/functions/list-for-sale
 // No auth required — mirrors list-binders.js by merging Blobs + GitHub manifests
 
-const { getManifest, getBinder } = require("./_blobs");
+const { getManifest, getBinder, getLocation } = require("./_blobs");
 const { getFile } = require("./_gh");
 
 const NO_CACHE = { "Cache-Control": "no-store, no-cache", "Content-Type": "application/json" };
@@ -25,7 +25,10 @@ exports.handler = async () => {
     const results = await Promise.all(
       publicBinders.map(async ({ slug, owner }) => {
         try {
-          const binder = await getBinder(slug);
+          const [binder, loc] = await Promise.all([
+            getBinder(slug),
+            getLocation(slug).catch(() => null),
+          ]);
           if (!binder) return [];
           return (binder.cards || [])
             .filter(c => c.available)
@@ -40,6 +43,7 @@ exports.handler = async () => {
               tcgUrl:      c.tcgUrl     || null,
               binderSlug:  slug,
               binderOwner: binder.owner || owner,
+              binderZip:   loc?.zip     || null,
             }));
         } catch {
           return [];

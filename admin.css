@@ -1038,6 +1038,7 @@ a.binder-card { cursor: pointer; }
 }
 .forsale-tile-meta a { color: var(--accent2); text-decoration: none; }
 .forsale-tile-meta a:hover { text-decoration: underline; }
+.forsale-dist { color: var(--text-muted); opacity: .75; }
 .forsale-tile-actions {
   display: flex;
   gap: .4rem;
