@@ -290,9 +290,19 @@
         const parts = new URL(link).pathname.split("/").filter(Boolean);
         const slug = parts[parts.length - 1] || "";
         let cleaned = slug.replace(/^pokemon-/, "");
-        const numMatch = cleaned.match(/-(\d+)$/);
-        cardNumber = numMatch ? parseInt(numMatch[1], 10).toString() : "";
-        if (numMatch) cleaned = cleaned.slice(0, numMatch.index);
+        // Strip trailing numbers — two in a row means number/total (e.g. espurr-095-088)
+        const lastNum = cleaned.match(/-(\d+)$/);
+        if (lastNum) {
+          cleaned = cleaned.slice(0, lastNum.index);
+          const prevNum = cleaned.match(/-(\d+)$/);
+          if (prevNum) {
+            // number/total format: prevNum is the card number, lastNum was the total
+            cardNumber = parseInt(prevNum[1], 10).toString();
+            cleaned = cleaned.slice(0, prevNum.index);
+          } else {
+            cardNumber = parseInt(lastNum[1], 10).toString();
+          }
+        }
         const nameSuffixes = new Set(["ex", "gx", "v", "vmax", "vstar", "mega", "break", "prime"]);
         const slugParts = cleaned.split("-");
         let nameWords = [slugParts[slugParts.length - 1]];
