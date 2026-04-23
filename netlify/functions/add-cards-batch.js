@@ -29,8 +29,10 @@ exports.handler = async (event, context) => {
 
     for (const c of cards) {
       if (!c.cardId) continue;
-      if (binder.cards.some(e => e.cardId === c.cardId)) {
-        skipped.push(c.cardId);
+      const existing = binder.cards.find(e => e.cardId === c.cardId);
+      if (existing) {
+        existing.qty = (existing.qty || 1) + 1;
+        added.push(c.cardId);
         continue;
       }
       const entry = { query: c.query || c.cardId, cardId: c.cardId };

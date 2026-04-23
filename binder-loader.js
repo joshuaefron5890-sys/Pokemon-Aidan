@@ -84,6 +84,7 @@ async function initBinder() {
       imageUrl:      c.imageUrl,
       fallbackPrice: c.fallbackPrice,
       grade:         c.grade,
+      qty:           c.qty,
     }));
 
     // Show owner chat bubble whenever the owner views their own binder

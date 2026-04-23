@@ -87,8 +87,11 @@ async function tool_get_collection(slug) {
 
 async function tool_add_card(slug, card) {
   const binder = await readBinder(slug);
-  if (binder.cards.some(c => c.cardId === card.cardId)) {
-    return { error: `"${card.cardId}" is already in the binder.` };
+  const existing = binder.cards.find(c => c.cardId === card.cardId);
+  if (existing) {
+    existing.qty = (existing.qty || 1) + 1;
+    await writeBinder(slug, binder);
+    return { success: true, message: `You already have "${card.query}" — updated quantity to ${existing.qty}.` };
   }
   binder.cards.push(card);
   await writeBinder(slug, binder);

@@ -268,6 +268,7 @@ async function deleteCard(cardId, query, element) {
 function createCardElement(query, card, price, overrides = {}, isStaticPrice = false) {
   const wrapper = document.createElement("div");
   const grade = overrides.grade ?? null;
+  const qty   = overrides.qty   ?? null;
   wrapper.className = `card-item ${getRarityClass(card)}${grade ? " graded" : ""}`;
   wrapper.dataset.price   = price ?? -1;
   wrapper.dataset.cardId  = overrides.cardId || "";
@@ -292,6 +293,7 @@ function createCardElement(query, card, price, overrides = {}, isStaticPrice = f
           : `<div class="card-img-placeholder"><span>${cardName}</span></div>`
         }
         ${grade ? `<div class="card-grade-badge">Grade ${grade}</div>` : ""}
+        ${!grade && qty > 1 ? `<div class="card-qty-badge">×${qty}</div>` : ""}
       ${overrides.available ? `<div class="card-available-badge" title="Available for trade or sale"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>For Sale</div>` : ""}
       </div>
       <div class="card-info">
