@@ -393,6 +393,7 @@ let currentFilter = "";
 let currentSeries = "";
 let currentGradeFilter = "";
 let currentAvailableFilter = "";
+let currentDuplicatesFilter = false;
 
 function normalizeSearch(str) {
   // Lowercase and collapse whitespace — no regex on user input so special chars are safe
@@ -420,6 +421,7 @@ function getFilteredResults() {
     if (currentGradeFilter === "non-graded" && overrides.grade) return false;
     if (currentAvailableFilter === "available" && !overrides.available) return false;
     if (currentAvailableFilter === "not-available" && overrides.available) return false;
+    if (currentDuplicatesFilter && !(overrides.qty > 1)) return false;
     return matchesFilter(query, card, overrides);
   });
 }
@@ -543,9 +545,10 @@ function buildAvailableDropdown() {
     options.forEach(({ label, value }) => {
       const li = document.createElement("li");
       li.textContent = label;
-      if (value === currentAvailableFilter) li.classList.add("selected");
+      if (value === currentAvailableFilter && !currentDuplicatesFilter) li.classList.add("selected");
       li.addEventListener("click", () => {
         currentAvailableFilter = value;
+        currentDuplicatesFilter = false;
         labelEl.textContent = label;
         btn.classList.toggle("active", !!value);
         panel.classList.remove("open");
@@ -554,6 +557,23 @@ function buildAvailableDropdown() {
       });
       listEl.appendChild(li);
     });
+
+    // Duplicates filter — owner only
+    if (window.IS_OWNER) {
+      const li = document.createElement("li");
+      li.textContent = "Duplicates Only";
+      if (currentDuplicatesFilter) li.classList.add("selected");
+      li.addEventListener("click", () => {
+        currentDuplicatesFilter = !currentDuplicatesFilter;
+        currentAvailableFilter = "";
+        labelEl.textContent = currentDuplicatesFilter ? "Duplicates Only" : "Availability";
+        btn.classList.toggle("active", currentDuplicatesFilter);
+        panel.classList.remove("open");
+        btn.setAttribute("aria-expanded", "false");
+        resetAndRender();
+      });
+      listEl.appendChild(li);
+    }
   }
 
   renderOptions();
