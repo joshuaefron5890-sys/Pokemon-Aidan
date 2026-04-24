@@ -1,5 +1,6 @@
 // Remove a card from a Blobs binder
 // POST { slug, cardId?, query? } — cardId preferred; falls back to first query match
+// If the card has qty > 1, decrements qty instead of removing entirely.
 // Auth required — user must own the binder
 
 const { getBinder, putBinder, getManifest, putManifest } = require("./_blobs");
@@ -18,14 +19,29 @@ exports.handler = async (event, context) => {
     if (!binder) return { statusCode: 404, body: JSON.stringify({ error: "Binder not found" }) };
     if (binder.email !== user.email) return { statusCode: 403, body: JSON.stringify({ error: "Forbidden" }) };
 
-    const before = binder.cards.length;
+    const card = cardId
+      ? binder.cards.find(c => c.cardId === cardId)
+      : binder.cards.find(c => c.query === query);
+
+    if (!card) return { statusCode: 404, body: JSON.stringify({ error: "Card not found" }) };
+
+    // Decrement qty if more than one copy remains
+    if ((card.qty || 1) > 1) {
+      card.qty = (card.qty || 1) - 1;
+      await putBinder(slug, binder);
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ok: true, decremented: true, newQty: card.qty }),
+      };
+    }
+
+    // Last copy — remove entirely
     if (cardId) {
       binder.cards = binder.cards.filter(c => c.cardId !== cardId);
-    } else if (query) {
+    } else {
       const idx = binder.cards.findIndex(c => c.query === query);
       if (idx >= 0) binder.cards.splice(idx, 1);
-    } else {
-      return { statusCode: 400, body: JSON.stringify({ error: "Provide cardId or query" }) };
     }
 
     await putBinder(slug, binder);
@@ -37,7 +53,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: true, removed: before - binder.cards.length }),
+      body: JSON.stringify({ ok: true, decremented: false }),
     };
   } catch (err) {
     console.error("remove-card error:", err);

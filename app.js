@@ -246,8 +246,11 @@ async function getCardAuthToken() {
   return null;
 }
 
-async function deleteCard(cardId, query, element) {
-  if (!confirm("Remove this card from the binder?")) return;
+async function deleteCard(cardId, query, element, qty) {
+  const msg = (qty || 1) > 1
+    ? `Remove one copy? (${qty} total in binder)`
+    : "Remove this card from the binder?";
+  if (!confirm(msg)) return;
   const slug = window.BINDER_SLUG;
   const token = await getCardAuthToken();
   try {
@@ -257,9 +260,19 @@ async function deleteCard(cardId, query, element) {
       body: JSON.stringify({ slug, cardId: cardId || undefined, query: cardId ? undefined : query }),
     });
     if (!res.ok) { const d = await res.json(); alert(d.error || "Failed to remove card"); return; }
-    element.remove();
-    const countEl = document.getElementById("card-count");
-    if (countEl) countEl.textContent = Math.max(0, parseInt(countEl.textContent || "0") - 1);
+    const data = await res.json();
+    if (data.decremented) {
+      const badge = element.querySelector(".card-qty-badge");
+      if (data.newQty > 1) {
+        if (badge) badge.textContent = `×${data.newQty}`;
+      } else {
+        if (badge) badge.remove();
+      }
+    } else {
+      element.remove();
+      const countEl = document.getElementById("card-count");
+      if (countEl) countEl.textContent = Math.max(0, parseInt(countEl.textContent || "0") - 1);
+    }
   } catch (err) {
     alert("Failed to remove card: " + err.message);
   }
@@ -366,7 +379,7 @@ function createCardElement(query, card, price, overrides = {}, isStaticPrice = f
     deleteBtn.className = "card-delete-btn";
     deleteBtn.title = "Remove from binder";
     deleteBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
-    deleteBtn.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); deleteCard(overrides.cardId, query, wrapper); });
+    deleteBtn.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); deleteCard(overrides.cardId, query, wrapper, overrides.qty); });
     wrapper.appendChild(deleteBtn);
   }
 
