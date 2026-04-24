@@ -226,16 +226,15 @@
 
     list.innerHTML = "";
     cardQueue.forEach((card, i) => {
-      const lastDash = card.cardId.lastIndexOf("-");
-      const setId    = card.cardId.slice(0, lastDash);
-      const num      = card.cardId.slice(lastDash + 1);
-      const imgUrl   = `https://images.pokemontcg.io/${setId}/${num}.png`;
+      const imgUrl = card.cardId
+        ? (() => { const d = card.cardId.lastIndexOf("-"); return `https://images.pokemontcg.io/${card.cardId.slice(0, d)}/${card.cardId.slice(d + 1)}.png`; })()
+        : "";
 
       const row = document.createElement("div");
       row.className = "acm-queue-row";
       row.innerHTML = `
         <img class="acm-queue-img" src="${imgUrl}" alt="${card.query}"
-             onerror="this.style.display='none'" />
+             onerror="this.style.display='none'" style="${imgUrl ? "" : "display:none"}" />
         <div class="acm-queue-info">
           <div class="acm-queue-name">${card.query}</div>
           <div class="acm-queue-set">${card.setName || ""}</div>
@@ -275,22 +274,36 @@
 
     const TCG_API = "https://api.pokemontcg.io/v2";
 
-    // Shared helper: call pokemontcg.io with optional number, return formatted cards
+    // pokemontcg.io stores GX/EX names with a hyphen ("Umbreon-GX") but URL slugs
+    // produce a space ("umbreon gx"). Try both forms so neither is missed.
+    function nameVariants(name) {
+      const suffixes = new Set(["ex", "gx", "v", "vmax", "vstar", "mega", "break", "prime"]);
+      const parts = name.trim().split(/\s+/);
+      const last = parts[parts.length - 1].toLowerCase();
+      if (parts.length > 1 && suffixes.has(last)) {
+        const base = parts.slice(0, -1).join(" ");
+        return [name, `${base}-${last}`]; // "umbreon gx" → also try "umbreon-gx"
+      }
+      return [name];
+    }
+
+    // Shared helper: try pokemontcg.io with multiple name forms + optional number
     async function tcgLookup(cardName, cardNumber, storedTcgUrl = "") {
-      let cards = null;
-      if (cardNumber) {
-        const q = encodeURIComponent(`name:"${cardName}" number:"${cardNumber}"`);
+      const variants = nameVariants(cardName);
+      for (const name of variants) {
+        if (cardNumber) {
+          const q = encodeURIComponent(`name:"${name}" number:"${cardNumber}"`);
+          const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
+          if (r.ok) { const { data } = await r.json(); if (data?.length) return formatCards(data, storedTcgUrl); }
+        }
+        const q = encodeURIComponent(`name:"${name}"`);
         const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
-        if (r.ok) { const { data } = await r.json(); if (data?.length) cards = data; }
+        if (r.ok) { const { data } = await r.json(); if (data?.length) return formatCards(data, storedTcgUrl); }
       }
-      if (!cards) {
-        const q = encodeURIComponent(`name:"${cardName}"`);
-        const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
-        if (!r.ok) throw new Error(`Card lookup failed (${r.status})`);
-        const { data } = await r.json();
-        if (!data?.length) throw new Error("No cards found. Try a different name or include the card number.");
-        cards = data;
-      }
+      return null; // not found in API
+    }
+
+    function formatCards(cards, storedTcgUrl) {
       return cards.map(c => ({
         cardId:      c.id,
         query:       `${c.name} ${c.number || ""}`.trim(),
@@ -315,6 +328,7 @@
 
       try {
         const formatted = await tcgLookup(cardName, cardNumber);
+        if (!formatted) throw new Error("No cards found. Try including the card number (e.g. \"Umbreon GX 67\") or use the TCG Link tab.");
         if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
         else { showPickStep(formatted); }
       } catch (err) {
@@ -364,12 +378,18 @@
 
       try {
         const formatted = await tcgLookup(cardName, cardNumber, link);
-        if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
-        else { showPickStep(formatted); }
+        if (formatted) {
+          if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
+          else { showPickStep(formatted); }
+        } else {
+          // Card not found in pokemontcg.io — add by name only (no cardId)
+          // Binder will still show it and try name-based lookup at display time
+          const nameQuery = cardName + (cardNumber ? ` ${cardNumber}` : "");
+          foundCard = { cardId: "", query: nameQuery, setName: "", marketPrice: null, tcgUrl: link };
+          showConfirmStep(foundCard);
+        }
       } catch (err) {
-        errEl.textContent = err.message.includes("No cards found")
-          ? "Card not found in the Pokémon TCG database — it may be a regional promo. Try the Card Name tab instead."
-          : err.message;
+        errEl.textContent = err.message;
         lookupBtn.disabled = false;
         lookupSpinner.classList.add("hidden");
         lookupLabel.textContent = "Find Card";
@@ -424,13 +444,15 @@
     lookupSpinner.classList.add("hidden");
     lookupLabel.textContent = "Find Card";
 
-    const lastDash = card.cardId.lastIndexOf("-");
-    const setId    = card.cardId.slice(0, lastDash);
-    const num      = card.cardId.slice(lastDash + 1);
-    const imgUrl   = `https://images.pokemontcg.io/${setId}/${num}.png`;
-
     const previewImg = document.getElementById("acm-preview-img");
-    previewImg.src   = imgUrl;
+    if (card.cardId) {
+      const lastDash = card.cardId.lastIndexOf("-");
+      previewImg.src          = `https://images.pokemontcg.io/${card.cardId.slice(0, lastDash)}/${card.cardId.slice(lastDash + 1)}.png`;
+      previewImg.style.display = "";
+    } else {
+      previewImg.src          = "";
+      previewImg.style.display = "none";
+    }
     previewImg.onerror = () => { previewImg.src = ""; previewImg.style.display = "none"; };
 
     document.getElementById("acm-preview-name").textContent  = card.query || card.cardId;
