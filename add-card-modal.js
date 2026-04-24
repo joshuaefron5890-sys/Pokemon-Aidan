@@ -445,9 +445,11 @@
     lookupLabel.textContent = "Find Card";
 
     const previewImg = document.getElementById("acm-preview-img");
+    let cardNum = "";
     if (card.cardId) {
       const lastDash = card.cardId.lastIndexOf("-");
-      previewImg.src          = `https://images.pokemontcg.io/${card.cardId.slice(0, lastDash)}/${card.cardId.slice(lastDash + 1)}.png`;
+      cardNum = card.cardId.slice(lastDash + 1);
+      previewImg.src          = `https://images.pokemontcg.io/${card.cardId.slice(0, lastDash)}/${cardNum}.png`;
       previewImg.style.display = "";
     } else {
       previewImg.src          = "";
@@ -457,7 +459,7 @@
 
     document.getElementById("acm-preview-name").textContent  = card.query || card.cardId;
     document.getElementById("acm-preview-set").textContent   = card.setName || "";
-    document.getElementById("acm-preview-num").textContent   = `#${num}`;
+    document.getElementById("acm-preview-num").textContent   = cardNum ? `#${cardNum}` : "";
     document.getElementById("acm-preview-price").textContent =
       card.marketPrice ? `$${Number(card.marketPrice).toFixed(2)}` : "Price unavailable";
 
