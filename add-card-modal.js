@@ -273,13 +273,58 @@
     const errEl = document.getElementById("acm-input-error");
     errEl.textContent = "";
 
-    let userMessage;
-    const jsonArrayInstruction = 'Return up to 5 best fuzzy matches as a JSON array only — no markdown, no extra text. Format: [{"cardId":"sv3pt5-006","query":"Charizard ex","setName":"151","marketPrice":45.00,"tcgUrl":""}]. Return [] if nothing found.';
+    const TCG_API = "https://api.pokemontcg.io/v2";
+
+    // Shared helper: call pokemontcg.io with optional number, return formatted cards
+    async function tcgLookup(cardName, cardNumber, storedTcgUrl = "") {
+      let cards = null;
+      if (cardNumber) {
+        const q = encodeURIComponent(`name:"${cardName}" number:"${cardNumber}"`);
+        const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
+        if (r.ok) { const { data } = await r.json(); if (data?.length) cards = data; }
+      }
+      if (!cards) {
+        const q = encodeURIComponent(`name:"${cardName}"`);
+        const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
+        if (!r.ok) throw new Error(`Card lookup failed (${r.status})`);
+        const { data } = await r.json();
+        if (!data?.length) throw new Error("No cards found. Try a different name or include the card number.");
+        cards = data;
+      }
+      return cards.map(c => ({
+        cardId:      c.id,
+        query:       `${c.name} ${c.number || ""}`.trim(),
+        setName:     c.set?.name || "",
+        marketPrice: c.tcgplayer?.prices?.holofoil?.market ?? c.tcgplayer?.prices?.normal?.market ?? null,
+        tcgUrl:      storedTcgUrl,
+      }));
+    }
 
     if (activeTab === "name") {
-      const name = document.getElementById("acm-card-name").value.trim();
-      if (!name) { errEl.textContent = "Please enter a card name."; return; }
-      userMessage = { role: "user", content: `Search for Pokémon cards matching "${name}". ${jsonArrayInstruction}` };
+      const rawName = document.getElementById("acm-card-name").value.trim();
+      if (!rawName) { errEl.textContent = "Please enter a card name."; return; }
+
+      // Split trailing number from name: "Charizard ex 006/165" → name="Charizard ex", num="006"
+      let cardName = rawName, cardNumber = "";
+      const numMatch = rawName.match(/^(.+?)\s+([A-Z]*\d+(?:\/\d+)?)$/);
+      if (numMatch) { cardName = numMatch[1].trim(); cardNumber = numMatch[2].split("/")[0]; }
+
+      lookupBtn.disabled = true;
+      lookupSpinner.classList.remove("hidden");
+      lookupLabel.textContent = "Searching…";
+
+      try {
+        const formatted = await tcgLookup(cardName, cardNumber);
+        if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
+        else { showPickStep(formatted); }
+      } catch (err) {
+        errEl.textContent = err.message;
+        lookupBtn.disabled = false;
+        lookupSpinner.classList.add("hidden");
+        lookupLabel.textContent = "Find Card";
+      }
+      return;
+
     } else if (activeTab === "link") {
       const link = document.getElementById("acm-tcg-link").value.trim();
       if (!link || !link.includes("tcgplayer.com")) { errEl.textContent = "Please paste a valid TCGPlayer URL."; return; }
@@ -296,7 +341,6 @@
           cleaned = cleaned.slice(0, lastNum.index);
           const prevNum = cleaned.match(/-(\d+)$/);
           if (prevNum) {
-            // number/total format: prevNum is the card number, lastNum was the total
             cardNumber = parseInt(prevNum[1], 10).toString();
             cleaned = cleaned.slice(0, prevNum.index);
           } else {
@@ -319,42 +363,19 @@
       lookupLabel.textContent = "Searching…";
 
       try {
-        const TCG_API = "https://api.pokemontcg.io/v2";
-        let cards = null;
-
-        // Try name + number first
-        if (cardNumber) {
-          const q = encodeURIComponent(`name:"${cardName}" number:"${cardNumber}"`);
-          const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
-          if (r.ok) { const { data } = await r.json(); if (data?.length) cards = data; }
-        }
-        // Fall back to name-only
-        if (!cards) {
-          const q = encodeURIComponent(`name:"${cardName}"`);
-          const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
-          if (!r.ok) throw new Error(`Card lookup failed (${r.status})`);
-          const { data } = await r.json();
-          if (!data?.length) throw new Error("Card not found in the Pokémon TCG database — it may be a regional promo. Try the Card Name tab instead.");
-          cards = data;
-        }
-
-        const formatted = cards.map(c => ({
-          cardId:      c.id,
-          query:       `${c.name} ${c.number || ""}`.trim(),
-          setName:     c.set?.name || "",
-          marketPrice: c.tcgplayer?.prices?.holofoil?.market ?? c.tcgplayer?.prices?.normal?.market ?? null,
-          tcgUrl:      link, // store the real TCGPlayer URL the user pasted
-        }));
-
+        const formatted = await tcgLookup(cardName, cardNumber, link);
         if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
         else { showPickStep(formatted); }
       } catch (err) {
-        errEl.textContent = err.message;
+        errEl.textContent = err.message.includes("No cards found")
+          ? "Card not found in the Pokémon TCG database — it may be a regional promo. Try the Card Name tab instead."
+          : err.message;
         lookupBtn.disabled = false;
         lookupSpinner.classList.add("hidden");
         lookupLabel.textContent = "Find Card";
       }
       return;
+
     } else {
       if (!pendingPhoto) { errEl.textContent = "Please select or drop a card photo first."; return; }
 
@@ -393,35 +414,6 @@
         lookupLabel.textContent = "Find Card";
       }
       return;
-    }
-
-    lookupBtn.disabled = true;
-    lookupSpinner.classList.remove("hidden");
-    lookupLabel.textContent = "Searching…";
-
-    try {
-      const data = await callChat([userMessage]);
-
-      const arrayMatch = data.reply.match(/\[[\s\S]*\]/);
-      if (!arrayMatch) throw new Error("Could not parse results. Please try again.");
-
-      const cards = JSON.parse(arrayMatch[0]).filter(c => c && c.cardId);
-      if (!cards.length) {
-        if (activeTab === "link") throw new Error("Card not found in the Pokémon TCG database — it may be a Japanese-only or regional promo. Try the Card Name tab and search for the Pokémon's name instead.");
-        throw new Error("No cards found. Try a different name or include the card number.");
-      }
-
-      if (cards.length === 1) {
-        foundCard = cards[0];
-        showConfirmStep(foundCard);
-      } else {
-        showPickStep(cards);
-      }
-    } catch (err) {
-      errEl.textContent = err.message;
-      lookupBtn.disabled = false;
-      lookupSpinner.classList.add("hidden");
-      lookupLabel.textContent = "Find Card";
     }
   }
 
