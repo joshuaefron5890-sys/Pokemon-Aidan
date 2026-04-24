@@ -346,8 +346,14 @@
       // Parse slug for card name + number
       let cardName = "", cardNumber = "";
       try {
-        const parts = new URL(link).pathname.split("/").filter(Boolean);
+        const normalized = link.includes("://") ? link : `https://${link}`;
+        const parts = new URL(normalized).pathname.split("/").filter(Boolean);
         const slug = parts[parts.length - 1] || "";
+        // Bare numeric product ID (e.g. /product/610447) — no card name in URL
+        if (/^\d+$/.test(slug)) {
+          errEl.textContent = "This link doesn't include the card name. Use a full TCGPlayer product URL (e.g. tcgplayer.com/product/12345/pokemon-set-name-card-name), or switch to the Card Name tab.";
+          return;
+        }
         let cleaned = slug.replace(/^pokemon-/, "");
         // Strip trailing numbers — two in a row means number/total (e.g. espurr-095-088)
         const lastNum = cleaned.match(/-(\d+)$/);
