@@ -545,11 +545,26 @@
 
   // ── Step B: Confirm → queue ───────────────────────────────
 
-  function showConfirmStep(card) {
+  async function showConfirmStep(card) {
     document.getElementById("acm-for-sale").checked = false;
     lookupBtn.disabled = false;
     lookupSpinner.classList.add("hidden");
     lookupLabel.textContent = "Find Card";
+
+    // If we have a TCGPlayer URL but no image/price yet, fetch them now
+    if (card.tcgUrl && !card.imageUrl && card.marketPrice == null) {
+      const pidMatch = card.tcgUrl.match(/tcgplayer\.com\/product\/(\d+)/i);
+      if (pidMatch) {
+        try {
+          const r = await fetch(`/.netlify/functions/resolve-tcg-product?productId=${pidMatch[1]}`);
+          if (r.ok) {
+            const d = await r.json();
+            if (d.imageUrl) card = { ...card, imageUrl: d.imageUrl };
+            if (d.price != null) card = { ...card, marketPrice: d.price };
+          }
+        } catch { /* non-fatal */ }
+      }
+    }
 
     const isManual = !card.cardId && !card.imageUrl;
 

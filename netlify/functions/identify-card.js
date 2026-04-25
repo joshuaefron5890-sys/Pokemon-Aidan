@@ -24,11 +24,15 @@ const COUNTRY_MARKERS = new Set([
 function parseSlug(slug) {
   if (!slug) return { name: "", number: "", isNonEnglish: false };
   let parts = slug.replace(/^pokemon-/, "").split("-").filter(Boolean);
-  let number = "";
+
+  // Collect ALL trailing digit-only segments in order (e.g. ["197","193"])
+  // Card number is the FIRST one (before the set total at the end)
+  const trailingNums = [];
   while (parts.length && /^\d+$/.test(parts[parts.length - 1])) {
-    if (!number) number = parseInt(parts[parts.length - 1], 10).toString();
-    parts.pop();
+    trailingNums.unshift(parts.pop());
   }
+  const number = trailingNums.length ? parseInt(trailingNums[0], 10).toString() : "";
+
   if (!parts.length) return { name: "", number, isNonEnglish: false };
   const isNonEnglish = COUNTRY_MARKERS.has(parts[0].toLowerCase());
   const nameParts = isNonEnglish ? parts.slice(1) : parts;
@@ -68,10 +72,13 @@ async function tcgdexSearch(name, number, language) {
       if (!r.ok) continue;
       const d = await r.json();
       if (!Array.isArray(d) || !d.length) continue;
-      if (number && d.length > 1) {
+      if (number) {
         const targets = new Set([number, numClean, numPadded].filter(Boolean));
         const exact = d.filter(c => targets.has(String(c.localId)));
         if (exact.length) return exact.slice(0, 4);
+        // Name-only search found cards but none match the number — skip rather
+        // than returning wrong cards (caller will show the fallback entry instead)
+        if (!url.includes("localId=")) continue;
       }
       return d.slice(0, 6);
     } catch { /* try next */ }
