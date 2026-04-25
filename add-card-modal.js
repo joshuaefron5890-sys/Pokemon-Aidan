@@ -140,12 +140,12 @@
 
   photoInput.addEventListener("change", e => {
     const file = e.target.files[0];
-    if (file) readPhotoFile(file);
+    if (file) readPhotoFile(file, true); // auto-identify after camera capture
   });
 
   photoInputDesk.addEventListener("change", e => {
     const file = e.target.files[0];
-    if (file) readPhotoFile(file);
+    if (file) readPhotoFile(file, false);
   });
 
   dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.classList.add("drag-over"); });
@@ -163,13 +163,13 @@
     photoInput.value = "";
   });
 
-  function readPhotoFile(file) {
+  function readPhotoFile(file, autoIdentify = false) {
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
     img.onload = () => {
       URL.revokeObjectURL(objectUrl);
-      // Resize to max 1024px on longest side before encoding — camera photos can be 5–8 MB
-      const MAX = 1024;
+      // 1600px gives Vision API enough detail to read card text without huge payload
+      const MAX = 1600;
       let { width, height } = img;
       if (width > MAX || height > MAX) {
         if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
@@ -178,11 +178,12 @@
       const canvas = document.createElement("canvas");
       canvas.width = width; canvas.height = height;
       canvas.getContext("2d").drawImage(img, 0, 0, width, height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.90);
       const [, data] = dataUrl.split(",");
       pendingPhoto = { data, mediaType: "image/jpeg" };
       preview.src = dataUrl;
       previewWrap.classList.remove("hidden");
+      if (autoIdentify) setTimeout(() => lookupBtn.click(), 80);
     };
     img.src = objectUrl;
   }
