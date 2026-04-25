@@ -48,10 +48,30 @@ exports.handler = async (event) => {
       html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:image"/i)?.[1] ||
       "";
 
+    // Price — try JSON-LD structured data first, then og:price meta tag
+    let price = null;
+    const ldMatch = html.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+    if (ldMatch) {
+      for (const block of ldMatch) {
+        try {
+          const json = JSON.parse(block.replace(/<\/?script[^>]*>/gi, ""));
+          const offers = json.offers || (Array.isArray(json) && json.find(j => j.offers)?.offers);
+          const offerPrice = Array.isArray(offers) ? offers[0]?.price : offers?.price;
+          if (offerPrice != null) { price = parseFloat(offerPrice) || null; break; }
+        } catch {}
+      }
+    }
+    if (price == null) {
+      const ogPrice =
+        html.match(/<meta[^>]+property="og:price:amount"[^>]+content="([^"]+)"/i)?.[1] ||
+        html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:price:amount"/i)?.[1];
+      if (ogPrice) price = parseFloat(ogPrice) || null;
+    }
+
     return {
       statusCode: 200,
       headers: HEADERS,
-      body: JSON.stringify({ title, slug, finalUrl, imageUrl }),
+      body: JSON.stringify({ title, slug, finalUrl, imageUrl, price }),
     };
   } catch (err) {
     console.error("resolve-tcg-product error:", err);

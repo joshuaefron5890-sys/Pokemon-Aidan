@@ -452,22 +452,14 @@
 
       try {
         if (isNonEnglish) {
-          // Non-English card: pull image + price from TCGPlayer page, skip API lookup
+          // Non-English card: pull everything from TCGPlayer page, skip API lookup
           const pidMatch = link.match(/tcgplayer\.com\/product\/(\d+)/i);
           let imageUrl = "", marketPrice = null;
           if (pidMatch) {
-            const [imgRes, priceRes] = await Promise.allSettled([
-              fetch(`/.netlify/functions/resolve-tcg-product?productId=${pidMatch[1]}`),
-              fetch(`/.netlify/functions/get-tcg-price?url=${encodeURIComponent(link)}`),
-            ]);
-            if (imgRes.status === "fulfilled" && imgRes.value.ok) {
-              const d = await imgRes.value.json();
-              imageUrl = d.imageUrl || "";
-            }
-            if (priceRes.status === "fulfilled" && priceRes.value.ok) {
-              const d = await priceRes.value.json();
-              if (d.price != null) marketPrice = d.price;
-            }
+            try {
+              const r = await fetch(`/.netlify/functions/resolve-tcg-product?productId=${pidMatch[1]}`);
+              if (r.ok) { const d = await r.json(); imageUrl = d.imageUrl || ""; marketPrice = d.price ?? null; }
+            } catch { /* non-fatal */ }
           }
           const displayName = cardName.replace(/\b\w/g, c => c.toUpperCase())
             + (cardNumber ? ` ${cardNumber}` : "") + " (Japanese)";
@@ -479,24 +471,16 @@
             if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
             else { showPickStep(formatted); }
           } else {
-            // Card not found in pokemontcg.io — fetch image + price from TCGPlayer directly
+            // Card not found in pokemontcg.io — pull everything from TCGPlayer page
             const displayName = cardName.replace(/\b\w/g, c => c.toUpperCase())
               + (cardNumber ? ` ${cardNumber}` : "");
             let imageUrl = "", marketPrice = null;
             const pidMatch = link.match(/tcgplayer\.com\/product\/(\d+)/i);
             if (pidMatch) {
-              const [imgRes, priceRes] = await Promise.allSettled([
-                fetch(`/.netlify/functions/resolve-tcg-product?productId=${pidMatch[1]}`),
-                fetch(`/.netlify/functions/get-tcg-price?url=${encodeURIComponent(link)}`),
-              ]);
-              if (imgRes.status === "fulfilled" && imgRes.value.ok) {
-                const d = await imgRes.value.json();
-                imageUrl = d.imageUrl || "";
-              }
-              if (priceRes.status === "fulfilled" && priceRes.value.ok) {
-                const d = await priceRes.value.json();
-                if (d.price != null) marketPrice = d.price;
-              }
+              try {
+                const r = await fetch(`/.netlify/functions/resolve-tcg-product?productId=${pidMatch[1]}`);
+                if (r.ok) { const d = await r.json(); imageUrl = d.imageUrl || ""; marketPrice = d.price ?? null; }
+              } catch { /* non-fatal */ }
             }
             foundCard = { cardId: "", query: displayName, setName: "", marketPrice, tcgUrl: link, imageUrl };
             showConfirmStep(foundCard);
