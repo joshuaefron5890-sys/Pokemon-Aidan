@@ -1,14 +1,15 @@
 // POST /.netlify/functions/identify-card
 // Body: { imageData: base64string, mediaType: "image/jpeg" }
 //
-// Pipeline:
-//  1. Google Vision Web Detection → looks for TCGPlayer URLs in matching pages
-//     → if found: parse slug for name/number, search TCGdex/pokemontcg.io
-//  2. If Vision finds no TCGPlayer URL: use web entities for name + OCR locale
-//     for language + OCR text for card number → route to APIs
-//  3. Fall back to Claude Sonnet if Vision is unavailable or returns nothing useful
+// Pipeline (parallel):
+//  Vision WEB_DETECTION  → TCGPlayer URL (best case) + language + number from OCR
+//  Claude Sonnet         → accurate English name (translates trainer cards like
+//                          "ヒビキのマグカルゴ" → "Ethan's Magcargo") + number + language
+//
+// Merge: Claude's name (most accurate), Vision's TCGPlayer URL (bonus), best
+// available number, then route to TCGdex (Japanese) or pokemontcg.io (English).
 
-const ANTHROPIC_KEY    = process.env.ANTHROPIC_API_KEY;
+const ANTHROPIC_KEY     = process.env.ANTHROPIC_API_KEY;
 const GOOGLE_VISION_KEY = process.env.GOOGLE_VISION_API_KEY;
 const TCG_API    = "https://api.pokemontcg.io/v2";
 const TCGDEX_EN  = "https://api.tcgdex.net/v2/en/cards";
@@ -19,36 +20,31 @@ const COUNTRY_MARKERS = new Set([
   "italian","spanish","portuguese","thai",
 ]);
 
-// ── Slug parser — mirrors add-card-modal.js parseSlugForCard ──────────────────
+// ── Slug parser ───────────────────────────────────────────────────────────────
 function parseSlug(slug) {
   if (!slug) return { name: "", number: "", isNonEnglish: false };
   let parts = slug.replace(/^pokemon-/, "").split("-").filter(Boolean);
-
-  // Peel trailing digit groups: "toxtricity-089-080" → number="89", parts=[..., "toxtricity"]
   let number = "";
   while (parts.length && /^\d+$/.test(parts[parts.length - 1])) {
     if (!number) number = parseInt(parts[parts.length - 1], 10).toString();
     parts.pop();
   }
-
   if (!parts.length) return { name: "", number, isNonEnglish: false };
-
   const isNonEnglish = COUNTRY_MARKERS.has(parts[0].toLowerCase());
   const nameParts = isNonEnglish ? parts.slice(1) : parts;
-
   const suffixes = new Set(["ex","gx","v","vmax","vstar","mega","break","prime"]);
   const last = nameParts[nameParts.length - 1]?.toLowerCase();
   const name = (last && suffixes.has(last) && nameParts.length >= 2)
     ? nameParts.slice(-2).join(" ")
     : (nameParts[nameParts.length - 1] || "");
-
   return { name, number, isNonEnglish };
 }
 
-// ── TCGdex search (tries multiple number formats + JA endpoint) ───────────────
+// ── TCGdex search ─────────────────────────────────────────────────────────────
 async function tcgdexSearch(name, number, language) {
   const numClean  = number ? number.replace(/^0+/, "") || "0" : "";
   const numPadded = number ? number.padStart(3, "0") : "";
+  const isJapanese = language && language.toLowerCase().includes("japan");
   const tries = [];
 
   if (number) {
@@ -58,14 +54,11 @@ async function tcgdexSearch(name, number, language) {
     if (numPadded !== number && numPadded !== numClean)
       tries.push(`${TCGDEX_EN}?name=${encodeURIComponent(name)}&localId=${encodeURIComponent(numPadded)}`);
   }
-
-  const isJapanese = language && language.toLowerCase().includes("japan");
   if (isJapanese && number) {
     tries.push(`${TCGDEX_JA}?name=${encodeURIComponent(name)}&localId=${encodeURIComponent(number)}`);
     if (numClean !== number)
       tries.push(`${TCGDEX_JA}?name=${encodeURIComponent(name)}&localId=${encodeURIComponent(numClean)}`);
   }
-
   tries.push(`${TCGDEX_EN}?name=${encodeURIComponent(name)}`);
   if (isJapanese) tries.push(`${TCGDEX_JA}?name=${encodeURIComponent(name)}`);
 
@@ -134,21 +127,19 @@ async function visionDetect(imageData) {
   return responses?.[0] || null;
 }
 
-// Pull a card number out of raw OCR text — looks for NNN/NNN or NN/NNN
 function extractNumberFromOCR(text) {
   const m = text.match(/\b(\d{1,3})\/(\d{2,3})\b/);
   return m ? parseInt(m[1], 10).toString() : "";
 }
 
-// Map Vision OCR locale codes to our language strings
 function localeToLanguage(locale) {
-  if (!locale) return "English";
+  if (!locale) return "";
   const l = locale.split("-")[0].toLowerCase();
-  const map = { ja: "Japanese", ko: "Korean", zh: "Chinese", de: "German", fr: "French", it: "Italian", es: "Spanish", pt: "Portuguese" };
-  return map[l] || "English";
+  const map = { ja:"Japanese", ko:"Korean", zh:"Chinese", de:"German", fr:"French", it:"Italian", es:"Spanish", pt:"Portuguese" };
+  return map[l] || "";
 }
 
-// ── Claude fallback ───────────────────────────────────────────────────────────
+// ── Claude — primary name/language extraction ─────────────────────────────────
 async function claudeIdentify(imageData, mediaType) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -165,13 +156,13 @@ async function claudeIdentify(imageData, mediaType) {
 STEP 1 — Determine language: Look at the TEXT printed on the card body (card name, HP label, attack names, flavor text). Japanese cards have kanji/hiragana/katakana characters. Korean cards use Hangul. English cards use only the Latin alphabet. Do NOT infer language from the Pokémon's name alone.
 
 STEP 2 — Extract fields and return ONLY this JSON:
-- "name": Pokémon name in English (translate from Japanese/Korean/etc. if needed)
-- "number": digits before the slash in the bottom corner, e.g. "089" from "089/080"
+- "name": full card name in English, including trainer prefix if present (e.g. "Ethan's Magcargo", "Misty's Psyduck"). Translate from Japanese/Korean if needed.
+- "number": digits before the slash in the bottom corner, e.g. "197" from "197/193"
 - "set": set name if legible, otherwise omit
 - "language": language of the printed text — "English", "Japanese", "Korean", "Chinese", etc.
 
-Japanese card example: {"name": "Toxtricity", "number": "089", "language": "Japanese"}
-English card example:  {"name": "Charizard", "number": "4", "set": "Base Set", "language": "English"}
+Japanese trainer card example: {"name": "Ethan's Magcargo", "number": "197", "language": "Japanese"}
+English card example: {"name": "Charizard", "number": "4", "set": "Base Set", "language": "English"}
 
 If you cannot identify the card: {"error": "Could not identify card"}
 
@@ -189,9 +180,9 @@ Return ONLY the JSON — no explanation, no markdown.`,
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error?.message || `Claude error ${res.status}`);
   }
-  const claude = await res.json();
-  const text   = claude.content.find(b => b.type === "text")?.text ?? "";
-  const match  = text.match(/\{[\s\S]*\}/);
+  const data  = await res.json();
+  const text  = data.content.find(b => b.type === "text")?.text ?? "";
+  const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error("Could not parse Claude response");
   return JSON.parse(match[0]);
 }
@@ -206,135 +197,80 @@ exports.handler = async (event) => {
     const { imageData, mediaType = "image/jpeg" } = JSON.parse(event.body || "{}");
     if (!imageData) return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "Missing imageData" }) };
 
-    // ── Stage 1: Google Vision ────────────────────────────────────────────────
-    if (GOOGLE_VISION_KEY) {
-      const vision = await visionDetect(imageData).catch(err => {
-        console.warn("Vision API failed:", err.message);
-        return null;
-      });
+    // ── Run Vision + Claude in parallel ───────────────────────────────────────
+    const [visionSettled, claudeSettled] = await Promise.allSettled([
+      GOOGLE_VISION_KEY ? visionDetect(imageData) : Promise.resolve(null),
+      claudeIdentify(imageData, mediaType),
+    ]);
 
-      if (vision) {
-        const web   = vision.webDetection || {};
-        const texts = vision.textAnnotations || [];
-        const ocrText   = texts[0]?.description || "";
-        const ocrLocale = texts[0]?.locale || "en";
+    // ── Extract Vision results ─────────────────────────────────────────────────
+    let tcgPlayerUrl = "";
+    let visionNumber = "";
+    let visionLanguage = "";
 
-        // ── 1a. TCGPlayer URL found in matching pages — best case ─────────────
-        const pages = [
-          ...(web.pagesWithMatchingImages || []),
-          ...(web.fullMatchingImages || []).map(i => ({ url: i.url })),
-        ];
-        const tcgPage = pages.find(p =>
-          /tcgplayer\.com\/product\/\d+\/[^?#\s]+/i.test(p.url)
-        );
+    if (visionSettled.status === "fulfilled" && visionSettled.value) {
+      const vision = visionSettled.value;
+      const web    = vision.webDetection || {};
+      const texts  = vision.textAnnotations || [];
+      const ocrText   = texts[0]?.description || "";
+      const ocrLocale = texts[0]?.locale || "";
 
-        if (tcgPage) {
-          const urlMatch = tcgPage.url.match(/tcgplayer\.com\/product\/(\d+)\/([^?#\s]+)/i);
-          const productId = urlMatch?.[1] || "";
-          const slug      = urlMatch?.[2] || "";
-          const tcgUrl    = `https://www.tcgplayer.com/product/${productId}/${slug}`;
-          const { name, number, isNonEnglish } = parseSlug(slug);
-
-          if (name) {
-            const language = isNonEnglish ? "Japanese" : "English";
-
-            if (isNonEnglish) {
-              const tcgCards = await tcgdexSearch(name, number, language).catch(() => []);
-              if (tcgCards.length) {
-                return { statusCode: 200, headers: CORS, body: JSON.stringify({ cards: formatTcgdex(tcgCards, tcgUrl) }) };
-              }
-              // TCGdex miss — return usable entry with TCGPlayer URL so price/image can be fetched
-              const displayName = name.replace(/\b\w/g, c => c.toUpperCase()) + (number ? ` ${number}` : "") + " (Japanese)";
-              return { statusCode: 200, headers: CORS, body: JSON.stringify({
-                cards: [{ cardId: "", query: displayName, setName: "Japanese", marketPrice: null, tcgUrl, imageUrl: "" }],
-              }) };
-            }
-
-            // English card with TCGPlayer URL → search pokemontcg.io
-            const numClean = number.replace(/^0+/, "") || number;
-            let cards = [];
-            for (const num of [...new Set([number, numClean])]) {
-              const q = `name:"${name}" number:"${num}"`;
-              const r = await fetch(`${TCG_API}/cards?q=${encodeURIComponent(q)}&pageSize=4&orderBy=-set.releaseDate`);
-              if (r.ok) { const { data } = await r.json(); if (data?.length) { cards = data; break; } }
-            }
-            if (!cards.length) {
-              const q = `name:"${name}"`;
-              const r = await fetch(`${TCG_API}/cards?q=${encodeURIComponent(q)}&pageSize=6&orderBy=-set.releaseDate`);
-              if (r.ok) { const { data } = await r.json(); if (data?.length) cards = data; }
-            }
-            if (cards.length) return { statusCode: 200, headers: CORS, body: JSON.stringify({ cards: formatPokemonTcg(cards) }) };
-          }
-        }
-
-        // ── 1b. No TCGPlayer URL — use web entities + OCR ────────────────────
-        const SKIP = new Set(["pokémon","pokemon","trading card","trading card game","tcg","card","collectible card game"]);
-        const topEntity = (web.webEntities || []).find(e =>
-          e.description && !SKIP.has(e.description.toLowerCase()) && (e.score || 0) >= 0.5
-        );
-        const bestLabel = (web.bestGuessLabels?.[0]?.label || "")
-          .replace(/\s*\(.*?\)/g, "")
-          .replace(/pokémon|pokemon/gi, "")
-          .trim();
-
-        const name = topEntity?.description || bestLabel;
-        const number = extractNumberFromOCR(ocrText);
-        const language = localeToLanguage(ocrLocale);
-        const isEnglish = language === "English";
-
-        if (name) {
-          console.log(`Vision entity path: name="${name}" number="${number}" language="${language}"`);
-
-          if (!isEnglish) {
-            const tcgCards = await tcgdexSearch(name, number, language).catch(() => []);
-            if (tcgCards.length) return { statusCode: 200, headers: CORS, body: JSON.stringify({ cards: formatTcgdex(tcgCards) }) };
-            const query = `${name}${number ? ` ${number}` : ""} (${language})`;
-            return { statusCode: 200, headers: CORS, body: JSON.stringify({
-              cards: [{ cardId: "", query, setName: language, marketPrice: null, tcgUrl: "", imageUrl: "" }],
-            }) };
-          }
-
-          // English — pokemontcg.io
-          let cards = [];
-          const numClean = number.replace(/^0+/, "") || number;
-          if (number) {
-            for (const num of [...new Set([number, numClean])]) {
-              const q = `name:"${name}" number:"${num}"`;
-              const r = await fetch(`${TCG_API}/cards?q=${encodeURIComponent(q)}&pageSize=4&orderBy=-set.releaseDate`);
-              if (r.ok) { const { data } = await r.json(); if (data?.length) { cards = data; break; } }
-            }
-          }
-          if (!cards.length) {
-            const q = `name:"${name}"`;
-            const r = await fetch(`${TCG_API}/cards?q=${encodeURIComponent(q)}&pageSize=6&orderBy=-set.releaseDate`);
-            if (r.ok) { const { data } = await r.json(); if (data?.length) cards = data; }
-          }
-          if (cards.length) return { statusCode: 200, headers: CORS, body: JSON.stringify({ cards: formatPokemonTcg(cards) }) };
-        }
+      // TCGPlayer URL from matching pages
+      const pages = web.pagesWithMatchingImages || [];
+      const tcgPage = pages.find(p => /tcgplayer\.com\/product\/\d+\/[^?#\s]+/i.test(p.url));
+      if (tcgPage) {
+        const m = tcgPage.url.match(/tcgplayer\.com\/product\/(\d+)\/([^?#\s]+)/i);
+        if (m) tcgPlayerUrl = `https://www.tcgplayer.com/product/${m[1]}/${m[2]}`;
       }
+
+      // Language + number from OCR (reliable supplement to Claude)
+      visionLanguage = localeToLanguage(ocrLocale);
+      visionNumber   = extractNumberFromOCR(ocrText);
+    } else if (visionSettled.status === "rejected") {
+      console.warn("Vision API failed:", visionSettled.reason?.message);
     }
 
-    // ── Stage 2: Claude fallback ──────────────────────────────────────────────
-    console.log("Falling back to Claude for card identification");
-    const { error, name, number, set, language } = await claudeIdentify(imageData, mediaType);
-    if (error || !name) return { statusCode: 200, headers: CORS, body: JSON.stringify({ cards: [] }) };
+    // ── Extract Claude results — primary source for name ──────────────────────
+    let claudeName = "", claudeNumber = "", claudeLanguage = "", claudeSet = "";
+    if (claudeSettled.status === "fulfilled" && !claudeSettled.value?.error) {
+      const c = claudeSettled.value;
+      claudeName     = c.name || "";
+      claudeNumber   = (c.number || "").split("/")[0].trim();
+      claudeLanguage = c.language || "";
+      claudeSet      = c.set || "";
+    } else if (claudeSettled.status === "rejected") {
+      console.error("Claude failed:", claudeSettled.reason?.message);
+    }
 
-    const numPart   = (number || "").split("/")[0].trim();
-    const isEnglish = !language || language.toLowerCase() === "english";
+    // ── Merge: Claude for name, best available for everything else ────────────
+    const name     = claudeName; // Claude is most accurate for trainer card names
+    const number   = claudeNumber || visionNumber;
+    const language = claudeLanguage || visionLanguage || "English";
+    const set      = claudeSet;
 
+    if (!name) return { statusCode: 200, headers: CORS, body: JSON.stringify({ cards: [] }) };
+
+    const numClean  = number.replace(/^0+/, "") || number;
+    const isEnglish = language.toLowerCase() === "english";
+
+    // ── Non-English → TCGdex ──────────────────────────────────────────────────
     if (!isEnglish) {
-      const tcgCards = await tcgdexSearch(name, numPart, language).catch(() => []);
-      if (tcgCards.length) return { statusCode: 200, headers: CORS, body: JSON.stringify({ cards: formatTcgdex(tcgCards) }) };
-      const query = `${name}${numPart ? ` ${numPart}` : ""} (${language})`;
+      const tcgCards = await tcgdexSearch(name, number, language).catch(() => []);
+      if (tcgCards.length) {
+        return { statusCode: 200, headers: CORS, body: JSON.stringify({ cards: formatTcgdex(tcgCards, tcgPlayerUrl) }) };
+      }
+      // TCGdex miss (card too new or not indexed) — return useful fallback entry
+      const query = `${name}${number ? ` ${number}` : ""} (${language})`;
       return { statusCode: 200, headers: CORS, body: JSON.stringify({
-        cards: [{ cardId: "", query, setName: language, marketPrice: null, tcgUrl: "", imageUrl: "" }],
+        cards: [{ cardId: "", query, setName: language, marketPrice: null, tcgUrl: tcgPlayerUrl, imageUrl: "" }],
       }) };
     }
 
+    // ── English → pokemontcg.io ───────────────────────────────────────────────
     let cards = [];
-    const numClean = numPart.replace(/^0+/, "") || numPart;
-    if (numPart) {
-      for (const num of [...new Set([numPart, numClean])]) {
+
+    if (number) {
+      for (const num of [...new Set([number, numClean])]) {
         const q = `name:"${name}" number:"${num}"`;
         const r = await fetch(`${TCG_API}/cards?q=${encodeURIComponent(q)}&pageSize=4&orderBy=-set.releaseDate`);
         if (r.ok) { const { data } = await r.json(); if (data?.length) { cards = data; break; } }
@@ -350,6 +286,7 @@ exports.handler = async (event) => {
       const r = await fetch(`${TCG_API}/cards?q=${encodeURIComponent(q)}&pageSize=6&orderBy=-set.releaseDate`);
       if (r.ok) { const { data } = await r.json(); if (data?.length) cards = data; }
     }
+
     return { statusCode: 200, headers: CORS, body: JSON.stringify({ cards: formatPokemonTcg(cards) }) };
 
   } catch (err) {
