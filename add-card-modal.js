@@ -329,11 +329,18 @@
     // first so old cards like Base Set Charizard surface above newer printings.
     async function tcgLookup(cardName, cardNumber, storedTcgUrl = "", setHint = "") {
       const variants = nameVariants(cardName);
+      // Try both the number as given and without leading zeros (e.g. "053" → also "53")
+      // pokemontcg.io stores older sets without leading zeros, newer sets with them.
+      const numForms = cardNumber
+        ? [...new Set([cardNumber, cardNumber.replace(/^0+/, "") || cardNumber])]
+        : [];
       for (const name of variants) {
-        if (cardNumber) {
-          const q = encodeURIComponent(`name:"${name}" number:"${cardNumber}"`);
-          const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
-          if (r.ok) { const { data } = await r.json(); if (data?.length) return formatCards(data, storedTcgUrl); }
+        if (numForms.length) {
+          for (const num of numForms) {
+            const q = encodeURIComponent(`name:"${name}" number:"${num}"`);
+            const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
+            if (r.ok) { const { data } = await r.json(); if (data?.length) return formatCards(data, storedTcgUrl); }
+          }
         } else {
           if (setHint) {
             const q = encodeURIComponent(`name:"${name}" set.name:"${setHint}"`);
