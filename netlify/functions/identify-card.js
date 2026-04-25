@@ -5,16 +5,59 @@
 // Returns { cards: [{cardId, query, setName, marketPrice, tcgUrl, imageUrl}] }
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-const TCG_API   = "https://api.pokemontcg.io/v2";
-const TCGDEX    = "https://api.tcgdex.net/v2/en/cards";
+const TCG_API    = "https://api.pokemontcg.io/v2";
+const TCGDEX_EN  = "https://api.tcgdex.net/v2/en/cards";
+const TCGDEX_JA  = "https://api.tcgdex.net/v2/ja/cards";
 
-async function tcgdexSearch(name, number) {
+// Returns [] on any failure. Tries multiple number formats and falls back to
+// a name-only search filtered by number in JS.
+async function tcgdexSearch(name, number, language) {
+  const numClean   = number ? number.replace(/^0+/, "") || "0" : "";  // strip leading zeros
+  const numPadded  = number ? number.padStart(3, "0") : "";           // ensure 3-digit padding
+
+  // Candidate (URL, endpoint) pairs — tried in order, return on first hit
+  const tries = [];
+
+  // Primary endpoint: English (covers all sets with English names)
   if (number) {
-    const r = await fetch(`${TCGDEX}?name=${encodeURIComponent(name)}&localId=${encodeURIComponent(number)}`);
-    if (r.ok) { const d = await r.json(); if (Array.isArray(d) && d.length) return d; }
+    tries.push(`${TCGDEX_EN}?name=${encodeURIComponent(name)}&localId=${encodeURIComponent(number)}`);
+    if (numClean !== number)
+      tries.push(`${TCGDEX_EN}?name=${encodeURIComponent(name)}&localId=${encodeURIComponent(numClean)}`);
+    if (numPadded !== number && numPadded !== numClean)
+      tries.push(`${TCGDEX_EN}?name=${encodeURIComponent(name)}&localId=${encodeURIComponent(numPadded)}`);
   }
-  const r = await fetch(`${TCGDEX}?name=${encodeURIComponent(name)}`);
-  if (r.ok) { const d = await r.json(); if (Array.isArray(d) && d.length) return d.slice(0, 6); }
+
+  // If language is Japanese, also try the Japanese endpoint (covers JP-exclusive sets)
+  const isJapanese = language && language.toLowerCase().includes("japan");
+  if (isJapanese && number) {
+    tries.push(`${TCGDEX_JA}?name=${encodeURIComponent(name)}&localId=${encodeURIComponent(number)}`);
+    if (numClean !== number)
+      tries.push(`${TCGDEX_JA}?name=${encodeURIComponent(name)}&localId=${encodeURIComponent(numClean)}`);
+  }
+
+  // Name-only fallbacks (post-filter by number in JS)
+  tries.push(`${TCGDEX_EN}?name=${encodeURIComponent(name)}`);
+  if (isJapanese)
+    tries.push(`${TCGDEX_JA}?name=${encodeURIComponent(name)}`);
+
+  for (const url of tries) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) continue;
+      const d = await r.json();
+      if (!Array.isArray(d) || !d.length) continue;
+
+      // For name-only results, prefer cards whose localId matches the detected number
+      if (number && d.length > 1) {
+        const targets = new Set([number, numClean, numPadded].filter(Boolean));
+        const exact = d.filter(c => targets.has(String(c.localId)));
+        if (exact.length) return exact.slice(0, 4);
+      }
+
+      return d.slice(0, 6);
+    } catch { /* try next */ }
+  }
+
   return [];
 }
 
@@ -57,18 +100,20 @@ exports.handler = async (event) => {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 512,
-        system: `You are a Pokémon card identifier. Given an image of a Pokémon card, identify:
-- The Pokémon name in English (even if the card is in another language)
-- The card number (printed in the bottom corner, e.g. "089/080" or "204/191")
-- The set name in English if readable, otherwise your best guess
-- The card language (e.g. "English", "Japanese", "Korean", "Chinese")
+        model: "claude-sonnet-4-6",
+        max_tokens: 256,
+        system: `You are a Pokémon card identifier. Examine the card image carefully and return ONLY a JSON object with these fields:
 
-Return ONLY a JSON object — no other text:
-{"name": "Toxtricity", "number": "089", "set": "Inferno X", "language": "Japanese"}
+- "name": the Pokémon's name in English (translate if the card is not in English)
+- "number": the card number printed in the bottom corner — read it EXACTLY as printed, e.g. "089" from "089/080", or "204" from "204/191". Include only the number before the slash.
+- "set": the set name in English if visible, otherwise omit
+- "language": the card's language, e.g. "English", "Japanese", "Korean", "Chinese"
 
-If you cannot identify the card, return: {"error": "Could not identify card"}`,
+Example output: {"name": "Toxtricity", "number": "089", "set": "Inferno X", "language": "Japanese"}
+
+If you cannot identify the card at all, return: {"error": "Could not identify card"}
+
+Return ONLY the JSON — no explanation, no markdown.`,
         messages: [{
           role: "user",
           content: [
@@ -92,12 +137,13 @@ If you cannot identify the card, return: {"error": "Could not identify card"}`,
     const { error, name, number, set, language } = JSON.parse(match[0]);
     if (error || !name) return { statusCode: 200, headers: CORS, body: JSON.stringify({ cards: [] }) };
 
-    const numPart = (number || "").split("/")[0];
+    // Use only the part before "/" so "089/080" → "089"
+    const numPart = (number || "").split("/")[0].trim();
     const isEnglish = !language || language.toLowerCase() === "english";
 
-    // ── Non-English: try TCGdex, fall back to name-only entry ──
+    // ── Non-English: try TCGdex (EN + JA endpoints), fall back to name-only entry ──
     if (!isEnglish) {
-      const tcgCards = await tcgdexSearch(name, numPart).catch(() => []);
+      const tcgCards = await tcgdexSearch(name, numPart, language).catch(() => []);
       if (tcgCards.length) {
         return { statusCode: 200, headers: CORS, body: JSON.stringify({ cards: formatTcgdex(tcgCards) }) };
       }
