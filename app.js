@@ -631,6 +631,13 @@ function resetAndRender() {
   sentinel.style.display = "";
   currentPage = 0;
   const filtered = getFilteredResults();
+  const isFiltered = !!(currentFilter || currentSeries || currentGradeFilter || currentAvailableFilter || currentDuplicatesFilter);
+
+  const totalEl = document.getElementById("total-value");
+  const countEl = document.getElementById("card-count");
+  if (totalEl) totalEl.textContent = formatPrice(filtered.reduce((sum, r) => sum + (r.price || 0), 0));
+  if (countEl) countEl.textContent = isFiltered ? `${filtered.length} of ${sortedResults.length}` : sortedResults.length;
+
   if (statusEl) {
     if (currentFilter) {
       statusEl.innerHTML = `<span class="search-status-pill"><strong>${filtered.length}</strong> of ${sortedResults.length} cards matched</span>`;
