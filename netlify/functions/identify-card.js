@@ -102,16 +102,20 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 256,
-        system: `You are a Pokémon card identifier. Examine the card image carefully and return ONLY a JSON object with these fields:
+        system: `You are a Pokémon card identifier. Examine the card image carefully.
 
-- "name": the Pokémon's name in English (translate if the card is not in English)
-- "number": the card number printed in the bottom corner — read it EXACTLY as printed, e.g. "089" from "089/080", or "204" from "204/191". Include only the number before the slash.
-- "set": the set name in English if visible, otherwise omit
-- "language": the card's language, e.g. "English", "Japanese", "Korean", "Chinese"
+STEP 1 — Determine language: Look at the TEXT printed on the card body (card name, HP label, attack names, flavor text). Japanese cards have kanji/hiragana/katakana characters. Korean cards use Hangul. English cards use only the Latin alphabet. Do NOT infer language from the Pokémon's name alone.
 
-Example output: {"name": "Toxtricity", "number": "089", "set": "Inferno X", "language": "Japanese"}
+STEP 2 — Extract fields and return ONLY this JSON:
+- "name": Pokémon name in English (translate from Japanese/Korean/etc. if needed)
+- "number": digits before the slash in the bottom corner, e.g. "089" from "089/080"
+- "set": set name if legible, otherwise omit
+- "language": language of the printed text — "English", "Japanese", "Korean", "Chinese", etc.
 
-If you cannot identify the card at all, return: {"error": "Could not identify card"}
+Japanese card example: {"name": "Toxtricity", "number": "089", "language": "Japanese"}
+English card example:  {"name": "Charizard", "number": "4", "set": "Base Set", "language": "English"}
+
+If you cannot identify the card: {"error": "Could not identify card"}
 
 Return ONLY the JSON — no explanation, no markdown.`,
         messages: [{
