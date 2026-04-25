@@ -28,20 +28,25 @@ exports.handler = async (event, context) => {
     const skipped = [];
 
     for (const c of cards) {
-      if (!c.cardId) continue;
-      const existing = binder.cards.find(e => e.cardId === c.cardId);
+      if (!c.cardId && !c.query) continue;
+      const key = c.cardId || c.query;
+      const existing = c.cardId
+        ? binder.cards.find(e => e.cardId === c.cardId)
+        : binder.cards.find(e => !e.cardId && e.query === c.query);
       if (existing) {
         existing.qty = (existing.qty || 1) + 1;
-        added.push(c.cardId);
+        added.push(key);
         continue;
       }
-      const entry = { query: c.query || c.cardId, cardId: c.cardId };
+      const entry = { query: c.query || c.cardId };
+      if (c.cardId)        entry.cardId        = c.cardId;
       if (c.setName)       entry.setName       = c.setName;
       if (c.tcgUrl)        entry.tcgUrl        = c.tcgUrl;
       if (c.fallbackPrice) entry.fallbackPrice = c.fallbackPrice;
+      if (c.imageUrl)      entry.imageUrl      = c.imageUrl;
       if (c.grade)         entry.grade         = c.grade;
       binder.cards.push(entry);
-      added.push(c.cardId);
+      added.push(key);
     }
 
     await putBinder(slug, binder);

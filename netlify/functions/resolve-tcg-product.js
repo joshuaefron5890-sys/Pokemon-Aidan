@@ -42,10 +42,16 @@ exports.handler = async (event) => {
     // Strip trailing " | TCGplayer" and similar suffixes
     title = title.replace(/\s*[|–—].*$/, "").trim();
 
+    // og:image — card image hosted on TCGPlayer CDN
+    const imageUrl =
+      html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i)?.[1] ||
+      html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:image"/i)?.[1] ||
+      "";
+
     return {
       statusCode: 200,
       headers: HEADERS,
-      body: JSON.stringify({ title, slug, finalUrl }),
+      body: JSON.stringify({ title, slug, finalUrl, imageUrl }),
     };
   } catch (err) {
     console.error("resolve-tcg-product error:", err);

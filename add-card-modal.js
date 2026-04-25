@@ -448,27 +448,43 @@
 
       lookupBtn.disabled = true;
       lookupSpinner.classList.remove("hidden");
-      lookupLabel.textContent = isNonEnglish ? "Fetching price…" : "Searching…";
+      lookupLabel.textContent = isNonEnglish ? "Loading card…" : "Searching…";
 
       try {
-        const formatted = isNonEnglish ? null : await tcgLookup(cardName, cardNumber, link, setHint);
-        if (formatted) {
-          if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
-          else { showPickStep(formatted); }
-        } else {
-          // Card not found in pokemontcg.io (or non-English) — manual add with TCGPlayer URL
-          const displayName = cardName.replace(/\b\w/g, c => c.toUpperCase())
-            + (cardNumber ? ` ${cardNumber}` : "");
-          let manualPrice = null;
+        if (isNonEnglish) {
+          // Non-English card: pull image + title from TCGPlayer page, skip API lookup
           const pidMatch = link.match(/tcgplayer\.com\/product\/(\d+)/i);
+          let imageUrl = "";
           if (pidMatch) {
             try {
-              const pr = await fetch(`/.netlify/functions/get-tcg-price?url=${encodeURIComponent(link)}`);
-              if (pr.ok) { const pd = await pr.json(); if (pd.price != null) manualPrice = pd.price; }
+              const r = await fetch(`/.netlify/functions/resolve-tcg-product?productId=${pidMatch[1]}`);
+              if (r.ok) { const d = await r.json(); imageUrl = d.imageUrl || ""; }
             } catch { /* non-fatal */ }
           }
-          foundCard = { cardId: "", query: displayName, setName: isNonEnglish ? "Japanese" : "", marketPrice: manualPrice, tcgUrl: link };
+          const displayName = cardName.replace(/\b\w/g, c => c.toUpperCase())
+            + (cardNumber ? ` ${cardNumber}` : "") + " (Japanese)";
+          foundCard = { cardId: "", query: displayName, setName: "Japanese", marketPrice: null, tcgUrl: link, imageUrl };
           showConfirmStep(foundCard);
+        } else {
+          const formatted = await tcgLookup(cardName, cardNumber, link, setHint);
+          if (formatted) {
+            if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
+            else { showPickStep(formatted); }
+          } else {
+            // Card not found in pokemontcg.io — manual add with TCGPlayer URL
+            const displayName = cardName.replace(/\b\w/g, c => c.toUpperCase())
+              + (cardNumber ? ` ${cardNumber}` : "");
+            let manualPrice = null;
+            const pidMatch = link.match(/tcgplayer\.com\/product\/(\d+)/i);
+            if (pidMatch) {
+              try {
+                const pr = await fetch(`/.netlify/functions/get-tcg-price?url=${encodeURIComponent(link)}`);
+                if (pr.ok) { const pd = await pr.json(); if (pd.price != null) manualPrice = pd.price; }
+              } catch { /* non-fatal */ }
+            }
+            foundCard = { cardId: "", query: displayName, setName: "", marketPrice: manualPrice, tcgUrl: link };
+            showConfirmStep(foundCard);
+          }
         }
       } catch (err) {
         errEl.textContent = err.message;
@@ -530,7 +546,10 @@
 
     const previewImg = document.getElementById("acm-preview-img");
     let cardNum = "";
-    if (card.cardId) {
+    if (card.imageUrl) {
+      previewImg.src          = card.imageUrl;
+      previewImg.style.display = "";
+    } else if (card.cardId) {
       const lastDash = card.cardId.lastIndexOf("-");
       cardNum = card.cardId.slice(lastDash + 1);
       previewImg.src          = `https://images.pokemontcg.io/${card.cardId.slice(0, lastDash)}/${cardNum}.png`;
