@@ -550,7 +550,7 @@
     lookupSpinner.classList.add("hidden");
     lookupLabel.textContent = "Find Card";
 
-    const isManual = !card.cardId;
+    const isManual = !card.cardId && !card.imageUrl;
 
     const previewImg = document.getElementById("acm-preview-img");
     let cardNum = "";
