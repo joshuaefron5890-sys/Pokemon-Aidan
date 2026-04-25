@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" />
-  <link rel="stylesheet" href="admin.css?v=23" />
+  <link rel="stylesheet" href="admin.css?v=24" />
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
@@ -568,6 +568,10 @@
           </div>
         </div>
         <div id="acm-confirm-error" class="acm-error"></div>
+        <label class="acm-check-row">
+          <input type="checkbox" id="acm-for-sale" />
+          <span>List as available for sale / trade</span>
+        </label>
         <button id="acm-confirm-btn" class="acm-primary-btn">Add to Queue</button>
         <button id="acm-back-btn" class="acm-secondary-btn">← Try again</button>
       </div>
@@ -647,7 +651,7 @@
   </div>
 
   <script src="admin.js?v=43"></script>
-  <script src="add-card-modal.js?v=19"></script>
+  <script src="add-card-modal.js?v=20"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");</script>
 </body>
 </html>

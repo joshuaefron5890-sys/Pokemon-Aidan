@@ -545,6 +545,7 @@
   // ── Step B: Confirm → queue ───────────────────────────────
 
   function showConfirmStep(card) {
+    document.getElementById("acm-for-sale").checked = false;
     lookupBtn.disabled = false;
     lookupSpinner.classList.add("hidden");
     lookupLabel.textContent = "Find Card";
@@ -632,7 +633,8 @@
       if (!name) { document.getElementById("acm-confirm-error").textContent = "Please enter a card name."; return; }
       foundCard = { ...foundCard, query: name, marketPrice: isNaN(price) ? null : price };
     }
-    cardQueue.push(foundCard);
+    const forSale = document.getElementById("acm-for-sale").checked;
+    cardQueue.push({ ...foundCard, available: forSale || undefined });
     foundCard = null;
     renderQueue();
     resetToStep("input");

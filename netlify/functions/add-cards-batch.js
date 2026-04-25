@@ -44,6 +44,7 @@ exports.handler = async (event, context) => {
       if (c.tcgUrl)                       entry.tcgUrl        = c.tcgUrl;
       if (c.imageUrl)                     entry.imageUrl      = c.imageUrl;
       if (c.grade)                        entry.grade         = c.grade;
+      if (c.available)                    entry.available     = true;
       // Accept either fallbackPrice (manual edit) or marketPrice (scraped from TCGPlayer)
       const storedPrice = c.fallbackPrice ?? c.marketPrice;
       if (storedPrice != null)            entry.fallbackPrice = storedPrice;
