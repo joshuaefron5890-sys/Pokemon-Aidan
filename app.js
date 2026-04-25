@@ -1164,6 +1164,32 @@ async function _refreshCardData() {
     }
 
     if (!card) {
+      // Fallback for Japanese/promo cards not in pokemontcg.io: fetch image + price
+      // directly from the TCGPlayer page via resolve-tcg-product
+      if (tcgProductId) {
+        try {
+          const pr = await fetch(`/.netlify/functions/resolve-tcg-product?productId=${tcgProductId}`);
+          if (pr.ok) {
+            const pd = await pr.json();
+            if (pd.imageUrl || pd.price != null) {
+              if (pd.imageUrl) {
+                const imgInput = m.querySelector("#cem-image-url");
+                const prev     = m.querySelector("#cem-preview");
+                if (!imgInput.value) { imgInput.value = pd.imageUrl; prev.src = pd.imageUrl; prev.style.display = ""; }
+              }
+              const priceInput = m.querySelector("#cem-price");
+              const priceToUse = pd.price ?? tcgPrice;
+              if (priceToUse != null && !priceInput.value) priceInput.value = priceToUse;
+              const priceNote = pd.price != null ? ` · $${pd.price.toFixed(2)}` : "";
+              statusEl.textContent = `✓ Fetched from TCGPlayer (card not in English database${priceNote})`;
+              statusEl.classList.add("cem-ok");
+              setTimeout(() => { statusEl.textContent = ""; statusEl.className = "cem-refresh-status"; }, 5000);
+              refreshBtn.disabled = false;
+              return;
+            }
+          }
+        } catch { /* fall through to error */ }
+      }
       statusEl.textContent = "Card not found — try entering the Card ID manually";
       statusEl.classList.add("cem-err");
       refreshBtn.disabled = false;
