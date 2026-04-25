@@ -276,6 +276,8 @@
 
     // Extracts card name + number from a TCGPlayer product slug
     // e.g. "pokemon-base-set-pikachu-058" → { cardName: "pikachu", cardNumber: "58" }
+    const COUNTRY_MARKERS = new Set(["japan","japanese","korean","chinese","german","french","italian","spanish","portuguese","thai"]);
+
     function parseSlugForCard(slug) {
       let cardName = "", cardNumber = "";
       let cleaned = slug.replace(/^pokemon-/, "");
@@ -292,17 +294,19 @@
       }
       const nameSuffixes = new Set(["ex", "gx", "v", "vmax", "vstar", "mega", "break", "prime"]);
       const slugParts = cleaned.split("-");
-      let nameWords = [slugParts[slugParts.length - 1]];
-      if (slugParts.length >= 2 && nameSuffixes.has(slugParts[slugParts.length - 1])) {
-        nameWords = [slugParts[slugParts.length - 2], slugParts[slugParts.length - 1]];
+      // Detect non-English cards (TCGPlayer puts country first: pokemon-japan-...)
+      const isNonEnglish = slugParts.length > 0 && COUNTRY_MARKERS.has(slugParts[0]);
+      // Strip the country word so it doesn't pollute the set hint
+      const nameParts = isNonEnglish ? slugParts.slice(1) : slugParts;
+      let nameWords = [nameParts[nameParts.length - 1]];
+      if (nameParts.length >= 2 && nameSuffixes.has(nameParts[nameParts.length - 1])) {
+        nameWords = [nameParts[nameParts.length - 2], nameParts[nameParts.length - 1]];
       }
       cardName = nameWords.join(" ");
-      // The slug words before the card name are the set hint.
-      // Use the last two of those — closest to the actual set name in the slug
-      // (e.g. "sword-shield-vivid-voltage-pikachu" → "vivid voltage", not "sword shield vivid voltage")
-      const setHintParts = slugParts.slice(0, slugParts.length - nameWords.length);
+      // Last 2 pre-name words = set hint (e.g. "base set", "vivid voltage")
+      const setHintParts = nameParts.slice(0, nameParts.length - nameWords.length);
       const setHint = setHintParts.slice(-2).join(" ");
-      return { cardName, cardNumber, setHint };
+      return { cardName, cardNumber, setHint, isNonEnglish };
     }
 
     // pokemontcg.io stores GX/EX names with a hyphen ("Umbreon-GX") but URL slugs
@@ -389,7 +393,7 @@
       if (!link || !link.includes("tcgplayer.com")) { errEl.textContent = "Please paste a valid TCGPlayer URL."; return; }
 
       // Parse slug for card name + number + set hint
-      let cardName = "", cardNumber = "", setHint = "";
+      let cardName = "", cardNumber = "", setHint = "", isNonEnglish = false;
       let isBareProductId = false;
       try {
         const normalized = link.includes("://") ? link : `https://${link}`;
@@ -398,7 +402,7 @@
         if (/^\d+$/.test(slug)) {
           isBareProductId = true;
         } else {
-          ({ cardName, cardNumber, setHint } = parseSlugForCard(slug));
+          ({ cardName, cardNumber, setHint, isNonEnglish } = parseSlugForCard(slug));
         }
       } catch {}
 
@@ -444,17 +448,17 @@
 
       lookupBtn.disabled = true;
       lookupSpinner.classList.remove("hidden");
-      lookupLabel.textContent = "Searching…";
+      lookupLabel.textContent = isNonEnglish ? "Fetching price…" : "Searching…";
 
       try {
-        const formatted = await tcgLookup(cardName, cardNumber, link, setHint);
+        const formatted = isNonEnglish ? null : await tcgLookup(cardName, cardNumber, link, setHint);
         if (formatted) {
           if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
           else { showPickStep(formatted); }
         } else {
-          // Card not found in pokemontcg.io — manual add with TCGPlayer URL
-          const displayName = (cardName + (cardNumber ? ` ${cardNumber}` : ""))
-            .replace(/\b\w/g, c => c.toUpperCase());
+          // Card not found in pokemontcg.io (or non-English) — manual add with TCGPlayer URL
+          const displayName = cardName.replace(/\b\w/g, c => c.toUpperCase())
+            + (cardNumber ? ` ${cardNumber}` : "");
           let manualPrice = null;
           const pidMatch = link.match(/tcgplayer\.com\/product\/(\d+)/i);
           if (pidMatch) {
@@ -463,7 +467,7 @@
               if (pr.ok) { const pd = await pr.json(); if (pd.price != null) manualPrice = pd.price; }
             } catch { /* non-fatal */ }
           }
-          foundCard = { cardId: "", query: displayName, setName: "", marketPrice: manualPrice, tcgUrl: link };
+          foundCard = { cardId: "", query: displayName, setName: isNonEnglish ? "Japanese" : "", marketPrice: manualPrice, tcgUrl: link };
           showConfirmStep(foundCard);
         }
       } catch (err) {
