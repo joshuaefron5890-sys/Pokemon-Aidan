@@ -297,7 +297,12 @@
         nameWords = [slugParts[slugParts.length - 2], slugParts[slugParts.length - 1]];
       }
       cardName = nameWords.join(" ");
-      return { cardName, cardNumber };
+      // The slug words before the card name are the set hint.
+      // Use the last two of those — closest to the actual set name in the slug
+      // (e.g. "sword-shield-vivid-voltage-pikachu" → "vivid voltage", not "sword shield vivid voltage")
+      const setHintParts = slugParts.slice(0, slugParts.length - nameWords.length);
+      const setHint = setHintParts.slice(-2).join(" ");
+      return { cardName, cardNumber, setHint };
     }
 
     // pokemontcg.io stores GX/EX names with a hyphen ("Umbreon-GX") but URL slugs
@@ -313,10 +318,12 @@
       return [name];
     }
 
-    // Shared helper: try pokemontcg.io with multiple name forms + optional number.
-    // When cardNumber is provided, only tries exact name+number matches — no name-only
-    // fallback, so callers can handle "not in API yet" promos without showing wrong cards.
-    async function tcgLookup(cardName, cardNumber, storedTcgUrl = "") {
+    // Shared helper: try pokemontcg.io with multiple name forms + optional number/set hint.
+    // When cardNumber is provided, only tries exact name+number — no name-only fallback, so
+    // callers can handle "not in API yet" promos without showing wrong cards.
+    // When no number but a setHint is provided (e.g. "base set"), tries set-filtered search
+    // first so old cards like Base Set Charizard surface above newer printings.
+    async function tcgLookup(cardName, cardNumber, storedTcgUrl = "", setHint = "") {
       const variants = nameVariants(cardName);
       for (const name of variants) {
         if (cardNumber) {
@@ -324,6 +331,11 @@
           const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
           if (r.ok) { const { data } = await r.json(); if (data?.length) return formatCards(data, storedTcgUrl); }
         } else {
+          if (setHint) {
+            const q = encodeURIComponent(`name:"${name}" set.name:"${setHint}"`);
+            const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
+            if (r.ok) { const { data } = await r.json(); if (data?.length) return formatCards(data, storedTcgUrl); }
+          }
           const q = encodeURIComponent(`name:"${name}"`);
           const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
           if (r.ok) { const { data } = await r.json(); if (data?.length) return formatCards(data, storedTcgUrl); }
@@ -376,8 +388,8 @@
       const link = document.getElementById("acm-tcg-link").value.trim();
       if (!link || !link.includes("tcgplayer.com")) { errEl.textContent = "Please paste a valid TCGPlayer URL."; return; }
 
-      // Parse slug for card name + number
-      let cardName = "", cardNumber = "";
+      // Parse slug for card name + number + set hint
+      let cardName = "", cardNumber = "", setHint = "";
       let isBareProductId = false;
       try {
         const normalized = link.includes("://") ? link : `https://${link}`;
@@ -386,7 +398,7 @@
         if (/^\d+$/.test(slug)) {
           isBareProductId = true;
         } else {
-          ({ cardName, cardNumber } = parseSlugForCard(slug));
+          ({ cardName, cardNumber, setHint } = parseSlugForCard(slug));
         }
       } catch {}
 
@@ -404,7 +416,7 @@
           const resolved = await r.json();
 
           if (resolved.slug) {
-            ({ cardName, cardNumber } = parseSlugForCard(resolved.slug));
+            ({ cardName, cardNumber, setHint } = parseSlugForCard(resolved.slug));
           } else if (resolved.title) {
             // Parse "Pikachu #58 - Base Set" style title
             const titleMatch = resolved.title.match(/^(.+?)\s+#(\w+)/);
@@ -435,7 +447,7 @@
       lookupLabel.textContent = "Searching…";
 
       try {
-        const formatted = await tcgLookup(cardName, cardNumber, link);
+        const formatted = await tcgLookup(cardName, cardNumber, link, setHint);
         if (formatted) {
           if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
           else { showPickStep(formatted); }
