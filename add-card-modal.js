@@ -313,7 +313,9 @@
       return [name];
     }
 
-    // Shared helper: try pokemontcg.io with multiple name forms + optional number
+    // Shared helper: try pokemontcg.io with multiple name forms + optional number.
+    // When cardNumber is provided, only tries exact name+number matches — no name-only
+    // fallback, so callers can handle "not in API yet" promos without showing wrong cards.
     async function tcgLookup(cardName, cardNumber, storedTcgUrl = "") {
       const variants = nameVariants(cardName);
       for (const name of variants) {
@@ -321,10 +323,11 @@
           const q = encodeURIComponent(`name:"${name}" number:"${cardNumber}"`);
           const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
           if (r.ok) { const { data } = await r.json(); if (data?.length) return formatCards(data, storedTcgUrl); }
+        } else {
+          const q = encodeURIComponent(`name:"${name}"`);
+          const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
+          if (r.ok) { const { data } = await r.json(); if (data?.length) return formatCards(data, storedTcgUrl); }
         }
-        const q = encodeURIComponent(`name:"${name}"`);
-        const r = await fetch(`${TCG_API}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
-        if (r.ok) { const { data } = await r.json(); if (data?.length) return formatCards(data, storedTcgUrl); }
       }
       return null; // not found in API
     }
@@ -354,7 +357,11 @@
 
       try {
         const formatted = await tcgLookup(cardName, cardNumber);
-        if (!formatted) throw new Error("No cards found. Try including the card number (e.g. \"Umbreon GX 67\") or use the TCG Link tab.");
+        if (!formatted) throw new Error(
+          cardNumber
+            ? `No card found for "${cardName} ${cardNumber}" — it may not be in the pokemontcg.io database yet. Try the TCG Link tab to add it by URL instead.`
+            : `No cards found for "${cardName}". Check the spelling or try a different name.`
+        );
         if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
         else { showPickStep(formatted); }
       } catch (err) {
