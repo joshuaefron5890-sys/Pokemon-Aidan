@@ -452,18 +452,26 @@
 
       try {
         if (isNonEnglish) {
-          // Non-English card: pull image + title from TCGPlayer page, skip API lookup
+          // Non-English card: pull image + price from TCGPlayer page, skip API lookup
           const pidMatch = link.match(/tcgplayer\.com\/product\/(\d+)/i);
-          let imageUrl = "";
+          let imageUrl = "", marketPrice = null;
           if (pidMatch) {
-            try {
-              const r = await fetch(`/.netlify/functions/resolve-tcg-product?productId=${pidMatch[1]}`);
-              if (r.ok) { const d = await r.json(); imageUrl = d.imageUrl || ""; }
-            } catch { /* non-fatal */ }
+            const [imgRes, priceRes] = await Promise.allSettled([
+              fetch(`/.netlify/functions/resolve-tcg-product?productId=${pidMatch[1]}`),
+              fetch(`/.netlify/functions/get-tcg-price?url=${encodeURIComponent(link)}`),
+            ]);
+            if (imgRes.status === "fulfilled" && imgRes.value.ok) {
+              const d = await imgRes.value.json();
+              imageUrl = d.imageUrl || "";
+            }
+            if (priceRes.status === "fulfilled" && priceRes.value.ok) {
+              const d = await priceRes.value.json();
+              if (d.price != null) marketPrice = d.price;
+            }
           }
           const displayName = cardName.replace(/\b\w/g, c => c.toUpperCase())
             + (cardNumber ? ` ${cardNumber}` : "") + " (Japanese)";
-          foundCard = { cardId: "", query: displayName, setName: "Japanese", marketPrice: null, tcgUrl: link, imageUrl };
+          foundCard = { cardId: "", query: displayName, setName: "Japanese", marketPrice, tcgUrl: link, imageUrl };
           showConfirmStep(foundCard);
         } else {
           const formatted = await tcgLookup(cardName, cardNumber, link, setHint);
