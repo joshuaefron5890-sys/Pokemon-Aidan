@@ -624,8 +624,8 @@
   // "Add to Queue" — store card and go back to input
   document.getElementById("acm-confirm-btn").addEventListener("click", () => {
     if (!foundCard) return;
-    if (!foundCard.cardId) {
-      // Manual add: apply any edits the user made to name/price
+    if (!foundCard.cardId && !foundCard.imageUrl) {
+      // Manual add (no image, no API card): apply edits from visible fields
       const nameInput  = document.getElementById("acm-manual-name");
       const priceInput = document.getElementById("acm-manual-price");
       const name  = nameInput.value.trim();
