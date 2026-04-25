@@ -39,12 +39,14 @@ exports.handler = async (event, context) => {
         continue;
       }
       const entry = { query: c.query || c.cardId };
-      if (c.cardId)        entry.cardId        = c.cardId;
-      if (c.setName)       entry.setName       = c.setName;
-      if (c.tcgUrl)        entry.tcgUrl        = c.tcgUrl;
-      if (c.fallbackPrice) entry.fallbackPrice = c.fallbackPrice;
-      if (c.imageUrl)      entry.imageUrl      = c.imageUrl;
-      if (c.grade)         entry.grade         = c.grade;
+      if (c.cardId)                       entry.cardId        = c.cardId;
+      if (c.setName)                      entry.setName       = c.setName;
+      if (c.tcgUrl)                       entry.tcgUrl        = c.tcgUrl;
+      if (c.imageUrl)                     entry.imageUrl      = c.imageUrl;
+      if (c.grade)                        entry.grade         = c.grade;
+      // Accept either fallbackPrice (manual edit) or marketPrice (scraped from TCGPlayer)
+      const storedPrice = c.fallbackPrice ?? c.marketPrice;
+      if (storedPrice != null)            entry.fallbackPrice = storedPrice;
       binder.cards.push(entry);
       added.push(key);
     }

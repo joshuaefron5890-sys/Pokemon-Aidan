@@ -48,19 +48,55 @@ exports.handler = async (event) => {
       html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:image"/i)?.[1] ||
       "";
 
-    // Price — try JSON-LD structured data first, then og:price meta tag
+    // Price — try multiple sources in order of reliability
     let price = null;
-    const ldMatch = html.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
-    if (ldMatch) {
-      for (const block of ldMatch) {
+
+    // 1. Next.js __NEXT_DATA__ (most reliable for TCGPlayer — always server-rendered)
+    if (price == null) {
+      const ndMatch = html.match(/<script[^>]+id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
+      if (ndMatch) {
         try {
-          const json = JSON.parse(block.replace(/<\/?script[^>]*>/gi, ""));
-          const offers = json.offers || (Array.isArray(json) && json.find(j => j.offers)?.offers);
-          const offerPrice = Array.isArray(offers) ? offers[0]?.price : offers?.price;
-          if (offerPrice != null) { price = parseFloat(offerPrice) || null; break; }
+          const nd = JSON.parse(ndMatch[1]);
+          // Walk common paths TCGPlayer uses
+          const pp = nd?.props?.pageProps;
+          const candidates = [
+            pp?.product?.marketPrice,
+            pp?.product?.lowestPrice,
+            pp?.listing?.price,
+            pp?.listings?.[0]?.price,
+            pp?.cardData?.marketPrice,
+            nd?.props?.initialState?.product?.marketPrice,
+          ];
+          for (const v of candidates) {
+            const n = parseFloat(v);
+            if (!isNaN(n) && n > 0) { price = n; break; }
+          }
+          // Deeper search: look for any key named marketPrice or price in pageProps
+          if (price == null && pp) {
+            const str = JSON.stringify(pp);
+            const mMatch = str.match(/"marketPrice"\s*:\s*([\d.]+)/);
+            if (mMatch) price = parseFloat(mMatch[1]) || null;
+          }
         } catch {}
       }
     }
+
+    // 2. JSON-LD structured data
+    if (price == null) {
+      const ldMatch = html.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+      if (ldMatch) {
+        for (const block of ldMatch) {
+          try {
+            const json = JSON.parse(block.replace(/<\/?script[^>]*>/gi, ""));
+            const offers = json.offers || (Array.isArray(json) && json.find(j => j.offers)?.offers);
+            const offerPrice = Array.isArray(offers) ? offers[0]?.price : offers?.price;
+            if (offerPrice != null) { price = parseFloat(offerPrice) || null; break; }
+          } catch {}
+        }
+      }
+    }
+
+    // 3. og:price meta tag
     if (price == null) {
       const ogPrice =
         html.match(/<meta[^>]+property="og:price:amount"[^>]+content="([^"]+)"/i)?.[1] ||
