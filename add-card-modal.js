@@ -479,18 +479,26 @@
             if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
             else { showPickStep(formatted); }
           } else {
-            // Card not found in pokemontcg.io — manual add with TCGPlayer URL
+            // Card not found in pokemontcg.io — fetch image + price from TCGPlayer directly
             const displayName = cardName.replace(/\b\w/g, c => c.toUpperCase())
               + (cardNumber ? ` ${cardNumber}` : "");
-            let manualPrice = null;
+            let imageUrl = "", marketPrice = null;
             const pidMatch = link.match(/tcgplayer\.com\/product\/(\d+)/i);
             if (pidMatch) {
-              try {
-                const pr = await fetch(`/.netlify/functions/get-tcg-price?url=${encodeURIComponent(link)}`);
-                if (pr.ok) { const pd = await pr.json(); if (pd.price != null) manualPrice = pd.price; }
-              } catch { /* non-fatal */ }
+              const [imgRes, priceRes] = await Promise.allSettled([
+                fetch(`/.netlify/functions/resolve-tcg-product?productId=${pidMatch[1]}`),
+                fetch(`/.netlify/functions/get-tcg-price?url=${encodeURIComponent(link)}`),
+              ]);
+              if (imgRes.status === "fulfilled" && imgRes.value.ok) {
+                const d = await imgRes.value.json();
+                imageUrl = d.imageUrl || "";
+              }
+              if (priceRes.status === "fulfilled" && priceRes.value.ok) {
+                const d = await priceRes.value.json();
+                if (d.price != null) marketPrice = d.price;
+              }
             }
-            foundCard = { cardId: "", query: displayName, setName: "", marketPrice: manualPrice, tcgUrl: link };
+            foundCard = { cardId: "", query: displayName, setName: "", marketPrice, tcgUrl: link, imageUrl };
             showConfirmStep(foundCard);
           }
         }
