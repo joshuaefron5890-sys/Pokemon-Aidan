@@ -274,6 +274,32 @@
 
     const TCG_API = "https://api.pokemontcg.io/v2";
 
+    // Extracts card name + number from a TCGPlayer product slug
+    // e.g. "pokemon-base-set-pikachu-058" → { cardName: "pikachu", cardNumber: "58" }
+    function parseSlugForCard(slug) {
+      let cardName = "", cardNumber = "";
+      let cleaned = slug.replace(/^pokemon-/, "");
+      const lastNum = cleaned.match(/-(\d+)$/);
+      if (lastNum) {
+        cleaned = cleaned.slice(0, lastNum.index);
+        const prevNum = cleaned.match(/-(\d+)$/);
+        if (prevNum) {
+          cardNumber = parseInt(prevNum[1], 10).toString();
+          cleaned = cleaned.slice(0, prevNum.index);
+        } else {
+          cardNumber = parseInt(lastNum[1], 10).toString();
+        }
+      }
+      const nameSuffixes = new Set(["ex", "gx", "v", "vmax", "vstar", "mega", "break", "prime"]);
+      const slugParts = cleaned.split("-");
+      let nameWords = [slugParts[slugParts.length - 1]];
+      if (slugParts.length >= 2 && nameSuffixes.has(slugParts[slugParts.length - 1])) {
+        nameWords = [slugParts[slugParts.length - 2], slugParts[slugParts.length - 1]];
+      }
+      cardName = nameWords.join(" ");
+      return { cardName, cardNumber };
+    }
+
     // pokemontcg.io stores GX/EX names with a hyphen ("Umbreon-GX") but URL slugs
     // produce a space ("umbreon gx"). Try both forms so neither is missed.
     function nameVariants(name) {
@@ -345,36 +371,55 @@
 
       // Parse slug for card name + number
       let cardName = "", cardNumber = "";
+      let isBareProductId = false;
       try {
         const normalized = link.includes("://") ? link : `https://${link}`;
         const parts = new URL(normalized).pathname.split("/").filter(Boolean);
         const slug = parts[parts.length - 1] || "";
-        // Bare numeric product ID (e.g. /product/610447) — no card name in URL
         if (/^\d+$/.test(slug)) {
-          errEl.textContent = "This link doesn't include the card name. Use a full TCGPlayer product URL (e.g. tcgplayer.com/product/12345/pokemon-set-name-card-name), or switch to the Card Name tab.";
+          isBareProductId = true;
+        } else {
+          ({ cardName, cardNumber } = parseSlugForCard(slug));
+        }
+      } catch {}
+
+      // For bare product IDs, resolve the card name server-side
+      if (isBareProductId) {
+        const normalized = link.includes("://") ? link : `https://${link}`;
+        const productId = new URL(normalized).pathname.split("/").filter(Boolean).pop();
+
+        lookupBtn.disabled = true;
+        lookupSpinner.classList.remove("hidden");
+        lookupLabel.textContent = "Resolving…";
+
+        try {
+          const r = await fetch(`/.netlify/functions/resolve-tcg-product?productId=${productId}`);
+          const resolved = await r.json();
+
+          if (resolved.slug) {
+            ({ cardName, cardNumber } = parseSlugForCard(resolved.slug));
+          } else if (resolved.title) {
+            // Parse "Pikachu #58 - Base Set" style title
+            const titleMatch = resolved.title.match(/^(.+?)\s+#(\w+)/);
+            if (titleMatch) { cardName = titleMatch[1].trim(); cardNumber = titleMatch[2]; }
+            else { cardName = resolved.title.split(/\s+[–—-]/)[0].trim(); }
+          }
+
+          if (!cardName) {
+            errEl.textContent = "Could not determine the card name from this link — try the Card Name tab instead.";
+            lookupBtn.disabled = false;
+            lookupSpinner.classList.add("hidden");
+            lookupLabel.textContent = "Find Card";
+            return;
+          }
+        } catch (err) {
+          errEl.textContent = "Failed to resolve product link — try the Card Name tab instead.";
+          lookupBtn.disabled = false;
+          lookupSpinner.classList.add("hidden");
+          lookupLabel.textContent = "Find Card";
           return;
         }
-        let cleaned = slug.replace(/^pokemon-/, "");
-        // Strip trailing numbers — two in a row means number/total (e.g. espurr-095-088)
-        const lastNum = cleaned.match(/-(\d+)$/);
-        if (lastNum) {
-          cleaned = cleaned.slice(0, lastNum.index);
-          const prevNum = cleaned.match(/-(\d+)$/);
-          if (prevNum) {
-            cardNumber = parseInt(prevNum[1], 10).toString();
-            cleaned = cleaned.slice(0, prevNum.index);
-          } else {
-            cardNumber = parseInt(lastNum[1], 10).toString();
-          }
-        }
-        const nameSuffixes = new Set(["ex", "gx", "v", "vmax", "vstar", "mega", "break", "prime"]);
-        const slugParts = cleaned.split("-");
-        let nameWords = [slugParts[slugParts.length - 1]];
-        if (slugParts.length >= 2 && nameSuffixes.has(slugParts[slugParts.length - 1])) {
-          nameWords = [slugParts[slugParts.length - 2], slugParts[slugParts.length - 1]];
-        }
-        cardName = nameWords.join(" ");
-      } catch {}
+      }
 
       if (!cardName) { errEl.textContent = "Could not parse card name from URL — try the Card Name tab instead."; return; }
 
