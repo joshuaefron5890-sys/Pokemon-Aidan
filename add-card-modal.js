@@ -440,10 +440,18 @@
           if (formatted.length === 1) { foundCard = formatted[0]; showConfirmStep(foundCard); }
           else { showPickStep(formatted); }
         } else {
-          // Card not found in pokemontcg.io — add by name only (no cardId)
-          // Binder will still show it and try name-based lookup at display time
-          const nameQuery = cardName + (cardNumber ? ` ${cardNumber}` : "");
-          foundCard = { cardId: "", query: nameQuery, setName: "", marketPrice: null, tcgUrl: link };
+          // Card not found in pokemontcg.io — manual add with TCGPlayer URL
+          const displayName = (cardName + (cardNumber ? ` ${cardNumber}` : ""))
+            .replace(/\b\w/g, c => c.toUpperCase());
+          let manualPrice = null;
+          const pidMatch = link.match(/tcgplayer\.com\/product\/(\d+)/i);
+          if (pidMatch) {
+            try {
+              const pr = await fetch(`/.netlify/functions/get-tcg-price?url=${encodeURIComponent(link)}`);
+              if (pr.ok) { const pd = await pr.json(); if (pd.price != null) manualPrice = pd.price; }
+            } catch { /* non-fatal */ }
+          }
+          foundCard = { cardId: "", query: displayName, setName: "", marketPrice: manualPrice, tcgUrl: link };
           showConfirmStep(foundCard);
         }
       } catch (err) {
@@ -502,6 +510,8 @@
     lookupSpinner.classList.add("hidden");
     lookupLabel.textContent = "Find Card";
 
+    const isManual = !card.cardId;
+
     const previewImg = document.getElementById("acm-preview-img");
     let cardNum = "";
     if (card.cardId) {
@@ -515,11 +525,21 @@
     }
     previewImg.onerror = () => { previewImg.src = ""; previewImg.style.display = "none"; };
 
+    document.getElementById("acm-confirm-sub").textContent  = isManual ? "Card not in database — add manually:" : "Is this the right card?";
     document.getElementById("acm-preview-name").textContent  = card.query || card.cardId;
     document.getElementById("acm-preview-set").textContent   = card.setName || "";
     document.getElementById("acm-preview-num").textContent   = cardNum ? `#${cardNum}` : "";
     document.getElementById("acm-preview-price").textContent =
       card.marketPrice ? `$${Number(card.marketPrice).toFixed(2)}` : "Price unavailable";
+
+    const manualFields = document.getElementById("acm-manual-fields");
+    if (isManual) {
+      manualFields.classList.remove("hidden");
+      document.getElementById("acm-manual-name").value  = card.query || "";
+      document.getElementById("acm-manual-price").value = card.marketPrice != null ? card.marketPrice : "";
+    } else {
+      manualFields.classList.add("hidden");
+    }
 
     resetToStep("confirm");
   }
@@ -561,6 +581,15 @@
   // "Add to Queue" — store card and go back to input
   document.getElementById("acm-confirm-btn").addEventListener("click", () => {
     if (!foundCard) return;
+    if (!foundCard.cardId) {
+      // Manual add: apply any edits the user made to name/price
+      const nameInput  = document.getElementById("acm-manual-name");
+      const priceInput = document.getElementById("acm-manual-price");
+      const name  = nameInput.value.trim();
+      const price = parseFloat(priceInput.value);
+      if (!name) { document.getElementById("acm-confirm-error").textContent = "Please enter a card name."; return; }
+      foundCard = { ...foundCard, query: name, marketPrice: isNaN(price) ? null : price };
+    }
     cardQueue.push(foundCard);
     foundCard = null;
     renderQueue();

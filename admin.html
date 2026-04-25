@@ -547,7 +547,7 @@
 
       <!-- Step B: Confirm card -->
       <div id="acm-step-confirm" class="acm-body hidden">
-        <p class="acm-sub">Is this the right card?</p>
+        <p id="acm-confirm-sub" class="acm-sub">Is this the right card?</p>
         <div class="acm-preview-row">
           <img id="acm-preview-img" class="acm-preview-card" alt="Card preview" />
           <div class="acm-preview-info">
@@ -555,6 +555,16 @@
             <div class="acm-preview-set"  id="acm-preview-set"></div>
             <div class="acm-preview-num"  id="acm-preview-num"></div>
             <div class="acm-preview-price" id="acm-preview-price"></div>
+          </div>
+        </div>
+        <!-- Shown when the card isn't in the pokemontcg.io database -->
+        <div id="acm-manual-fields" class="hidden">
+          <p class="acm-hint" style="margin-bottom:.75rem">Not found in the card database — edit the name and price before adding.</p>
+          <div class="acm-field">
+            <input type="text" id="acm-manual-name" placeholder="Card name" autocomplete="off" />
+          </div>
+          <div class="acm-field">
+            <input type="number" id="acm-manual-price" step="0.01" min="0" placeholder="Price (NM) e.g. 4.99" />
           </div>
         </div>
         <div id="acm-confirm-error" class="acm-error"></div>
@@ -637,7 +647,7 @@
   </div>
 
   <script src="admin.js?v=43"></script>
-  <script src="add-card-modal.js?v=8"></script>
+  <script src="add-card-modal.js?v=9"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");</script>
 </body>
 </html>
