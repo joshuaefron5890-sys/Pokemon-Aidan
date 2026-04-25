@@ -325,7 +325,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
 
-        const cards = (data.cards || []).filter(c => c && c.cardId);
+        const cards = (data.cards || []).filter(c => c && (c.cardId || c.imageUrl || c.query));
         if (!cards.length) throw new Error("Could not identify card. Try a clearer photo or use Card Name instead.");
 
         if (cards.length === 1) {
