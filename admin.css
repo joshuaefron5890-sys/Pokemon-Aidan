@@ -1019,6 +1019,9 @@ a.binder-card { cursor: pointer; }
 .forsale-heart-btn.faved { opacity: 1; color: #f43f5e; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
 .forsale-heart-btn:hover { background: #fff !important; color: #e11d48 !important; }
 .forsale-heart-btn.fav-pulse { animation: fav-pop .35s ease; }
+@media (hover: none) {
+  .forsale-heart-btn { opacity: 1; }
+}
 .forsale-tile-info {
   padding: .6rem .7rem .3rem;
   flex: 1;
