@@ -1386,7 +1386,7 @@ a.binder-card { cursor: pointer; }
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: var(--surface);
+  background: #0e1f38;
   border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,.5);
