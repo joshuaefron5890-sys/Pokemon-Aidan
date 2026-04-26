@@ -408,6 +408,16 @@ let currentGradeFilter = "";
 let currentAvailableFilter = "";
 let currentDuplicatesFilter = false;
 
+function syncUrl() {
+  const params = new URLSearchParams();
+  if (currentFilter)          params.set("q", currentFilter);
+  if (currentSeries)          params.set("series", currentSeries);
+  if (currentGradeFilter)     params.set("grade", currentGradeFilter);
+  if (currentAvailableFilter) params.set("available", currentAvailableFilter);
+  const qs = params.toString();
+  history.replaceState(null, "", qs ? `?${qs}` : location.pathname);
+}
+
 function normalizeSearch(str) {
   // Lowercase and collapse whitespace — no regex on user input so special chars are safe
   return String(str).toLowerCase().replace(/\s+/g, " ").trim();
@@ -624,6 +634,7 @@ function renderNextPage() {
 }
 
 function resetAndRender() {
+  syncUrl();
   const grid = document.getElementById("card-grid");
   const sentinel = document.getElementById("load-sentinel");
   const statusEl = document.getElementById("search-status");
@@ -800,6 +811,15 @@ async function loadCollection() {
   const total = sortedResults.reduce((sum, r) => sum + (r.price || 0), 0);
   totalEl.textContent = formatPrice(total);
 
+  // Apply URL filter params before first render (deep-link / shareable URL support)
+  (function () {
+    const p = new URLSearchParams(location.search);
+    if (p.get("q"))         currentFilter = p.get("q");
+    if (p.get("series"))    currentSeries = p.get("series");
+    if (p.get("grade"))     currentGradeFilter = p.get("grade");
+    if (p.get("available")) currentAvailableFilter = p.get("available");
+  })();
+
   // Remove skeletons, render first page
   grid.querySelectorAll(".card-skeleton").forEach(el => el.remove());
   currentPage = 0;
@@ -808,6 +828,50 @@ async function loadCollection() {
   buildSeriesDropdown();
   buildGradeDropdown();
   buildAvailableDropdown();
+
+  // Reflect URL-loaded filters in the UI controls
+  (function () {
+    const p = new URLSearchParams(location.search);
+    if (p.get("q")) {
+      const si = document.getElementById("search-input");
+      const sc = document.getElementById("search-clear");
+      if (si) si.value = currentFilter;
+      if (sc) sc.style.display = "block";
+    }
+    if (p.get("series")) {
+      document.getElementById("series-label").textContent = currentSeries;
+      document.getElementById("series-btn").classList.add("active");
+    }
+    if (p.get("grade")) {
+      const labels = { graded: "Graded Only", "non-graded": "Non-Graded Only" };
+      document.getElementById("grade-label").textContent = labels[currentGradeFilter] || "All Cards";
+      document.getElementById("grade-btn").classList.add("active");
+    }
+    if (p.get("available")) {
+      const labels = { available: "For Sale/Trade", "not-available": "Not for Sale/Trade" };
+      const lbl = document.getElementById("available-label");
+      if (lbl) lbl.textContent = labels[currentAvailableFilter] || "Availability";
+      document.getElementById("available-btn")?.classList.add("active");
+    }
+  })();
+
+  // Share button — copies current URL (with active filter params) to clipboard
+  const shareLinkBtn = document.getElementById("share-link-btn");
+  if (shareLinkBtn) {
+    shareLinkBtn.addEventListener("click", async () => {
+      syncUrl(); // ensure URL is current before copying
+      try { await navigator.clipboard.writeText(location.href); }
+      catch {
+        const ta = Object.assign(document.createElement("textarea"), { value: location.href });
+        Object.assign(ta.style, { position: "fixed", opacity: "0" });
+        document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
+      }
+      const label = document.getElementById("share-link-label");
+      if (!label) return;
+      label.textContent = "Copied!";
+      setTimeout(() => { label.textContent = "Share"; }, 2000);
+    });
+  }
 
   loadingEl.textContent = "";
 

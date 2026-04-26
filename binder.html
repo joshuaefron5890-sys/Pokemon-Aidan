@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PokéBinder" />
-  <link rel="stylesheet" href="/style.css?v=78" />
+  <link rel="stylesheet" href="/style.css?v=79" />
 
   <!-- Netlify Identity for private binder auth + owner tools -->
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
@@ -113,6 +113,10 @@
         </div>
       </div>
     </div>
+    <button class="share-link-btn" id="share-link-btn" title="Copy shareable link to current filters">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span id="share-link-label">Share</span>
+    </button>
   </div>
   <div id="search-status" class="search-status"></div>
 
@@ -175,7 +179,7 @@
 
   <script src="/favorites.js?v=6"></script>
   <script src="/binder-loader.js?v=8"></script>
-  <script src="/app.js?v=80"></script>
+  <script src="/app.js?v=81"></script>
   <script src="/background.js?v=44"></script>
   <script>
     // Hide nav when embedded in the admin iframe
