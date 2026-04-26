@@ -670,7 +670,7 @@ function resizeAndIdentify(file) {
   reader.onload = ev => {
     const img = new Image();
     img.onload = async () => {
-      const MAX = 1024;
+      const MAX = 1600;
       let w = img.naturalWidth, h = img.naturalHeight;
       if (w > MAX || h > MAX) {
         if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
@@ -679,7 +679,7 @@ function resizeAndIdentify(file) {
       const canvas = document.createElement("canvas");
       canvas.width = w; canvas.height = h;
       canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-      const b64 = canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
+      const b64 = canvas.toDataURL("image/jpeg", 0.90).split(",")[1];
       try {
         const token = wizardData.token;
         const res = await fetch("/.netlify/functions/identify-card", {
@@ -745,40 +745,213 @@ document.getElementById("wiz-upload-input").addEventListener("change", e => {
 
 // ── Step 3: TCG Link tab ────────────────────────────────────
 
-function parseTcgLink(link) {
-  try {
-    const parts = new URL(link).pathname.split("/").filter(Boolean);
-    const slug  = parts[parts.length - 1] || "";
-    let cleaned = slug.replace(/^pokemon-/, "");
-    const numMatch = cleaned.match(/-(\d+)$/);
-    const numStr   = numMatch ? parseInt(numMatch[1], 10).toString() : null;
-    if (numMatch) cleaned = cleaned.slice(0, numMatch.index);
-    const suffixes  = new Set(["ex", "gx", "v", "vmax", "vstar", "mega", "break", "prime"]);
-    const slugParts = cleaned.split("-");
-    let nameWords   = [slugParts[slugParts.length - 1]];
-    if (slugParts.length >= 2 && suffixes.has(slugParts[slugParts.length - 1])) {
-      nameWords = [slugParts[slugParts.length - 2], slugParts[slugParts.length - 1]];
+const TCG_API_WIZ = "https://api.pokemontcg.io/v2";
+const LINK_COUNTRY_MARKERS = new Set(["japan","japanese","korean","chinese","german","french","italian","spanish","portuguese","thai"]);
+
+function parseSlugForCard(slug) {
+  let cardName = "", cardNumber = "";
+  let cleaned = slug.replace(/^pokemon-/, "");
+  const lastNum = cleaned.match(/-(\d+)$/);
+  if (lastNum) {
+    cleaned = cleaned.slice(0, lastNum.index);
+    const prevNum = cleaned.match(/-(\d+)$/);
+    if (prevNum) {
+      cardNumber = parseInt(prevNum[1], 10).toString();
+      cleaned = cleaned.slice(0, prevNum.index);
+    } else {
+      cardNumber = parseInt(lastNum[1], 10).toString();
     }
-    return numStr ? `${nameWords.join(" ")} ${numStr}` : nameWords.join(" ");
-  } catch { return null; }
+  }
+  const nameSuffixes = new Set(["ex","gx","v","vmax","vstar","mega","break","prime"]);
+  const slugParts = cleaned.split("-");
+  const isNonEnglish = slugParts.length > 0 && LINK_COUNTRY_MARKERS.has(slugParts[0]);
+  const nameParts = isNonEnglish ? slugParts.slice(1) : slugParts;
+  let nameWords = [nameParts[nameParts.length - 1]];
+  if (nameParts.length >= 2 && nameSuffixes.has(nameParts[nameParts.length - 1])) {
+    nameWords = [nameParts[nameParts.length - 2], nameParts[nameParts.length - 1]];
+  }
+  cardName = nameWords.join(" ");
+  const setHintParts = nameParts.slice(0, nameParts.length - nameWords.length);
+  const setHint = setHintParts.slice(-2).join(" ");
+  return { cardName, cardNumber, setHint, isNonEnglish };
 }
 
-document.getElementById("wiz-link-btn").addEventListener("click", () => {
-  const link      = document.getElementById("wiz-link-input").value.trim();
-  const statusEl  = document.getElementById("wiz-link-status");
+function nameVariantsWiz(name) {
+  const suffixes = new Set(["ex","gx","v","vmax","vstar","mega","break","prime"]);
+  const parts = name.trim().split(/\s+/);
+  const last = parts[parts.length - 1].toLowerCase();
+  if (parts.length > 1 && suffixes.has(last)) {
+    const base = parts.slice(0, -1).join(" ");
+    return [name, `${base}-${last}`];
+  }
+  return [name];
+}
+
+async function tcgLookupWiz(cardName, cardNumber, storedTcgUrl = "", setHint = "") {
+  const variants = nameVariantsWiz(cardName);
+  const numForms = cardNumber
+    ? [...new Set([cardNumber, cardNumber.replace(/^0+/, "") || cardNumber])]
+    : [];
+  for (const name of variants) {
+    if (numForms.length) {
+      for (const num of numForms) {
+        const q = encodeURIComponent(`name:"${name}" number:"${num}"`);
+        const r = await fetch(`${TCG_API_WIZ}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
+        if (r.ok) { const { data } = await r.json(); if (data?.length) return formatLinkCards(data, storedTcgUrl); }
+      }
+    } else {
+      if (setHint) {
+        const q = encodeURIComponent(`name:"${name}" set.name:"${setHint}"`);
+        const r = await fetch(`${TCG_API_WIZ}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
+        if (r.ok) { const { data } = await r.json(); if (data?.length) return formatLinkCards(data, storedTcgUrl); }
+      }
+      const q = encodeURIComponent(`name:"${name}"`);
+      const r = await fetch(`${TCG_API_WIZ}/cards?q=${q}&pageSize=6&orderBy=-set.releaseDate`);
+      if (r.ok) { const { data } = await r.json(); if (data?.length) return formatLinkCards(data, storedTcgUrl); }
+    }
+  }
+  return null;
+}
+
+function formatLinkCards(cards, storedTcgUrl) {
+  return cards.map(c => ({
+    cardId:      c.id,
+    query:       `${c.name} ${c.number || ""}`.trim(),
+    setName:     c.set?.name || "",
+    marketPrice: c.tcgplayer?.prices?.holofoil?.market ?? c.tcgplayer?.prices?.normal?.market ?? null,
+    tcgUrl:      storedTcgUrl,
+  }));
+}
+
+function addLinkCard(card) {
+  const statusEl = document.getElementById("wiz-link-status");
+  if (card.cardId && wizardData.cards.some(c => c.cardId === card.cardId)) {
+    statusEl.textContent = "That card is already in your binder.";
+    return;
+  }
+  wizardData.cards.push({
+    query:         card.query,
+    cardId:        card.cardId || "",
+    setName:       card.setName || "",
+    tcgUrl:        card.tcgUrl || "",
+    imageUrl:      card.imageUrl || undefined,
+    fallbackPrice: card.marketPrice || undefined,
+  });
+  saveState();
+  updateTray();
+  resultsEl.classList.add("hidden");
+  resultsGrid.innerHTML = "";
+  statusEl.textContent = `✓ Added ${card.query}`;
+}
+
+function showLinkResults(cards) {
+  resultsGrid.innerHTML = "";
+  cards.forEach(card => {
+    const imgSrc = card.imageUrl || (card.cardId ? cardImgUrl(card.cardId) : "");
+    const btn = document.createElement("button");
+    btn.className = "result-item";
+    btn.innerHTML = `
+      ${imgSrc ? `<img src="${imgSrc}" alt="${card.query}" loading="lazy" onerror="this.style.opacity='.25'" />` : ""}
+      <div class="result-name">${card.query}</div>
+      <div class="result-set">${card.setName || ""}</div>
+      ${card.marketPrice ? `<div class="result-price">$${Number(card.marketPrice).toFixed(2)}</div>` : ""}`;
+    btn.addEventListener("click", () => addLinkCard(card));
+    resultsGrid.appendChild(btn);
+  });
+  resultsEl.classList.remove("hidden");
+}
+
+document.getElementById("wiz-link-btn").addEventListener("click", async () => {
+  const link     = document.getElementById("wiz-link-input").value.trim();
+  const statusEl = document.getElementById("wiz-link-status");
+  statusEl.textContent = "";
+  resultsEl.classList.add("hidden");
+  resultsGrid.innerHTML = "";
+
   if (!link || !link.includes("tcgplayer.com")) {
     statusEl.textContent = "Please paste a valid TCGPlayer URL.";
     return;
   }
-  const q = parseTcgLink(link);
-  if (!q) { statusEl.textContent = "Couldn't parse that URL."; return; }
-  statusEl.textContent = "";
-  searchInput.value = q;
-  activeWizTab = "name";
-  document.querySelectorAll(".wiz-tab").forEach(t => t.classList.toggle("active", t.dataset.tab === "name"));
-  document.querySelectorAll(".wiz-tab-panel").forEach(p => p.classList.toggle("active", p.id === "wiz-tab-name"));
-  doSearch();
+
+  let cardName = "", cardNumber = "", setHint = "", isNonEnglish = false;
+  let isBareProductId = false;
+  try {
+    const normalized = link.includes("://") ? link : `https://${link}`;
+    const parts = new URL(normalized).pathname.split("/").filter(Boolean);
+    const slug = parts[parts.length - 1] || "";
+    if (/^\d+$/.test(slug)) {
+      isBareProductId = true;
+    } else {
+      ({ cardName, cardNumber, setHint, isNonEnglish } = parseSlugForCard(slug));
+    }
+  } catch {
+    statusEl.textContent = "Couldn't parse that URL.";
+    return;
+  }
+
+  const linkBtn = document.getElementById("wiz-link-btn");
+  linkBtn.disabled = true;
+  linkBtn.textContent = "Loading…";
+
+  try {
+    if (isBareProductId) {
+      const normalized = link.includes("://") ? link : `https://${link}`;
+      const productId = new URL(normalized).pathname.split("/").filter(Boolean).pop();
+      const r = await fetch(`/.netlify/functions/resolve-tcg-product?productId=${productId}`);
+      const resolved = await r.json();
+
+      if (resolved.slug) {
+        ({ cardName, cardNumber, setHint, isNonEnglish } = parseSlugForCard(resolved.slug));
+      } else if (resolved.title) {
+        const titleMatch = resolved.title.match(/^(.+?)\s+#(\w+)/);
+        if (titleMatch) { cardName = titleMatch[1].trim(); cardNumber = titleMatch[2]; }
+        else { cardName = resolved.title.split(/\s+[–—-]/)[0].trim(); }
+      }
+
+      if (!cardName) {
+        statusEl.textContent = "Could not determine the card name from this link.";
+        return;
+      }
+    }
+
+    if (isNonEnglish) {
+      const pidMatch = link.match(/tcgplayer\.com\/product\/(\d+)/i);
+      let imageUrl = "", marketPrice = null;
+      if (pidMatch) {
+        try {
+          const r = await fetch(`/.netlify/functions/resolve-tcg-product?productId=${pidMatch[1]}`);
+          if (r.ok) { const d = await r.json(); imageUrl = d.imageUrl || ""; marketPrice = d.price ?? null; }
+        } catch { /* non-fatal */ }
+      }
+      const displayName = cardName.replace(/\b\w/g, c => c.toUpperCase())
+        + (cardNumber ? ` ${cardNumber}` : "") + " (Japanese)";
+      showLinkResults([{ cardId: "", query: displayName, setName: "Japanese", marketPrice, tcgUrl: link, imageUrl }]);
+    } else {
+      const formatted = await tcgLookupWiz(cardName, cardNumber, link, setHint);
+      if (formatted) {
+        showLinkResults(formatted);
+      } else {
+        const displayName = cardName.replace(/\b\w/g, c => c.toUpperCase())
+          + (cardNumber ? ` ${cardNumber}` : "");
+        let imageUrl = "", marketPrice = null;
+        const pidMatch = link.match(/tcgplayer\.com\/product\/(\d+)/i);
+        if (pidMatch) {
+          try {
+            const r = await fetch(`/.netlify/functions/resolve-tcg-product?productId=${pidMatch[1]}`);
+            if (r.ok) { const d = await r.json(); imageUrl = d.imageUrl || ""; marketPrice = d.price ?? null; }
+          } catch { /* non-fatal */ }
+        }
+        showLinkResults([{ cardId: "", query: displayName, setName: "", marketPrice, tcgUrl: link, imageUrl }]);
+      }
+    }
+  } catch {
+    statusEl.textContent = "Failed to look up that URL — try the Search tab instead.";
+  } finally {
+    linkBtn.disabled = false;
+    linkBtn.textContent = "Search";
+  }
 });
+
 document.getElementById("wiz-link-input").addEventListener("keydown", e => {
   if (e.key === "Enter") document.getElementById("wiz-link-btn").click();
 });
